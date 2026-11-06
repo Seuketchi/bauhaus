@@ -1,0 +1,16 @@
+{
+  "name": "bauhaus",
+  "owner": {
+    "name": "Tristan Jadman"
+  },
+  "description": "A private design package, as an installable plugin.",
+  "plugins": [
+    {
+      "name": "bauhaus",
+      "source": "./",
+      "description": "A design method, its jobs and the characters who call them, for brand, email and screens.",
+      "category": "design",
+      "keywords": ["design", "brand", "email", "screens"]
+    }
+  ]
+}
