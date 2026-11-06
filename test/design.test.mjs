@@ -855,6 +855,20 @@ test("tells T20: more than six distinct left edges is flagged and edges on the g
   clean(renderRun(onGrid, { only: "T20" }));
 });
 
+test("tells T20: a piece centred in a wider render is measured against its own container, not the canvas", () => {
+  // A 600 px container centred in a 640 px render: a full-bleed block at its edge, then blocks on the brand grid inside its margin.
+  // Inner width 552, 12 columns, 16 px gutter: columns start at 44, 91.3, 138.7.
+  const onItsGrid = [{ x: 20, y: 10, w: 600, h: 60, color: INK }, { x: 44, y: 90, w: 300, h: 12, color: INK }, { x: 44, y: 120, w: 200, h: 12, color: INK }, { x: 91, y: 150, w: 100, h: 12, color: INK }];
+  clean(renderRun(onItsGrid, { only: "T20", w: 640, h: 300 }));
+  const offItsGrid = [{ x: 20, y: 10, w: 600, h: 60, color: INK }, { x: 55, y: 90, w: 300, h: 12, color: INK }, { x: 77, y: 120, w: 200, h: 12, color: INK }, { x: 133, y: 150, w: 100, h: 12, color: INK }];
+  flagged(renderRun(offItsGrid, { only: "T20", w: 640, h: 300 }), "T20");
+});
+
+test("tells T20: content that is not centred is still measured against the canvas", () => {
+  const leftHeavy = [{ x: 20, y: 10, w: 300, h: 60, color: INK }, { x: 44, y: 90, w: 200, h: 12, color: INK }, { x: 44, y: 120, w: 200, h: 12, color: INK }, { x: 91, y: 150, w: 100, h: 12, color: INK }];
+  flagged(renderRun(leftHeavy, { only: "T20", w: 640, h: 300 }), "T20");
+});
+
 test("tells: a clean piece with a clean render and the brand's data passes every row", () => {
   const html = page("p{font-size:20px;color:#111827;background:#ffffff}", "<h1>Your account is ready</h1><p>You can sign in now.</p>");
   const rects = [{ x: 24, y: 24, w: 300, h: 40, color: INK }, { x: 24, y: 80, w: 200, h: 12, color: INK }, { x: 71, y: 120, w: 100, h: 12, color: INK }];
@@ -913,6 +927,94 @@ test("email: a colour pair that fails 4.5:1 is rejected", () => {
   bad(["email", "e.html"], "T24", dir({ "e.html": GOOD_EMAIL.replace("color:#1f4e79", "color:#999999;background:#ffffff") }));
 });
 
+// ---- email: the shipped LIMITS.md ----
+
+const SHIPPED_LIMITS = join(here, "..", "skills", "tools", "email", "LIMITS.md");
+const shippedLimits = () => readFileSync(SHIPPED_LIMITS, "utf8");
+const limitRows = () =>
+  shippedLimits().split("\n").filter((l) => l.startsWith("|") && !/^\|\s*(Feature|-)/.test(l)).map((l) => l.split(/\|(?=(?:[^`]*`[^`]*`)*[^`]*$)/).slice(1, -1).map((c) => c.trim()));
+// An email page with `extra` inside the table, run against the shipped table.
+const withShipped = (extra, replace) => {
+  const html = replace ? GOOD_EMAIL.replace(...replace) : GOOD_EMAIL.replace("<table", `${extra}<table`);
+  return dir({ "e.html": html });
+};
+const lint = (d, limits = SHIPPED_LIMITS) => ck(["email", "e.html", "--limits", limits], d);
+
+test("LIMITS.md: the seed rows are the ones re-read from caniemail on 2026-11-07, with their test dates", () => {
+  const rows = limitRows();
+  const by = (re) => rows.find((r) => re.test(r[0]));
+  const bg = by(/background-image/);
+  const grid = by(/display:\s*grid|display: grid/);
+  const dark = by(/prefers-color-scheme/);
+  assert.ok(bg && grid && dark, "a seed row is missing");
+  assert.deepEqual([bg[2], bg[3], bg[4], bg[5]].map((c) => c.replace(/\s+/g, " ")), ["Outlook for Windows 2007 to 2019", "none", "2023-07-24", "https://www.caniemail.com/features/css-background-image/"]);
+  assert.deepEqual([grid[2], grid[3], grid[4], grid[5]].map((c) => c.replace(/\s+/g, " ")), ["Outlook for Windows 2007 to 2019 and Windows Mail", "none", "2019-02-28", "https://www.caniemail.com/features/css-display-grid/"]);
+  assert.equal(dark[2], "Gmail on desktop webmail, iOS, Android and mobile webmail");
+  assert.equal(dark[3], "ignored");
+  assert.equal(dark[4], "2023-03-08");
+  assert.equal(dark[5], "https://www.caniemail.com/features/css-at-media-prefers-color-scheme/");
+});
+
+test("LIMITS.md: every row has a date and a caniemail feature URL, and the support column uses a documented vocabulary", () => {
+  const text = shippedLimits();
+  for (const r of limitRows()) {
+    assert.match(r[4], /^\d{4}-\d{2}-\d{2}$/, r[0]);
+    assert.match(r[5], /^https:\/\/www\.caniemail\.com\/features\/[a-z0-9-]+\/$/, r[0]);
+    assert.ok(["none", "ignored"].includes(r[3]), `${r[0]}: support "${r[3]}" is not in the vocabulary`);
+  }
+  assert.match(text, /`none` blocks/);
+  assert.match(text, /`ignored`[^.]*note/i);
+  assert.match(text, /re-read[^.]*caniemail/i);
+});
+
+test("email on the shipped LIMITS.md: background-image url( fails, background-color passes", () => {
+  const r = lint(withShipped("", ['style="width:600px', 'style="background-image:url(https://example.com/bg.png);width:600px']));
+  assert.equal(r.status, 1, r.all);
+  assert.match(r.all, /background-image \(Outlook for Windows 2007 to 2019\): none support, and the email uses it/);
+  assert.equal(lint(withShipped("", ['style="width:600px', 'style="background-color:#f3f4f6;width:600px'])).status, 0);
+});
+
+test("email on the shipped LIMITS.md: display:grid, display: grid and display :grid all fail", () => {
+  for (const v of ["display:grid", "display: grid", "display :grid", "display : grid"]) {
+    const r = lint(withShipped(`<div style="${v}"></div>`));
+    assert.equal(r.status, 1, `${v}: ${r.all}`);
+    assert.match(r.all, /display:grid/);
+  }
+  assert.equal(lint(withShipped('<div style="display:block"></div>')).status, 0);
+});
+
+test("email on the shipped LIMITS.md: a dark scheme with a legible light default passes with a note, not a failure", () => {
+  const html = GOOD_EMAIL.replace("<body>", "<head><style>@media (prefers-color-scheme: dark){td{background:#111827}}</style></head><body>");
+  const r = lint(dir({ "e.html": html }));
+  assert.equal(r.status, 0, r.all);
+  assert.match(r.out, /note: @media \(prefers-color-scheme\) \(Gmail[^)]*\): ignored/);
+  assert.match(r.out, /legibility must not depend on it/);
+});
+
+test("email: the run says which LIMITS.md it read, on a pass and on a failure", () => {
+  const pass = lint(dir({ "e.html": GOOD_EMAIL }));
+  assert.match(pass.out, /limits read: .*LIMITS\.md \(3 rows\)/);
+  const fail = lint(withShipped('<div style="display:grid"></div>'));
+  assert.match(fail.out, /limits read: .*LIMITS\.md \(3 rows\)/);
+});
+
+test("email: a row with an invalid regex is a problem on its row, not a crash", () => {
+  const limits = LIMITS.replace("`display:\\s*grid`", "`display:(grid`");
+  const d = dir({ "e.html": GOOD_EMAIL, "LIMITS.md": limits });
+  const r = lint(d, "LIMITS.md");
+  assert.equal(r.status, 1, r.all);
+  assert.match(r.all, /LIMITS\.md: CSS grid: pattern is not a valid regular expression/);
+  assert.doesNotMatch(r.all, /SyntaxError|at .*node:/);
+});
+
+test("email: a pattern with a | inside backticks is one cell", () => {
+  const limits = LIMITS.replace("`display:\\s*grid`", "`display:\\s*(?:grid|inline-grid)`");
+  const d = dir({ "e.html": GOOD_EMAIL.replace("<table", '<div style="display:inline-grid"></div><table'), "LIMITS.md": limits });
+  const r = lint(d, "LIMITS.md");
+  assert.equal(r.status, 1, r.all);
+  assert.match(r.all, /CSS grid \(Outlook for Windows\): none/);
+});
+
 // ---- the shipped files ----
 
 const root = join(here, "..");
@@ -927,8 +1029,18 @@ test("TELLS.md has 28 complete rows T1 to T28 and each one has a check that runs
     assert.equal(cells[0], `T${i + 1}`);
     assert.ok(cells.every(Boolean), `${cells[0]} has an empty cell`);
     assert.ok(["file", "render", "text"].includes(cells[3]), `${cells[0]} type ${cells[3]}`);
-    assert.equal(cells[5], "proposed, not run");
+    assert.match(cells[5], /^(?:proposed, not run|ran on \d+ real files?\b.*)$/, `${cells[0]} status "${cells[5]}"`);
   });
+  const status = (id) => rows.find((r) => r[0] === id)[5];
+  assert.ok(rows.filter((r) => r[5].startsWith("ran on ")).length >= 15, "the rows that ran on real files say so");
+  for (const id of ["T2", "T3", "T5", "T6", "T7", "T8", "T9", "T10", "T22", "T28"]) assert.equal(status(id), "proposed, not run", `${id}: no real piece held its subject`);
+  assert.match(status("T20"), /false positives?.*fixed/, "T20 had a false positive on a real file");
+  assert.match(status("T26"), /inferred/);
+  assert.match(status("T27"), /warning/);
+  const text = shipped("skills", "tools", "design", "TELLS.md");
+  assert.match(text, /^## False positives/m);
+  assert.match(text.split(/^## False positives/m)[1], /T20[\s\S]*email\.html[\s\S]*landing\.html[\s\S]*T27[\s\S]*email\.html/);
+  assert.match(text, /does not show that it catches/i, "a row with no hit is not claimed to catch the tell");
   assert.match(rows[25].join(" "), /inferred/);
   assert.match(rows[26].join(" "), /warning/);
   const render = png(300, 100, WHITE, [{ x: 24, y: 20, w: 100, h: 10, color: INK }]);
@@ -1022,5 +1134,5 @@ test("package.json adds test:artcraft and the plugin lists the design tool", () 
   assert.equal(pkg.scripts["test:artcraft"], "ARTCRAFT_REQUIRED=1 node --test --test-reporter=tap test/artcraft.test.mjs");
   assert.equal(pkg.dependencies, undefined);
   assert.equal(pkg.devDependencies, undefined);
-  assert.deepEqual(JSON.parse(shipped(".claude-plugin", "plugin.json")).skills, ["./skills/tools/design"]);
+  assert.ok(JSON.parse(shipped(".claude-plugin", "plugin.json")).skills.includes("./skills/tools/design"));
 });

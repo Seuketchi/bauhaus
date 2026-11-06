@@ -8,4 +8,5 @@ None yet.
 
 ## Model-invoked
 
-None yet.
+- **[bayer](./bayer/SKILL.md)**: The graphic designer. Brand, logos and HTML email, from a brief file and the project's own rules.
+- **[gropius](./gropius/SKILL.md)**: The lead. Frames the brief, hands the piece to the right designer and runs the craft pass on pieces made elsewhere.

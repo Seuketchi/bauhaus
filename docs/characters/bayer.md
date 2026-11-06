@@ -1,0 +1,34 @@
+# bayer
+
+## What it does
+
+`bayer` is the graphic designer: brand, logos and HTML email. It reads the brief and the project's `DESIGN.md`, makes the piece with the matching tool and hands back files that pass the checks.
+
+It calls four tools, each on a stated fact: `design` when no brief file exists, `brand` when the brief asks for an identity or no `DESIGN.md` exists, `email` when the piece is an HTML email, and `critique` when a finished piece exists that this session did not make. The default is not to call.
+
+The split is fixed. Donna keeps the words and the PDF build, `bayer` owns layout and look, and louis reviews. App and web screens go to `breuer`.
+
+## When to reach for it
+
+- A brand, a logo or a visual identity is wanted.
+- An HTML email needs its layout and look.
+- A finished identity or email from another session needs a craft pass.
+
+Skip it for document text, email copy and app screens.
+
+## Common questions
+
+**Who writes the email copy?** Donna. The email carries labelled slots for donna's words and plain-text part.
+
+**What does a hand-over say?** The piece and its state, the files made, the checks run with their result, the reference rows the brief cites and what was not checked. For an email it also says that the email was not tested in Outlook for Windows.
+
+**Does it mark its own work?** No. The craft pass runs on a piece another session made.
+
+**Is this a person speaking?** No. The register is plain and professional, and nothing in the file imitates a real person's voice or attributes words to anyone.
+
+## It's working if
+
+- The `DESIGN.md` it writes passes `check.mjs design` and its token file passes `check.mjs tokens`.
+- An email it builds passes `check.mjs email`, with every colour pair computed.
+- Every piece started from a brief file that cites reference rows.
+- Words in its pieces appear only where the brief supplied them or donna wrote them.

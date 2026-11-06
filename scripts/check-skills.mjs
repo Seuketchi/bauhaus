@@ -11,7 +11,11 @@
 //   is a `/bauhaus:` call, except the one optional lookup the screens skill may
 //   name; a call into suits is named as such;
 // - no ui-ux-pro-max data (CSV or Python files, its copyright holder) under skills/;
-// - every relative link in a Markdown file resolves.
+// - every relative link in a Markdown file resolves;
+// - no file inside a skill folder (skills/<bucket>/<name>/, character or tool)
+//   links into another skill folder. A link to its own folder, to a bucket
+//   README (skills/<bucket>/README.md, which is not a skill folder) or to a
+//   docs page is allowed. A tool's shared reference lives in the tool that owns it.
 // Then, if `claude` is on PATH, runs `claude plugin validate`, failing on any
 // error or on any warning not listed in ACCEPTED_WARNINGS.
 // Exits 1 with one line per problem.
@@ -114,6 +118,8 @@ function markdownFiles(dir) {
     return e.name.endsWith(".md") ? [path] : [];
   });
 }
+// The skill folder (skills/<bucket>/<name>) a repo-relative path is inside, if any.
+const skillFolderOf = (path) => /^skills\/(?:characters|tools)\/[^/]+(?=\/)/.exec(path.split("\\").join("/"))?.[0];
 const rootMarkdown = readdirSync(repo).filter((f) => f.endsWith(".md")).map((f) => join(repo, f));
 for (const file of [...rootMarkdown, ...markdownFiles(join(repo, "skills")), ...markdownFiles(join(repo, "docs"))]) {
   const prose = readFileSync(file, "utf8").replace(/^(```|~~~)[\s\S]*?^\1/gm, "").replace(/`[^`\n]*`/g, "");
@@ -122,6 +128,12 @@ for (const file of [...rootMarkdown, ...markdownFiles(join(repo, "skills")), ...
     if (/^(?:[a-z][\w+.-]*:|#|\/)/i.test(target) || /^[\w-]+$/.test(target)) continue;
     const path = decodeURIComponent(target.split("#")[0]);
     if (path && !existsSync(join(dirname(file), path))) problems.push(`${relative(repo, file)}: broken link ${target}`);
+    // Cross-folder links: the skill folder a file sits in, against the one its link lands in.
+    const from = skillFolderOf(relative(repo, file));
+    if (path && from) {
+      const into = skillFolderOf(relative(repo, resolve(dirname(file), path)));
+      if (into && into !== from) problems.push(`${relative(repo, file)}: link ${target} leaves its skill folder, into ${into}`);
+    }
   }
 }
 
