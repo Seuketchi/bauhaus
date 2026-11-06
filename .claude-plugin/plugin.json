@@ -1,0 +1,10 @@
+{
+  "name": "bauhaus",
+  "description": "A design package: a method, jobs and characters for brand, email and screens.",
+  "author": {
+    "name": "Tristan Jadman"
+  },
+  "repository": "https://github.com/Seuketchi/bauhaus",
+  "license": "MIT",
+  "skills": []
+}

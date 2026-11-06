@@ -1,0 +1,14 @@
+{
+  "name": "bauhaus",
+  "private": true,
+  "description": "A design package: a method, jobs and characters for brand, email and screens.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Seuketchi/bauhaus"
+  },
+  "license": "MIT",
+  "scripts": {
+    "check-skills": "node scripts/check-skills.mjs",
+    "test": "node --test --test-reporter=tap \"test/*.test.mjs\""
+  }
+}
