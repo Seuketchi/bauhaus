@@ -9,6 +9,7 @@
   "license": "MIT",
   "scripts": {
     "check-skills": "node scripts/check-skills.mjs",
-    "test": "node --test --test-reporter=tap \"test/*.test.mjs\""
+    "test": "node --test --test-reporter=tap \"test/*.test.mjs\"",
+    "test:artcraft": "ARTCRAFT_REQUIRED=1 node --test --test-reporter=tap test/artcraft.test.mjs"
   }
 }
