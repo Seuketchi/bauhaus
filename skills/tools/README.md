@@ -8,4 +8,4 @@ None yet.
 
 ## Model-invoked
 
-None yet.
+- **[design](./design/SKILL.md)**: The design method: the banned defaults, a plan checked against the brief, the project's rules first, and the checks for colour, tokens, trends and briefs.
