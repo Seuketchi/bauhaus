@@ -29,7 +29,7 @@ A piece follows one flow: grill, research, concept and story, craft, critique. T
 
 The owner talks to a character, the character reads `DESIGN.md` and the project's own rules, drives the installed command-line apps by file path, and hands back files. Suits is unchanged. The writer owns the words of the pieces made here; donna keeps long documents and the PDF build. The designer owns layout and look, and louis reviews against the rules and the numbers.
 
-The architect is specified in section 3 (MIE, MAS and PLN): **Ludwig Mies van der Rohe** is the space designer, with two jobs, `massing` in SolidCraft (3D) and `plans` in CADCraft (2D). The shot and motion designer is specified in the same section (MN, SHO, STO and MOT): **László Moholy-Nagy** has three jobs, `shots` in FilmCraft (the shot list as a table and markers), `storyboard` in FigCraft then FilmCraft (framing panels and a rough animatic) and `motion` in EffectCraft (an animated title or graphic). The work is a plan and a draft, not a cut: no film is made, no shot is taken and no footage is cut. A still photograph is a later job for another character.
+The architect is specified in section 3 (MIE, MAS and PLN): **Ludwig Mies van der Rohe** is the space designer, with two jobs, `massing` in SolidCraft (3D) and `plans` in CADCraft (2D). The shot and motion designer is specified in the same section (MN, SHO, STO and MOT): **László Moholy-Nagy** has three jobs, `shots` in FilmCraft (the shot list as a table and markers), `storyboard` in FigCraft then FilmCraft (framing panels and a rough animatic) and `motion` in EffectCraft (an animated title or graphic). The work is a plan and a draft, not a cut: no film is made, no shot is taken and no footage is cut. A still photograph is the photographer's job: **Walter Peterhans** has one job, `develop` in LightCraft (a photograph developed or prepared after capture), specified in the same section (PH and DEV).
 
 ## User Stories
 
@@ -314,6 +314,26 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - STN4 [T] The `Stance` section comes after `Hard rules` and `Hand over` and before `Voice`, and is inside none of them.
 - STN5 [J] The owner reads a sample of each character's answer and says whether the stance shows. No test can judge that.
 
+**`peterhans` (character). The photographer.**
+
+- PH1 [T] Same section, register and attribution tests as GRO1, the CAST1 scan, and the two name tests: the name is written in full where a first name is used, and no image of anyone's work and no `Lucia` appears anywhere. Calls only `/bauhaus:design`, `/bauhaus:develop`, `/bauhaus:critique`. Triggers, each a fact about the task: `design` when no brief file exists; `develop` when the task is a photograph to develop or prepare; `critique` when a finished image exists that this session did not make.
+- PH2 [T] The SKILL.md has a `## Stance` of three to six lines in the third person, written as a method sheet: paraphrased, no quote, no first person, and no place or date, placed after Hard rules and Hand over and before Voice.
+- PH3 [T] Takes the brief's `Story` beats as the input of `develop` and invents no story. Routing: `gropius` hands a photograph to `peterhans` after the writer, with the brief, the words file and `DESIGN.md`, and `ogilvy` hands it on the same way.
+- Sample line: "The exposure moved 0.5 stop and the temperature stays at 6500. The developed file and the command that made it are in the output folder."
+
+**`develop` (tool, LightCraft). The photograph.** Produces `developed.jpg`, `preview.png`, `develop.sh`, `controls.json` and the side folders `library/` and `xdg/`. LightCraft acts after capture: aperture, shutter speed and ISO are not controls in it, so capture advice is a note and never a step.
+
+- DEV1 [R] `lightcraft-cli render <in> -o <out> --set C=V --size N` exits 0 and writes an image of the stated long edge (run 24).
+- DEV2 [R] The library flow `run --library DIR --import F develop.auto develop.set … app.export path=… longEdge=N` returns `"ok":true` on each line with `DIR` inside the output directory, and both exports (the JPG and the PNG preview) come from the one develop, so the preview carries the crop (run 25).
+- DEV3 [T] Every control and value the job sets is in the `develop.controls` catalogue and inside its `min` and `max`. The app refuses an unknown id but clamps an out-of-range value without an error, so the job checks the range itself and refuses a value outside it before the run (run 26).
+- DEV4 [R] The source photograph is never changed: its hash is the same after the run, the output path differs from the input, and `format=original` is never used. Measured: `--import` writes no sidecar beside the source.
+- DEV5 [T] `develop.auto` runs before the manual `develop.set` steps, because it replaces an earlier set.
+- DEV6 [R] The job writes a PNG preview of at most 2000 pixels, because `critique` takes `.png` and not `.jpg` (C1).
+- DEV7 [T] Never `merge`, `denoise-serve`, `snapshot`, `mcp`, `--connect` or `--bridge`; confinement as MAS7, with the settings, data and cache directories under the output directory.
+- DEV8 [J] Each craft rule cites a row of `develop/REFERENCES.md` that is `opened` and `secondary`. The rules are limited to exposure in stops, the direction, hardness and pattern of light, colour temperature in kelvin, composition, a tone curve, and crop and straighten. No rule on product or tabletop lighting setups: no source for one was opened.
+- DEV9 [T] The sample line of `peterhans` is at most 30 words about the work, with no biography, no image and no quote.
+- DEV10 [T] The brief's `Minimum:` line for `develop` is 2 only with one of the two stated reasons (an editing brief; a still-life or tabletop brief), and 3 otherwise.
+
 ### 4. Characters (theme: Bauhaus)
 
 **From `notes/design-package/theme-options.md` (rachel, 2026-11-07).** The owner chose the theme and approved the cast. The package and repo are `bauhaus`, at `/home/tan/projects/bauhaus`. The cast are real historical people who are dead; their names are used as names only (section 1). Facts below are rachel's, from English Wikipedia pages, which she calls a lead and not a primary source: tag **found (secondary)**, and I did not re-read the pages. Whether any estate or foundation restricts the use of a name was not checked.
@@ -325,6 +345,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 | Marcel Breuer, 1902 to 1981 | UI/UX: app and web screens | Headed the carpentry shop; tubular-steel furniture; later large buildings | An analogy only: objects built for the body. "Design for use" is not on the page, so the fit is inferred |
 | Josef Albers, 1888 to 1976 | The colour science inside `design`; or UI/UX (open question 19) | Taught the preliminary course; wrote *Interaction of Color* (1963), colour studied by experiment | Strong for colour. As UI/UX, inferred |
 | László Moholy-Nagy, 1895 to 1946 | Shot and motion designer: shots, storyboards and animated titles | Photograms; light-based work; films including a silent black-and-white short of about 5 to 6.5 minutes | Strong on light. The role is by craft: the film rows are secondary pages, and the fit to a role is inferred |
+| Walter Peterhans | Photographer: a photograph developed or prepared | Taught photography at the school from 1929 (secondary: two biography pages agree on the year) | Strong on the craft of the still image. The fit to a role is inferred; the name only is used, and nothing else about the person is kept |
 | Ludwig Mies van der Rohe, 1886 to 1969 | Space designer: form, plans and structure | Architect: space, form and structure | Strong |
 | David Ogilvy, 1911 to 1999 | Writer: the idea, insight, story and words of the pieces made here | Found in the research notes (`creative-group-research.md`, part 1b) and the owner's pick; his method rows are in `concept/REFERENCES.md`, each from an opened source | Good. The craft is a written method for words; he is not a person of the school (see the theme change below) |
 
@@ -339,6 +360,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
   - Breuer: "The screen has four states with one reserved height. Rules applied: three, listed by file and heading."
   - Mies: "The study has a 12 by 8 metre plan and three closed bodies. It is a design study, not an engineered design, and no code is checked."
   - Moholy-Nagy: "The shot list has twelve rows in three scenes, each scene with its axis named. Two rows break the axis and are flagged for the owner."
+  - Peterhans: "The exposure moved 0.5 stop and the temperature stays at 6500. The developed file and the command that made it are in the output folder."
 - **Moholy-Nagy** is specified in section 3, on the opened Wikibooks and Wikipedia pages on shot sizes, camera angles, moving the camera, the 180-degree rule and continuity, all secondary. The film canon (Mascelli, Katz) is lending-only and stays pointers. **Mies** is specified in section 3, on Vitruvius and Ruskin, which are free and were opened; Ching and Alexander stay pointers.
 
 - **Name.** `bauhaus` has no exact plugin clash in the local catalogues or one web search (rachel; one search is not exhaustive). Two near-name plugins exist (`bauhaus-digital`, which designs interfaces and slides with a Bauhaus basic course, and `bauhaus-code`), an unrelated npm package named `bauhaus`, and a German hardware retailer holds the trademark (weakly sourced; the registers were not searched). Goods differ and the plugin is private with no releases, which lowers the risk. Open question 20.
@@ -462,7 +484,7 @@ Not verified, and so not relied on: `figcraft-cli export` to PNG with `--scale`;
 
 **Harvey's budget of at most 14 files does not hold, and it did not hold before UI/UX.** His tally (manifests 2, README and CLAUDE.md 2, check script and test 2, method 1, character 1, commands 3, template 1, spare 2) leaves out what the suits layout requires of every skill: a docs page with four sections, and the bucket READMEs that list each skill. Counting those, the first release without UI/UX is already about 31 files, and with UI/UX, its character, the references and tells files and the trends file the owner has since asked for, 41. Recommendation: keep the cap at 14 per pull request and split the release into four pull requests, one ticket each. If the owner prefers harvey's original shape, the alternative is to cut the suits conventions (one `docs/skills.md` for all pages, one skills list in the README), which makes the package unlike suits; I do not recommend it. Open question 1.
 
-The full tree (74 files, with the space designer, the writer, the stance record and the shot and motion designer):
+The full tree (79 files, with the space designer, the writer, the stance record, the shot and motion designer and the photographer):
 
 ```
 bauhaus/
@@ -486,6 +508,7 @@ bauhaus/
   skills/characters/mies/SKILL.md
   skills/characters/ogilvy/SKILL.md
   skills/characters/moholy-nagy/SKILL.md
+  skills/characters/peterhans/SKILL.md
   skills/tools/README.md
   skills/tools/design/SKILL.md
   skills/tools/design/ARTCRAFT.md
@@ -516,6 +539,8 @@ bauhaus/
   skills/tools/storyboard/REFERENCES.md
   skills/tools/motion/SKILL.md
   skills/tools/motion/REFERENCES.md
+  skills/tools/develop/SKILL.md
+  skills/tools/develop/REFERENCES.md
   skills/tools/critique/SKILL.md
   docs/characters/gropius.md
   docs/characters/bayer.md
@@ -532,6 +557,8 @@ bauhaus/
   docs/tools/shots.md
   docs/tools/storyboard.md
   docs/tools/motion.md
+  docs/characters/peterhans.md
+  docs/tools/develop.md
   docs/tools/concept.md
   docs/tools/critique.md
   test/check-skills.test.mjs
@@ -554,6 +581,7 @@ Split (each at most 14 files; a later PR also edits files from an earlier one, w
 | 6. The writer and the flow | `ogilvy`, `concept` with its REFERENCES, `RESEARCH.md`, the three `REGISTERS.md`, ADR 0002, and the docs pages of `ogilvy` and `concept` | 10 |
 | 7. The stance | `## Stance` in `gropius`, `bayer`, `mies` and `ogilvy`, ADR `0003` with the row table, the voice-rule paragraph, STN1 to STN5, and one line in the READMEs and four docs pages | 1 |
 | 8. The shot and motion designer | `moholy-nagy`, `shots`, `storyboard` and `motion` with their REFERENCES, and their four docs pages, and `test/film.test.mjs` and `test/film-lib.mjs`, the rules of the film tools as functions over strings and their tests | 13 |
+| 9. The photographer | `peterhans`, `develop` with its REFERENCES, and their two docs pages | 5 |
 
 PR 1 has no skill. Whether `claude plugin validate` accepts `"skills": []` is UNVERIFIED (the check runs it). If it refuses, `design/SKILL.md` and its docs page move into PR 1, which makes 15 and trips the cap, so the fallback is to ship PR 1 with `design` and drop the ADR to PR 2.
 
@@ -574,6 +602,7 @@ Given one real small brief from one of the owner's projects (the asenso app has 
 11. `mies` produces, with no hand-written asset: for one real small brief, a `massing.json` run into a STEP file whose bodies are all closed with the volume stated as the sum of the bodies, and a plan whose PDF passes `pdfcraft-cli check`, whose dimension text is legible on the PNG and whose hand-over carries the design-study line. Each is run by a session that did not build it.
 12. The flow, on one small brief with no `DESIGN.md`, in a category that has a register and a second that has none: `gropius` asks the five questions in one message, once, and the answers appear unedited in the brief's `Intake`; `research.md` exists, passes `check.mjs research` and cites a picture opened as an image for every register rule it uses (for the category with no register it writes one first and says so); the brief passes `check.mjs brief` with all eleven sections; the writer produces `Idea`, `Insight`, `Story` and `words.md` without asking anything `Intake` already answered, and `words.md` holds no claim without a research row; the email starts as a 600 px comp that the owner sees first, and the built HTML passes `check.mjs email` and renders beside it; `critique`, run by a session that did not make the piece, reports a seeded lost move and a seeded copy tell as the writer's.
 13. `moholy-nagy` produces, with no hand-written asset: for one real small brief, a shot list whose EDL has one marker line for each row, a storyboard with one PNG for each shot taken from the brief's `Story` beats, with an animatic whose clips are as long as the table says, and an animated title with its keys read back, its poster and its GIF. Each is run by a session that did not build it, and each hand-over says it is a plan and a draft, not a cut.
+14. `peterhans` produces, with no hand-written asset: for one real photograph, a developed JPG and a PNG preview from one library run, every control checked against `develop.controls`, the source hash unchanged and no sidecar beside it, and a hand-over that lists the values the app took. Run by a session that did not build it.
 
 ### 10. References and the machine-made look
 

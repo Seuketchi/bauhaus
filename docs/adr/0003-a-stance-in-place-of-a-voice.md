@@ -43,6 +43,12 @@ That leaves a character with a name and a job, and nothing that says what its cr
 | ogilvy | Leaves a night between drafting and sending, reads the draft aloud, then edits. | CGR 1b.4 r3 | opened |
 | ogilvy | Tells the reader plainly what to do. | CGR 1b.4 r4 | opened |
 | ogilvy | Finds facts about the reader before drafting. | CGR 1b.4 r6 | secondary, opened |
+| peterhans | Holds the variables still: the same size, the same finish and the same way up, so that a difference seen is a difference made. | CGR 1 §6 r1 | opened, secondary description of the exercises; craft only, no date or place |
+| peterhans | Opens with an instruction that leaves room, and reads the first answer as the place to start. | CGR 1 §6 r2 | opened, secondary description of the exercises |
+| peterhans | Puts two versions side by side to see what each change adds, and sets the work between two extremes. | CGR 1 §6 r5, r6 | opened, secondary description of the exercises |
+| peterhans | Judges against a range and not by liking: too weak here, and a stronger value tried and looked at. | CGR 1 §6 r7 | opened, secondary description of the exercises |
+| peterhans | Works under tight limits first: one setting at a time, on one photograph. | CGR 1 §6 r8 | opened, secondary description of the exercises; "one photograph" is our translation |
+| peterhans | Refuses a finish laid over a weak frame, and a verdict that stops at liking. | CGR 1 §6 would refuse | opened; the weak frame is inferred from the refusal of a removable surface, which the source does not name for a photograph |
 
 ## Consequences
 

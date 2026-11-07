@@ -2,7 +2,7 @@
 
 ## What it does
 
-`gropius` leads the design work. It makes sure a piece starts from a complete brief file, with all eleven sections. It asks the owner the intake questions once and keeps the answers word for word, hands the brief to the writer, `ogilvy`, who hands it with the words to `bayer` (brand, logos, email), `breuer` (app and web screens) `mies` (space work: form, plans, structure) or `moholy-nagy` (shots, storyboards, motion); the lead hands a piece to a designer itself only when the intake is skipped. It runs the craft pass on pieces that another session made. It makes no piece itself.
+`gropius` leads the design work. It makes sure a piece starts from a complete brief file, with all eleven sections. It asks the owner the intake questions once and keeps the answers word for word, hands the brief to the writer, `ogilvy`, who hands it with the words to `bayer` (brand, logos, email), `breuer` (app and web screens) `mies` (space work: form, plans, structure) `moholy-nagy` (shots, storyboards, motion) or `peterhans` (a photograph to develop or prepare); the lead hands a piece to a designer itself only when the intake is skipped. It runs the craft pass on pieces that another session made. It makes no piece itself.
 
 Its file also holds a short stance: the whole before the parts, the trades kept together, and no decoration apart from what it belongs to. A stance is not a voice.
 

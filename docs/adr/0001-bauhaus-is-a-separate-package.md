@@ -27,6 +27,7 @@ The casting rationale below is from English Wikipedia pages, which are a lead an
 | Marcel Breuer | UI/UX designer | Headed the carpentry shop; tubular-steel furniture. An analogy only, objects built for the body, so the fit is inferred. |
 | Josef Albers | Colour science inside the method | Taught the preliminary course; author of a book on colour explored by experiment. Strong for colour. |
 | Moholy-Nagy | Shot and motion designer | Photograms and light-based work, and a few short films. Strong on light; the fit to a role is inferred. |
+| Peterhans | Photographer | Taught photography at the school from 1929 (secondary: two biography pages agree on the year). Strong on the craft of the still image; the fit to a role is inferred. |
 | Mies van der Rohe | Architect | Architect: space, form and structure. Strong. |
 
 ## Consequences

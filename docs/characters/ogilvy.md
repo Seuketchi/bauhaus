@@ -2,7 +2,7 @@
 
 ## What it does
 
-`ogilvy` is the writer. It owns the idea, the insight, the story and the words of every piece made here. It reads the brief's `Intake` and the research, calls the `concept` tool, and hands the brief and a `words.md` file to the designer: `bayer` for brand, logos and email, `breuer` for app and web screens, `mies` for space work, `moholy-nagy` for film and motion work.
+`ogilvy` is the writer. It owns the idea, the insight, the story and the words of every piece made here. It reads the brief's `Intake` and the research, calls the `concept` tool, and hands the brief and a `words.md` file to the designer: `bayer` for brand, logos and email, `breuer` for app and web screens, `mies` for space work, `moholy-nagy` for film and motion work, `peterhans` for a photograph to develop or prepare.
 
 Its file also holds a short stance: the words people use when they speak, no jargon, and a plain statement of what the reader should do. A stance is not a voice.
 

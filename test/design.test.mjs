@@ -1272,7 +1272,7 @@ test("the shipped TRENDS.md holds only Watch entries, each reviewed within six m
 });
 
 const BANNED_WORDS = /\b(ai|assistants?|agents?|cooks?|kitchens?|stations?|workflows?|head chef|claude|prompts?)\b/i;
-const CAST = /albers|gropius|bayer|breuer|moholy|mies|ogilvy/i;
+const CAST = /albers|gropius|bayer|breuer|moholy|mies|ogilvy|peterhans/i;
 test("the method's files name no cast member, no banned word and no lending-only book", () => {
   for (const [name, text] of [...designFiles.map((f) => [f, shipped("skills", "tools", "design", f)]), ["docs/tools/design.md", shipped("docs", "tools", "design.md")]]) {
     const prose = text.replace(/https?:\/\/\S+/g, "").replace(/CLAUDE\.md|AGENTS\.md/g, "");
@@ -1360,7 +1360,6 @@ test("ARTCRAFT.md rows for massing and plans, with runs 6 to 14 stamped with the
   assert.match(added, /invalid camera/);
   assert.match(added, /cannot be used multiple times/);
   assert.match(added, /ISO-10303-21;/);
-  assert.doesNotMatch(text, /lightcraft-cli render|\| `(?:develop|photographer)` \|/, "the row of the next pull request is not here");
 });
 
 test("ARTCRAFT.md rows for shots, storyboard and motion, with runs 15 to 23 stamped with the app version and the date", () => {
@@ -1381,7 +1380,7 @@ test("ARTCRAFT.md rows for shots, storyboard and motion, with runs 15 to 23 stam
   assert.match(rows("motion"), /render-frame/);
   assert.match(rows("motion"), /render --comp[^|]*--format gif/);
   const runs = text.split(/^## Verified runs/m)[1].split(/^## Not run/m)[0];
-  const items = runs.split("\n").filter((l) => /^\d+\. /.test(l));
+  const items = runs.split("\n").filter((l) => /^\d+\. /.test(l)).slice(0, 23);
   assert.equal(items.length, 5 + 9 + 9, "runs 1 to 14 stay, and nine new runs are added");
   const added = items.slice(14).join("\n");
   assert.match(added, /filmcraft-cli 0\.18\.0/);
@@ -1473,23 +1472,57 @@ test("the FigCraft facts section names what was not seen run, and the facts sect
   assert.match(figcraftFacts(), /Not run: [^\n]*`command\.batch`[^\n]*`as`/, "command.batch with as was not tried");
 });
 
-// P2
-test("ARTCRAFT.md has a LightCraft row in the table's shape, with the headless check that was run and the jobs that do not use it", () => {
+// P2, and the develop job (spec DEV1 to DEV7)
+test("ARTCRAFT.md has a develop row in the table's shape, naming the commands that were run, the app version and the date", () => {
   const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
   const rows = text.split("\n").filter((l) => l.startsWith("|") && /lightcraft-cli/.test(l));
   assert.equal(rows.length, 1, "one row");
   const header = text.split("\n").find((l) => l.startsWith("| Job |"));
   const cells = (l) => l.split(/\|(?=(?:[^`]*`[^`]*`)*[^`]*$)/).slice(1, -1);
   assert.equal(cells(rows[0]).length, cells(header).length, "the same columns as the other rows");
-  assert.match(rows[0], /`lightcraft-cli --version`/);
-  assert.match(rows[0], /`lightcraft-cli run --demo engine\.commands`/);
+  assert.match(rows[0], /^\| `develop` \|/);
+  assert.match(rows[0], /`lightcraft-cli render <in> -o <out> --set C=V --size N`/);
+  assert.match(rows[0], /`lightcraft-cli run --library DIR --import F develop\.auto develop\.set[^`]*app\.export path=[^`]*longEdge=N`/);
+  assert.match(rows[0], /`lightcraft-cli run --demo develop\.controls`/);
   assert.match(rows[0], /lightcraft-cli 0\.19\.0/);
   assert.match(rows[0], /2026-11-07/);
-  assert.match(rows[0], /no job uses it yet/i);
-  assert.doesNotMatch(text, /lightcraft-cli render|\| `(?:develop|photographer)` \|/, "the photographer's row is not here");
+  assert.doesNotMatch(text, /no job uses it yet|\| none yet \|/, "a job uses it now");
   const notRun = text.split(/^## Not run, so not relied on/m)[1];
-  assert.doesNotMatch(notRun, /LightCraft 0\.19\.0 does too|none of the three has a row/);
+  for (const phrase of ["`lightcraft-cli merge`", "`snapshot`", "`--connect`", "`denoise-serve`", "`format=original`"]) assert.ok(notRun.includes(phrase), `not-run list lacks ${phrase}`);
+  assert.doesNotMatch(notRun, /LightCraft 0\.19\.0 does too|none of the three has a row|no job behind it/);
   assert.match(notRun, /FilmCraft 0\.18\.0 and EffectCraft 0\.22\.0 are installed/);
+});
+
+test("ARTCRAFT.md rules name lightcraft-cli among the -cli binaries and say where its side files and cache go", () => {
+  const rules = shipped("skills", "tools", "design", "ARTCRAFT.md").split(/^## Commands each job uses/m)[0];
+  assert.match(rules, /Run only the `-cli` binaries:[^\n]*`lightcraft-cli`/);
+  assert.match(rules, /`lightcraft-cli`[^\n]*no root flag|no root flag[^\n]*lightcraft/i);
+  assert.match(rules, /`catalog\.\*` and `view\.json` in a LightCraft library/);
+  assert.match(rules, /shader cache[^\n]*`XDG_CACHE_HOME`|`XDG_CACHE_HOME`[^\n]*shader cache/);
+  assert.match(rules, /out-of-range[^\n]*clamp|clamp[^\n]*out-of-range/i, "the app clamps a value without an error");
+});
+
+test("ARTCRAFT.md has the three LightCraft runs, stamped with the app version and the date, with what each one showed", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  const runs = text.split(/^## Verified runs/m)[1].split(/^## Not run/m)[0];
+  const items = runs.split("\n").filter((l) => /^\d+\. /.test(l));
+  const light = items.filter((l) => /lightcraft-cli/.test(l));
+  assert.equal(light.length, 3, "a render, a library flow and the catalogue");
+  for (const item of light) {
+    assert.match(item, /lightcraft-cli 0\.19\.0/, item.slice(0, 50));
+    assert.match(item, /2026-11-07/, item.slice(0, 50));
+  }
+  const all = light.join("\n");
+  assert.match(all, /lightcraft-cli render/);
+  assert.match(all, /--library/);
+  assert.match(all, /develop\.controls/);
+  assert.match(all, /light\.exposure[^.\n]*-5[^.\n]*5/, "the range of exposure");
+  assert.match(all, /clamp/i, "an out-of-range value is clamped, not refused");
+  assert.match(all, /unknown control/, "an unknown control is refused");
+  assert.match(all, /develop\.auto[^.\n]*replace/i, "develop.auto replaces an earlier develop.set");
+  assert.match(all, /no sidecar|sidecar[^.\n]*(?:none|not written)/i, "--import wrote no sidecar beside the source");
+  assert.match(all, /sha256|hash/i, "the source was hashed before and after");
+  assert.match(all, /wb\.temp[^.\n]*(?:warm|red)/i, "which way wb.temp moves the picture");
 });
 
 // P3: contrast exits 0 on a failing pair unless --min is passed, so every example passes it.
@@ -1643,4 +1676,16 @@ test("the spec says there are 9 seed trends, the same as TRENDS.md, and why one 
   const section9 = spec.split(/^### 9\./m)[1].split(/^## /m)[0];
   assert.match(section9, /9 seed (?:entries|trends)/);
   assert.match(spec, /moves PR 2 to 9 files/, "the file count of PR 2 is untouched");
+});
+
+// ---- develop: the lowered brief minimums (spec section 5) ----
+
+test("develop: the two lowered minimums its skill states are accepted by `check.mjs brief`, and a minimum of 2 with no reason is not", () => {
+  const skill = shipped("skills", "tools", "develop", "SKILL.md");
+  const stated = [...new Set([...skill.matchAll(/Minimum: 2\. Reason: [^`\n]+?(?=`|\n|$)/g)].map((m) => m[0].trim()))];
+  assert.equal(stated.length, 2, `an editing brief and a still-life brief: ${stated.join(" | ")}`);
+  for (const line of stated) {
+    ok(["brief", "brief.md"], brief({ References: `- LD1: Exposure counted in stops.\n- LD9: Keep the frame simple.\n${line}` }));
+  }
+  bad(["brief", "brief.md"], "Minimum: 2 is below 3 and needs a Reason:", brief({ References: "- LD1: Exposure counted in stops.\n- LD9: Keep the frame simple.\nMinimum: 2." }));
 });
