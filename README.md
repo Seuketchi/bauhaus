@@ -2,7 +2,7 @@
 
 A design package. It holds one method, the jobs that apply it, and characters who brief those jobs and hand work on. The method names the generic defaults a piece must not fall into, asks for a plan checked against the brief before anything is built, and puts the project's own rules above its own taste.
 
-Status: the method, the brand, email and critique jobs, and the lead and graphic designer characters are in. The screens job and its character follow.
+Status: the method, the brand, email, critique and screens jobs, and the lead, the graphic designer and the screen designer are in.
 
 ## Install
 

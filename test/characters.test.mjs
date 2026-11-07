@@ -49,7 +49,8 @@ const TOPICS = {
 };
 const topicHits = (text) => Object.entries(TOPICS).filter(([, re]) => re.test(text)).map(([name]) => name);
 const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+)?(?:gropius|bayer|breuer)\b/i;
-const BIOGRAPHY = /\b(?:Weimar|Dessau|ARCO|founded|was born|born in|studied|apprentic\w+)\b/;
+// Breuer is cast by analogy only: no furniture, workshop, steel or "for the body" in any file.
+const BIOGRAPHY = /\b(?:Weimar|Dessau|ARCO|founded|was born|born in|studied|apprentic\w+|furniture|carpentry|workshop|tubular|steel)\b|for the body/i;
 
 // The words that name how the work is built, in anything meant for others.
 const BUILD_WORDS = /\b(?:ai|assistants?|agents?|cooks?|kitchens?|stations?|workflows?|head chef|claude|prompts?|llm)\b/i;
@@ -118,9 +119,11 @@ const registered = plugin.skills.map((p) => p.replace(/^\.\//, ""));
 const toolDir = (name) => ["tools", "characters"].map((b) => `skills/${b}/${name}`).find((d) => exists(d, "SKILL.md"));
 
 describe("registration", () => {
-  test("plugin.json lists the characters, then design, brand, email and critique, and has no version", () => {
+  test("plugin.json lists the characters and the tools, and has no version", () => {
     const wanted = ["skills/characters/bayer", "skills/characters/gropius", "skills/tools/design", "skills/tools/brand", "skills/tools/email", "skills/tools/critique"];
     assert.deepEqual(registered.slice(0, wanted.length), wanted);
+    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens"]);
+    assert.ok(!registered.some((d) => /ui-ux-pro-max/.test(d)), "the optional lookup is not a skill of this package");
     assert.equal("version" in plugin, false);
     for (const dir of registered) assert.ok(exists(dir, "SKILL.md"), `${dir} has no SKILL.md`);
   });
@@ -131,13 +134,23 @@ describe("registration", () => {
       const model = readme.split(/^## /m).find((s) => s.startsWith("Model-invoked")) ?? "";
       for (const name of names) assert.match(model, new RegExp(`\\]\\(\\./${name}/SKILL\\.md\\)`), `${name} is not under Model-invoked in skills/${bucket}/README.md`);
     };
-    listed("characters", ["bayer", "gropius"]);
-    listed("tools", ["brand", "critique", "design", "email"]);
+    listed("characters", ["bayer", "breuer", "gropius"]);
+    listed("tools", ["brand", "critique", "design", "email", "screens"]);
+    for (const name of ["breuer", "screens"]) {
+      const bucket = name === "breuer" ? "characters" : "tools";
+      assert.doesNotMatch(read("skills", bucket, name, "SKILL.md"), /^disable-model-invocation:/m);
+      const line = read("skills", bucket, "README.md").split("\n").find((l) => l.includes(`./${name}/SKILL.md`));
+      assert.doesNotMatch(line, NUMBER_OF, `${name}: a number of characters or jobs in a description`);
+    }
   });
 
   test("the root README no longer says it is a skeleton and links only files that exist", () => {
     const readme = read("README.md");
     assert.doesNotMatch(readme, /skeleton only/i);
+    assert.doesNotMatch(readme, /screens job and its character follow/i, "the status line still says UI/UX is to come");
+    assert.match(readme, /screens/i);
+    assert.equal(readme.split("\n").filter((l) => /^\| Marcel Breuer \|/.test(l)).length, 1, "the cast table keeps its one Breuer row");
+    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Josef Albers) \|/.test(l)).length, 4, "the four rows");
     assert.ok(readme.split(/\s+/).length >= 40);
     for (const [, target] of readme.matchAll(/\]\((\.\/[^)\s#]+)/g)) assert.ok(exists(target.slice(2)), `README links ${target}`);
   });
@@ -149,13 +162,17 @@ describe("registration", () => {
 const CALLS = {
   gropius: ["design", "critique"],
   bayer: ["design", "brand", "email", "critique"],
+  breuer: ["design", "screens", "critique"],
 };
 const TRIGGERS = {
   design: /no brief file exists/i,
   brand: /brief asks for an identity|no `DESIGN\.md` exists/i,
   email: /piece is an HTML email/i,
   critique: /finished piece exists that this session did not make/i,
+  screens: /task is an app or web screen/i,
 };
+// BRE2: breuer's critique trigger is a finished screen.
+const TRIGGER_OF = (name, skill) => (name === "breuer" && skill === "critique" ? /finished screen exists that this session did not make/i : TRIGGERS[skill]);
 const characters = dirs("skills/characters");
 
 describe("characters", () => {
@@ -188,7 +205,7 @@ describe("characters", () => {
       test("says in When to call that the default is not to call, and gives each tool a trigger", () => {
         const when = section(source, "When to call");
         assert.match(when, /default is not to call/i);
-        for (const skill of CALLS[name]) assert.match(when, TRIGGERS[skill], `no trigger for ${skill}`);
+        for (const skill of CALLS[name]) assert.match(when, TRIGGER_OF(name, skill), `no trigger for ${skill}`);
         for (const skill of CALLS[name]) assert.ok(new RegExp(`\`/bauhaus:${skill}\``).test(when), `${skill} is not named in When to call`);
       });
 
@@ -220,7 +237,7 @@ describe("characters", () => {
       });
 
       test("names donna and louis as roles and never calls them, and links nowhere outside its folder", () => {
-        assert.doesNotMatch(source, /`\/(?:donna|louis|breuer|screens)`|\/bauhaus:(?:breuer|screens)|\/suits:/);
+        assert.doesNotMatch(source, /`\/(?:donna|louis|breuer|screens)`|\/bauhaus:breuer|\/suits:|\/ui-ux-pro-max:/);
         assert.doesNotMatch(source, /\]\(\.\.\/\.\.\/tools\//);
       });
     });
@@ -257,6 +274,34 @@ describe("characters", () => {
       assert.doesNotMatch(source, /^\d\. The project's own checked-in rules/m);
     });
   });
+});
+
+describe("breuer (BRE1 to BRE3)", () => {
+  const source = read("skills/characters/breuer/SKILL.md");
+  const rules = section(source, "Hard rules");
+  test("the project's rules and its design gate come first, and no app code is written (BRE3)", () => {
+    assert.match(rules, /project'?s own rules and its design gate come first/i);
+    assert.match(rules, /writes no app code/i);
+  });
+  test("the precedence list is pointed at in design, not restated, and the stop-and-name rule is stated", () => {
+    assert.match(rules, /precedence list[^.]*`\/bauhaus:design`/i);
+    assert.doesNotMatch(source, /^\d\. The project's own checked-in rules/m);
+    assert.match(rules, /contradicts a project rule[^.]*stop[^.]*name the rule[^.]*file and heading[^.]*brief line[^.]*ask the owner/i);
+  });
+  test("every screen spec starts with Rules applied and ends with a hand-over of paths", () => {
+    const hand = section(source, "Hand over");
+    assert.match(hand, /first line[^.]*verdict/i);
+    assert.match(hand, /path of the screen spec/i);
+    assert.match(hand, /each PNG/);
+    assert.match(hand, /`Rules applied:`/);
+    assert.match(hand, /not checked/i);
+  });
+  test("donna, louis and the lead are roles and never calls, and bayer's work is not taken on", () => {
+    assert.match(source, /donna/i);
+    assert.match(source, /louis/i);
+    assert.doesNotMatch(source, /\]\(\.\.\//, "a link into another folder");
+  });
+  test("the sample line is about a screen", () => assert.match(samples(section(source, "Voice"))[0], /screen/i));
 });
 
 // ---- CAST1 over the real files ----
@@ -344,7 +389,7 @@ function rowProblems(cells) {
   return out;
 }
 const GOOD_ROW = ["V9", "A work", "2010", "p. 3", "Keep one rule from first to last.", "opened", "free (https://example.com/a)"];
-const REFS = { brand: "skills/tools/brand/REFERENCES.md", email: "skills/tools/email/REFERENCES.md" };
+const REFS = { brand: "skills/tools/brand/REFERENCES.md", email: "skills/tools/email/REFERENCES.md", screens: "skills/tools/screens/REFERENCES.md" };
 
 describe("REFERENCES.md rows", () => {
   test("a complete row has no problem", () => assert.deepEqual(rowProblems(GOOD_ROW), []));
@@ -420,9 +465,35 @@ describe("REFERENCES.md rows", () => {
   });
 });
 
+describe("screens/REFERENCES.md", () => {
+  const rows = referenceRows(read(REFS.screens));
+  const find = (re) => rows.filter((r) => re.test(r[1]));
+  test("WCAG 2.2 is opened and points at the criteria the skill uses", () => {
+    const r = find(/WCAG 2\.2/);
+    assert.equal(r.length, 1);
+    assert.equal(r[0][5], "opened");
+    for (const sc of ["2.5.8", "1.4.10", "1.4.3", "1.4.11"]) assert.match(r[0][3], new RegExp(sc.replace(/\./g, "\\.")));
+  });
+  test("Apple HIG, Buttons is free and opened, and gives the 44 by 44 point hit region", () => {
+    const r = find(/Apple.*Buttons/);
+    assert.equal(r.length, 1);
+    assert.equal(r[0][5], "opened");
+    assert.match(r[0][6], /^free \(https:\/\/developer\.apple\.com\//);
+    assert.match(r[0].join(" "), /44 by 44 points?/);
+  });
+  test("Material 3 is a pointer and not opened, and the lending book is not opened and lending", () => {
+    assert.equal(find(/Material 3/)[0][5], "not opened");
+    const g = find(/M\u00fcller-Brockmann/)[0];
+    assert.equal(g[5], "not opened");
+    assert.equal(g[6], "lending");
+    assert.match(g[4], /inferred from the title/i);
+  });
+  test("no Albers row, no cast name", () => assert.doesNotMatch(read(REFS.screens), /albers|Interaction of Color/i));
+});
+
 // ---- the job skills ----
 
-const JOBS = ["brand", "email", "critique"];
+const JOBS = ["brand", "email", "critique", "screens"];
 const job = (name) => read("skills/tools", name, "SKILL.md");
 const citedRows = (source) =>
   [...source.matchAll(/\brows? ((?:[A-Z]{1,2}\d+)(?:(?:,\s*|\s+and\s+)[A-Z]{1,2}\d+)*)/g)].flatMap((m) => m[1].split(/,\s*|\s+and\s+/));
@@ -617,5 +688,93 @@ describe("critique (C1 to C9)", () => {
   test("a trend is named as a reason only if it is in TRENDS.md, and an applied trend missing from section 8 is reported", () => {
     has(/TRENDS\.md/);
     has(/section 8/);
+  });
+});
+
+describe("screens (S1 to S7)", () => {
+  const source = job("screens");
+  const has = (re, why) => assert.match(source, re, why);
+  test("the first step finds and reads the project's own rules, and the output starts with Rules applied (S1)", () => {
+    has(/first step[^.]*project'?s own rules/i);
+    for (const re of [/`CLAUDE\.md`/, /`AGENTS\.md`/, /UI idioms or themes/i, /design gate/i, /`DESIGN\.md`/]) has(re);
+    has(/starts with `Rules applied:`/);
+    has(/`file:heading`|as `file:heading`/);
+    has(/`No project rules found`/);
+    has(/check each heading in the file before it is listed/i);
+    has(/never a bare file name or a line number/i);
+  });
+  test("the precedence list is pointed at in design, not restated, and the project's rules win over the brief (S2)", () => {
+    has(/precedence list[^.]*`\/bauhaus:design`/i);
+    assert.doesNotMatch(source, /^\d\. The project's own checked-in rules/m);
+    has(/project'?s own rules[^.]*(?:win|come first)/i);
+    has(/named[^.]*owner|name[^.]*ask the owner/i);
+  });
+  test("the deliverable is a spec with its seven parts and one PNG per state, and writes no app code (S3)", () => {
+    for (const re of [/purpose/i, /entry and exit/i, /empty, loading, loaded and error/i, /components/i, /every string on screen/i, /accessibility notes/i, /rules applied/i]) has(re);
+    has(/one PNG per state/i);
+    has(/writes no app code/i);
+    assert.doesNotMatch(source, /^```(?:dart|swift|kotlin|tsx|xml)\b/m, "an app code block");
+  });
+  test("the target size comes from the project's rules or the owner, with presets spelled as figcraft-cli lists them (S3)", () => {
+    has(/target size[^.]*project'?s (?:own )?rules|project'?s (?:own )?rules[^.]*target size/i);
+    has(/ask the owner[^.]*never guess|never guess/i);
+    for (const preset of ["`iPhone 16` 393 by 852", "`iPhone SE` 320 by 568", "`Android Compact` 412 by 917"]) assert.ok(source.includes(preset), preset);
+    has(/frame\.presets/);
+    has(/export[^.\n]*--node/);
+  });
+  test("the checklist carries the WCAG 2.2 numbers as they stand (S4)", () => {
+    has(/24 by 24 CSS pixels/);
+    has(/SC 2\.5\.8[^.\n]*Level AA/);
+    for (const re of [/spacing/i, /equivalent/i, /inline/i, /set by the browser or platform/i, /essential/i]) has(re);
+    has(/SC 1\.4\.10/);
+    has(/320 CSS pixels/);
+    has(/project rule is stricter[^.]*project rule wins/i);
+    has(/44 by 44 points/);
+    has(/check\.mjs contrast/);
+    has(/4\.4999/);
+    has(/SC 2\.4\.11[^.\n]*Level AA/);
+    has(/SC 2\.5\.7[^.\n]*Level AA/);
+    has(/SC 3\.3\.8[^.\n]*Level AA/);
+    assert.doesNotMatch(source, /SC 2\.4\.1[23]|SC 2\.5\.5|SC 3\.3\.9/, "an enhanced (AAA) criterion named as part of the floor");
+  });
+  test("states that keep the same dimensions name the reserved dimension once, and every state uses it (S5)", () => {
+    has(/same dimensions/i);
+    has(/names? the reserved dimension once/i);
+    has(/value and unit/i);
+    has(/measured/i);
+    has(/same dimensions[^.]*PNG|PNG[^.]*same dimensions/i);
+  });
+  test("the one optional lookup is named once, never required and never above the project's rules (S6)", () => {
+    assert.equal(source.split("/ui-ux-pro-max:ui-ux-pro-max").length - 1, 1);
+    has(/if the `ui-ux-pro-max` package is installed/i);
+    has(/never required/i);
+    has(/suggestion on style, palette or type/i);
+    assert.doesNotMatch(source, /layout or component choice/i, "the lookup is for style, palette or type ideas only");
+    has(/copy none of (?:its|that package'?s) data/i);
+  });
+  test("the lookup call is in this file only, in no docs page, no README and not in the plugin", () => {
+    const hits = [];
+    const scan = (file) => read(file).includes("/ui-ux-pro-max:") && hits.push(file);
+    for (const dir of registered) scan(`${dir}/SKILL.md`);
+    for (const f of [...files("docs/characters"), ...files("docs/tools"), ...files("skills/tools"), ...files("skills/characters"), "README.md"]) scan(f);
+    for (const d of registered) for (const f of readdirSync(join(root, d)).filter((x) => x.endsWith(".md"))) scan(`${d}/${f}`);
+    assert.deepEqual([...new Set(hits)], ["skills/tools/screens/SKILL.md"]);
+    assert.match(read("docs/tools/screens.md"), /ui-ux-pro-max/, "the docs page names the package, without the call");
+    assert.ok(!readFileSync(join(root, ".claude-plugin/plugin.json"), "utf8").includes("ui-ux-pro-max"));
+    for (const file of registered.flatMap((d) => readdirSync(join(root, d)).map((f) => `${d}/${f}`))) assert.doesNotMatch(file, /\.(csv|py)$/);
+  });
+  test("strings are specified in the project's own shape: key with English text when keys are used, plain text and a line otherwise (S7)", () => {
+    has(/l10n rules first/i);
+    has(/key[^.]*English text/i);
+    has(/`No l10n rule found`/);
+    has(/donna/i);
+    has(/long-form/i);
+  });
+  test("a deliverable cites three rows, or states a lower minimum with a reason and a floor of one; not opened rows are never counted", () => {
+    has(/at least three rows/i);
+    has(/lower minimum with a reason/i);
+    has(/floor (?:is|of) one/i);
+    has(/never counted/i);
+    assert.doesNotMatch(source, /vectorcraft-cli/, "the screens job makes no vector file");
   });
 });
