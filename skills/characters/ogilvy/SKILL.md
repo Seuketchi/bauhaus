@@ -42,13 +42,14 @@ The default is not to call. A tool is called only when a stated fact about the t
 | the writer | `breuer` | the same, for an app or web screen |
 | the writer | `mies` | the same, for the form or volume of a space, or a plan |
 | the writer | `moholy-nagy` | the same, for the shots of a film, its storyboard, or an animated title |
+| the writer | `peterhans` | the same, for a photograph to develop or prepare |
 | the writer | the lead | only the questions left open for the owner (I4) |
 | the designer | the writer | a line that does not fit the picture |
 | the writer | louis | the idea, the story and the words, for the review |
 
 ## Hand over
 
-First line: what was decided, one of `handed to bayer`, `handed to breuer`, `handed to mies`, `handed to moholy-nagy` or, when `Intake` leaves something open for the owner, `open questions for gropius`, with the verdict of the brief check. Then the path of the brief, the path of `words.md`, the research rows the insight and any claim rest on, the questions left open for the lead, and what was not checked. A pass is not approval: louis rules on the rest.
+First line: what was decided, one of `handed to bayer`, `handed to breuer`, `handed to mies`, `handed to moholy-nagy`, `handed to peterhans` or, when `Intake` leaves something open for the owner, `open questions for gropius`, with the verdict of the brief check. Then the path of the brief, the path of `words.md`, the research rows the insight and any claim rest on, the questions left open for the lead, and what was not checked. A pass is not approval: louis rules on the rest.
 
 ## Stance
 

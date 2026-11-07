@@ -48,7 +48,7 @@ const TOPICS = {
   "a death date": /\bdied\b|\bdeath\b|\bdead\b|\bpassed away\b/i,
 };
 const topicHits = (text) => Object.entries(TOPICS).filter(([, re]) => re.test(text)).map(([name]) => name);
-const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+|ludwig\s+|david\s+|laszlo\s+)?(?:gropius|bayer|breuer|mies|ogilvy|moholy-nagy)\b/i;
+const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+|ludwig\s+|david\s+|laszlo\s+)?(?:gropius|bayer|breuer|mies|ogilvy|moholy-nagy|peterhans)\b/i;
 // Breuer is cast by analogy only: no furniture, workshop, steel or "for the body" in any file.
 const BIOGRAPHY = /\b(?:Weimar|Dessau|ARCO|founded|was born|born in|studied|apprentic\w+|furniture|carpentry|workshop|tubular|steel)\b|for the body/i;
 
@@ -122,7 +122,7 @@ describe("registration", () => {
   test("plugin.json lists the characters and the tools, and has no version", () => {
     const wanted = ["skills/characters/bayer", "skills/characters/gropius", "skills/tools/design", "skills/tools/brand", "skills/tools/email", "skills/tools/critique"];
     assert.deepEqual(registered.slice(0, wanted.length), wanted);
-    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans", "skills/characters/ogilvy", "skills/tools/concept", "skills/characters/moholy-nagy", "skills/tools/shots", "skills/tools/storyboard", "skills/tools/motion"]);
+    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans", "skills/characters/ogilvy", "skills/tools/concept", "skills/characters/moholy-nagy", "skills/tools/shots", "skills/tools/storyboard", "skills/tools/motion", "skills/characters/peterhans", "skills/tools/develop"]);
     assert.ok(!registered.some((d) => /ui-ux-pro-max/.test(d)), "the optional lookup is not a skill of this package");
     assert.equal("version" in plugin, false);
     for (const dir of registered) assert.ok(exists(dir, "SKILL.md"), `${dir} has no SKILL.md`);
@@ -134,9 +134,9 @@ describe("registration", () => {
       const model = readme.split(/^## /m).find((s) => s.startsWith("Model-invoked")) ?? "";
       for (const name of names) assert.match(model, new RegExp(`\\]\\(\\./${name}/SKILL\\.md\\)`), `${name} is not under Model-invoked in skills/${bucket}/README.md`);
     };
-    listed("characters", ["bayer", "breuer", "gropius", "mies", "moholy-nagy", "ogilvy"]);
-    listed("tools", ["brand", "concept", "critique", "design", "email", "massing", "motion", "plans", "screens", "shots", "storyboard"]);
-    const BUCKET_OF = { breuer: "characters", mies: "characters", ogilvy: "characters", "moholy-nagy": "characters", screens: "tools", massing: "tools", plans: "tools", concept: "tools", shots: "tools", storyboard: "tools", motion: "tools" };
+    listed("characters", ["bayer", "breuer", "gropius", "mies", "moholy-nagy", "ogilvy", "peterhans"]);
+    listed("tools", ["brand", "concept", "critique", "design", "develop", "email", "massing", "motion", "plans", "screens", "shots", "storyboard"]);
+    const BUCKET_OF = { breuer: "characters", mies: "characters", ogilvy: "characters", "moholy-nagy": "characters", peterhans: "characters", develop: "tools", screens: "tools", massing: "tools", plans: "tools", concept: "tools", shots: "tools", storyboard: "tools", motion: "tools" };
     for (const [name, bucket] of Object.entries(BUCKET_OF)) {
       assert.doesNotMatch(read("skills", bucket, name, "SKILL.md"), /^disable-model-invocation:/m);
       const line = read("skills", bucket, "README.md").split("\n").find((l) => l.includes(`./${name}/SKILL.md`));
@@ -150,7 +150,7 @@ describe("registration", () => {
     assert.doesNotMatch(readme, /screens job and its character follow/i, "the status line still says UI/UX is to come");
     assert.match(readme, /screens/i);
     assert.equal(readme.split("\n").filter((l) => /^\| Marcel Breuer \|/.test(l)).length, 1, "the cast table keeps its one Breuer row");
-    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Ludwig Mies van der Rohe|László Moholy-Nagy|Josef Albers|David Ogilvy) \|/.test(l)).length, 7, "one row for each person");
+    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Ludwig Mies van der Rohe|László Moholy-Nagy|Walter Peterhans|Josef Albers|David Ogilvy) \|/.test(l)).length, 8, "one row for each person");
     assert.match(readme, /^\| David Ogilvy \| Writer\. The idea, the story and the words\. \|$/m, "the Ogilvy row names the role by craft");
     assert.match(readme, /not only people of the school|a writer from outside the school/i, "the README says the cast is no longer only the school's");
     assert.doesNotMatch(readme, /The cast are historical designers/, "the cast line no longer says designers only");
@@ -176,6 +176,7 @@ const CALLS = {
   breuer: ["design", "screens", "critique"],
   mies: ["design", "massing", "plans", "critique"],
   "moholy-nagy": ["design", "shots", "storyboard", "motion", "critique"],
+  peterhans: ["design", "develop", "critique"],
 };
 const TRIGGERS = {
   design: /no brief file exists/i,
@@ -188,10 +189,11 @@ const TRIGGERS = {
   shots: /task is the shots of a film or a sequence/i,
   storyboard: /task is the frames of a film in order, or an animatic/i,
   motion: /task is an animated title, graphic or effect/i,
+  develop: /task is a photograph to develop or prepare/i,
   concept: /brief has an `Intake` and no `Idea` yet|piece needs words that no `words\.md` holds/i,
 };
 // BRE2: breuer's critique trigger is a finished screen.
-const TRIGGER_OF = (name, skill) => (name === "breuer" && skill === "critique" ? /finished screen exists that this session did not make/i : name === "moholy-nagy" && skill === "critique" ? /finished frame exists that this session did not make/i : TRIGGERS[skill]);
+const TRIGGER_OF = (name, skill) => (name === "breuer" && skill === "critique" ? /finished screen exists that this session did not make/i : name === "moholy-nagy" && skill === "critique" ? /finished frame exists that this session did not make/i : name === "peterhans" && skill === "critique" ? /finished image exists that this session did not make/i : TRIGGERS[skill]);
 const characters = dirs("skills/characters");
 
 describe("characters", () => {
@@ -256,7 +258,7 @@ describe("characters", () => {
       });
 
       test("names donna and louis as roles and never calls them, and links nowhere outside its folder", () => {
-        assert.doesNotMatch(source, /`\/(?:donna|louis|breuer|screens|mies)`|\/bauhaus:breuer|\/bauhaus:mies|\/bauhaus:moholy-nagy|\/suits:|\/ui-ux-pro-max:/);
+        assert.doesNotMatch(source, /`\/(?:donna|louis|breuer|screens|mies)`|\/bauhaus:breuer|\/bauhaus:mies|\/bauhaus:moholy-nagy|\/bauhaus:peterhans|\/suits:|\/ui-ux-pro-max:/);
         assert.doesNotMatch(source, /\]\(\.\.\/\.\.\/tools\//);
       });
     });
@@ -480,10 +482,11 @@ const REFS = {
   shots: "skills/tools/shots/REFERENCES.md",
   storyboard: "skills/tools/storyboard/REFERENCES.md",
   motion: "skills/tools/motion/REFERENCES.md",
+  develop: "skills/tools/develop/REFERENCES.md",
   concept: "skills/tools/concept/REFERENCES.md",
 };
 // The least number of rows each file holds.
-const ROW_FLOOR = { brand: 4, email: 4, screens: 4, massing: 4, plans: 4, concept: 5, shots: 5, storyboard: 4, motion: 3 };
+const ROW_FLOOR = { brand: 4, email: 4, screens: 4, massing: 4, plans: 4, concept: 5, shots: 5, storyboard: 4, motion: 3, develop: 9 };
 
 describe("REFERENCES.md rows", () => {
   test("a complete row has no problem", () => assert.deepEqual(rowProblems(GOOD_ROW), []));
@@ -587,7 +590,7 @@ describe("screens/REFERENCES.md", () => {
 
 // ---- the job skills ----
 
-const JOBS = ["brand", "email", "critique", "screens", "massing", "plans", "shots", "storyboard", "motion"];
+const JOBS = ["brand", "email", "critique", "screens", "massing", "plans", "shots", "storyboard", "motion", "develop"];
 const job = (name) => read("skills/tools", name, "SKILL.md");
 const citedRows = (source) =>
   [...source.matchAll(/\brows? ((?:[A-Z]{1,2}\d+)(?:(?:,\s*|\s+and\s+)[A-Z]{1,2}\d+)*)/g)].flatMap((m) => m[1].split(/,\s*|\s+and\s+/));
@@ -1170,6 +1173,25 @@ describe("film and motion work goes from the writer to moholy-nagy, and the lead
   });
 });
 
+describe("a photograph goes from the writer to peterhans, and the lead has no route back", () => {
+  const gropius = read("skills/characters/gropius/SKILL.md");
+  const ogilvy = read("skills/characters/ogilvy/SKILL.md");
+  test("gropius names peterhans in the rule, the working table and the hand-over options, and still calls only design and critique", () => {
+    assert.match(section(gropius, "Hard rules"), /`peterhans`[^.\n]*photograph/i);
+    assert.match(gropius, /\| the lead \| `peterhans` \|/);
+    assert.match(section(gropius, "Hand over"), /`handed to peterhans`/);
+    assert.match(read("docs/characters/gropius.md"), /`peterhans`/);
+    assert.deepEqual([...new Set(named(gropius))].sort(), ["critique", "design"]);
+  });
+  test("the writer hands the brief and words.md to peterhans, and the photographer is named, never called", () => {
+    assert.match(ogilvy, /\| the writer \| `peterhans` \|[^\n]*photograph/);
+    assert.match(section(ogilvy, "Hand over"), /`handed to peterhans`/);
+    assert.match(read("docs/characters/ogilvy.md"), /`peterhans` for a photograph/);
+    assert.doesNotMatch(gropius, /\/bauhaus:peterhans/);
+    assert.doesNotMatch(ogilvy, /\/bauhaus:peterhans/);
+  });
+});
+
 describe("gropius routes space work to mies (MIE5)", () => {
   const source = read("skills/characters/gropius/SKILL.md");
   const page = read("docs/characters/gropius.md");
@@ -1342,6 +1364,365 @@ describe("reference row ids across files", () => {
   });
 });
 
+// ---- peterhans and develop (PH1, DEV1 to DEV9, STN1 to STN4 for this character) ----
+//
+// This block reads its own files, so it holds whether or not the shared tables above list them yet.
+
+const PHOTO_CHARACTER = "skills/characters/peterhans/SKILL.md";
+const PHOTO_TOOL = "skills/tools/develop/SKILL.md";
+const PHOTO_REFS = "skills/tools/develop/REFERENCES.md";
+const PHOTO_PAGES = ["docs/characters/peterhans.md", "docs/tools/develop.md"];
+const headings = (source) => [...source.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+// The lines of a section that carry text: a Stance is counted in these.
+const textLines = (body) => body.split("\n").map((l) => l.trim()).filter(Boolean);
+
+describe("peterhans: the character file (PH1)", () => {
+  const source = read(PHOTO_CHARACTER);
+
+  test("the name is its folder, the description says what it does and names no count", () => {
+    assert.match(frontmatter(source), /^name: peterhans$/m);
+    const description = frontmatter(source).match(/^description: (.+)$/m)?.[1] ?? "";
+    assert.ok(description.split(/\s+/).length >= 12, "a description that says when to use it");
+    assert.doesNotMatch(description, NUMBER_OF);
+  });
+
+  test("has When to call, Hard rules, Hand over, Stance and Voice, in that order", () => {
+    const order = ["When to call", "Hard rules", "Hand over", "Stance", "Voice"].map((t) => headings(source).indexOf(t));
+    assert.ok(order.every((i) => i >= 0), `a section is missing: ${order}`);
+    assert.deepEqual([...order].sort((a, b) => a - b), order, "Stance sits after Hard rules and Hand over and before Voice");
+  });
+
+  test("calls design, develop and critique, each as a /bauhaus: call, and nothing else", () => {
+    assert.deepEqual([...new Set(named(source))].sort(), ["critique", "design", "develop"]);
+    assert.deepEqual(unnamespaced(source), []);
+    for (const skill of ["design", "develop", "critique"]) assert.ok(toolDir(skill), `${skill} does not exist`);
+  });
+
+  test("When to call: the default is not to call, and each tool has one trigger stated as a fact", () => {
+    const when = section(source, "When to call");
+    assert.match(when, /default is not to call/i);
+    assert.match(when, /one line[^.]*which tool[^.]*why/i);
+    assert.match(when, /skipped without comment/i);
+    const row = (skill) => when.split("\n").find((l) => l.includes(`\`/bauhaus:${skill}\``)) ?? "";
+    assert.match(row("design"), /no brief file exists/i);
+    assert.match(row("develop"), /task is a photograph to develop or prepare/i);
+    assert.match(row("critique"), /finished image exists that this session did not make/i);
+  });
+
+  test("Hard rules: the project's rules first, the source file untouched, the catalogue, the app's figures, the saved command", () => {
+    const rules = section(source, "Hard rules");
+    assert.match(rules, /precedence list[^.]*`\/bauhaus:design`/i);
+    assert.doesNotMatch(source, /^\d\. The project's own checked-in rules/m, "a paraphrase of the list; point at design");
+    assert.match(rules, /source (?:photograph|file)[^.\n]*never (?:changed|written)/i);
+    assert.match(rules, /`develop\.controls`/);
+    assert.match(rules, /(?:min|range)[^.\n]*(?:max|clamp)/i);
+    assert.match(rules, /every figure is the app'?s/i);
+    assert.match(rules, /command that made it/i);
+    assert.match(rules, /contradicts a project rule[^.]*stop[^.]*name the rule[^.]*file and heading[^.]*brief line[^.]*ask the owner/i);
+    assert.match(rules, /never mark(?:s)? own work|never marks? (?:its|their) own work/i);
+  });
+
+  test("Hard rules: the job is the still image after capture, so capture advice is a note and not an action", () => {
+    const rules = section(source, "Hard rules");
+    assert.match(rules, /after capture/i);
+    assert.match(rules, /aperture, shutter(?: speed)? and ISO are not controls/i);
+    assert.match(rules, /capture advice is a note/i);
+  });
+
+  test("the brief's Story beats are the input, and the character invents no story", () => {
+    assert.match(source, /`Story` beats?/);
+    assert.match(source, /invents? no story|does not invent the story/i);
+  });
+
+  test("Hand over: the verdict with its command, the files by path, the figures as the app printed them, what was not checked", () => {
+    const hand = section(source, "Hand over");
+    assert.match(hand, /first line[^.]*verdict/i);
+    assert.match(hand, /developed/i);
+    assert.match(hand, /preview/i);
+    assert.match(hand, /command/i);
+    assert.match(hand, /as the app printed/i);
+    assert.match(hand, /not checked/i);
+    assert.match(hand, /not approval|not a sign-off/i);
+  });
+
+  test("Stance: three to six lines, each plain and third-person, with no quote, no first person and no speech verb (STN1, STN2, STN4)", () => {
+    const lines = textLines(section(source, "Stance"));
+    assert.ok(lines.length >= 3 && lines.length <= 6, `${lines.length} lines`);
+    for (const line of lines) {
+      assert.match(line, /^- /, `a stance line is a list item: ${line}`);
+      assert.doesNotMatch(line, /["“”]/, `a quotation mark: ${line}`);
+      assert.doesNotMatch(line, /\b(?:I|me|my|we|our|us)\b/, `first person: ${line}`);
+      assert.doesNotMatch(line, new RegExp(`\\b(?:${VERBS})\\b`, "i"), `a verb that attributes: ${line}`);
+      assert.doesNotMatch(line, /\bPeterhans\b/, `the name has no place in a stance line: ${line}`);
+      assert.doesNotMatch(line, /\b(?:Chicago|Illinois|Institute|Ulm|Berlin|Leipzig|Folkwang)\b/, `a place: ${line}`);
+      assert.doesNotMatch(line, /\b(?:18|19|20)\d{2}\b/, `a date: ${line}`);
+      assert.ok(!tooLong(line) || line.split(/\s+/).length <= 45, `a stance line is one plain statement: ${line}`);
+    }
+  });
+
+  test("Stance is a method sheet: it holds the variables still, compares side by side and judges against a range, and refuses a verdict that stops at liking", () => {
+    const stance = section(source, "Stance");
+    assert.match(stance, /variables? still|same (?:size|finish|way up|orientation)/i);
+    assert.match(stance, /side by side/i);
+    assert.match(stance, /range/i);
+    assert.match(stance, /refuses?[^.\n]*(?:like|liking)/i);
+  });
+
+  test("Voice: plain, professional, no real person's voice, no attributed words, one sample line of 30 words or fewer about the work (DEV9)", () => {
+    const voice = section(source, "Voice");
+    assert.match(voice, /plain/i);
+    assert.match(voice, /professional/i);
+    assert.match(voice, /no real person'?s voice is imitated/i);
+    assert.match(voice, /no words are attributed to anyone/i);
+    const lines = samples(voice);
+    assert.equal(lines.length, 1);
+    assert.ok(!tooLong(lines[0]), lines[0]);
+    assert.match(lines[0], /exposure|temperature|developed/i);
+    assert.doesNotMatch(lines[0], /\b(?:18|19|20)\d{2}\b/);
+  });
+
+  test("the name only: no biography word, no year, no persona, no build word, no team size, no link into another folder", () => {
+    for (const re of [BIOGRAPHY, /\b(?:18|19)\d{2}\b/, NUMBER_OF, /Lucia/]) assert.doesNotMatch(source, re);
+    assert.doesNotMatch(source, /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+)?peterhans\b/i);
+    assert.doesNotMatch(bareWords(source), BUILD_WORDS);
+    assert.doesNotMatch(source, /\/suits:|\/ui-ux-pro-max:|\]\(\.\.\//);
+    assert.deepEqual(topicHits(source), []);
+    assert.doesNotMatch(source, /\bPeterhans\b[^.!?\n]{0,80}?\b(?:said|says|wrote|writes|believed|believes|argued|argues|taught that|teaches that|insisted|claimed|declared)\b/i);
+  });
+
+  test("the character file shows no image", () => assert.doesNotMatch(source, /!\[[^\]]*\]\([^)]*\)/));
+});
+
+describe("develop: the tool file (DEV1 to DEV9)", () => {
+  const source = read(PHOTO_TOOL);
+  const hand = section(source, "Hand over");
+  const rows = referenceRows(read(PHOTO_REFS));
+  const own = new Map(rows.map((r) => [r[0], r]));
+
+  test("the name is its folder, and it names its references and the ArtCraft rules", () => {
+    assert.match(frontmatter(source), /^name: develop$/m);
+    assert.match(frontmatter(source), /^description: .{40,}$/m);
+    assert.doesNotMatch(frontmatter(source), NUMBER_OF);
+    assert.match(source, /REFERENCES\.md/);
+    assert.match(source, /ARTCRAFT\.md/);
+    assert.doesNotMatch(source, /\]\(\.\.\/design\//, "a link into another skill folder");
+  });
+
+  test("every row it cites exists in its own references and was opened (DEV8)", () => {
+    const cited = citedRows(source);
+    assert.ok(cited.length >= 6, `${cited.length} rows cited`);
+    for (const id of cited) {
+      assert.ok(own.has(id), `${id} is not a row of develop/REFERENCES.md`);
+      assert.equal(own.get(id)[5], "opened", `${id} is not opened`);
+    }
+  });
+
+  test("the craft rules are limited to the six DEV8 names, each citing a row", () => {
+    for (const re of [/exposure[^.\n]*stops?/i, /direction[^.\n]*hardness|hardness[^.\n]*direction/i, /kelvin/i, /thirds/i, /tone curve/i, /crop and straighten|straighten/i]) {
+      assert.match(source, re, String(re));
+    }
+  });
+
+  test("it says plainly that it has no rule on product or tabletop lighting setups and none on non-destructive editing as a concept", () => {
+    assert.match(source, /no rule on (?:product|tabletop)[^.\n]*(?:setups?|lighting)/i);
+    assert.match(source, /no source[^.\n]*opened/i);
+    assert.doesNotMatch(source, /\bsoftbox|\bflags?\b[^.\n]*reflection|\bbeauty dish/i, "no lighting-setup rule");
+    assert.doesNotMatch(source, /non-destructive/i, "no source for it as a concept was opened: the source file is never changed, which is a rule of this job");
+  });
+
+  test("a rule that rests only on a partly fitting row says the row is short or thin", () => {
+    const thin = [...own.keys()].filter((id) => /short|thin/i.test(own.get(id)[4]));
+    assert.ok(thin.length >= 4, `${thin.length} short or thin rows`);
+    const lines = source.split("\n").filter((l) => thin.some((id) => new RegExp(`\\b${id}\\b`).test(l)));
+    assert.ok(lines.length > 0, "a thin row is cited");
+    for (const line of lines) assert.match(line, /short|thin/i, line);
+  });
+
+  test("the brief minimum: three by default, two for an editing brief and two for a still-life or tabletop brief, each with its reason", () => {
+    assert.match(source, /Minimum: 2\. Reason: editing sources are thin: two secondary rows and the vendor README as a tool row/);
+    assert.match(source, /Minimum: 2\. Reason: no product-lighting source opened: the still-life and light-tent pages are short/);
+    assert.match(source, /three(?: opened)? rows|at least three/i);
+  });
+
+  test("the control flow: the catalogue first, develop.auto before manual sets, a value checked against min and max, and the app clamps without an error (DEV3)", () => {
+    assert.match(source, /develop\.controls/);
+    assert.match(source, /develop\.auto/);
+    assert.match(source, /develop\.auto[^.\n]*(?:first|before)[^.\n]*(?:manual|develop\.set)|(?:manual|develop\.set)[^.\n]*after[^.\n]*develop\.auto/i);
+    assert.match(source, /develop\.auto[^.\n]*replaces[^.\n]*develop\.set|replaces[^.\n]*earlier[^.\n]*develop\.set/i);
+    assert.match(source, /`min` and `max`/);
+    assert.match(source, /clamps?[^.\n]*(?:without|no)[^.\n]*error/i);
+    assert.match(source, /refused before the run|before the run/i);
+  });
+
+  test("the controls: exposure in stops against light.exposure, temperature in kelvin against wb.temp, and which way wb.temp moves the picture", () => {
+    assert.match(source, /`light\.exposure`/);
+    assert.match(source, /`wb\.temp`/);
+    assert.match(source, /higher value[^.\n]*warm/i);
+    assert.match(source, /lower value[^.\n]*cool/i);
+    assert.match(source, /light'?s own[^.\n]*not an error|warm cast[^.\n]*not an error/i);
+  });
+
+  test("the source photograph is never changed: its hash is taken before and after, the output differs from the input, and format=original is never used (DEV4)", () => {
+    assert.match(source, /hash[^.\n]*before and after/i);
+    assert.match(source, /output path differs from the input|never the input/i);
+    assert.match(source, /never[^.\n]*`format=original`|`format=original`[^.\n]*never/i);
+    assert.match(source, /sidecar/i);
+  });
+
+  test("it writes a PNG preview of at most 2000 pixels, because critique takes PNG and not JPG (DEV6)", () => {
+    assert.match(source, /2000 pixels|2000 px/i);
+    assert.match(source, /`\/bauhaus:critique` takes (?:the )?PNG/);
+    assert.match(source, /not (?:a )?(?:JPG|JPEG)|not the JPG|and not (?:the )?JPG/i);
+  });
+
+  test("the command is saved beside every output so the develop can be redone (DEV5)", () => {
+    assert.match(source, /develop\.sh/);
+    assert.match(source, /so the develop can be (?:done|made|redone) again|so the develop can be redone/i);
+  });
+
+  test("never merge, denoise-serve, snapshot, mcp, --connect or --bridge, and the side files are listed (DEV7)", () => {
+    for (const word of ["merge", "denoise-serve", "snapshot", "mcp", "--connect"]) assert.match(source, new RegExp(`never[^\\n]*${word}|${word}[^\\n]*never`, "i"), word);
+    assert.match(source, /catalog\.\*/);
+    assert.match(source, /view\.json/);
+    assert.match(source, /XDG_CACHE_HOME/);
+  });
+
+  test("it takes the brief's Story beats and writes no words", () => {
+    assert.match(source, /`Story` beats?/);
+    assert.match(source, /invents? no story|does not invent the story/i);
+  });
+
+  test("Hand over: the files by name, the figures as the app printed them, the side files, and what was not checked", () => {
+    for (const f of ["develop.sh", "developed", "preview"]) assert.match(hand, new RegExp(f, "i"), f);
+    assert.match(hand, /as the app printed/i);
+    assert.match(hand, /hash/i);
+    assert.match(hand, /not checked/i);
+  });
+
+  test("no biography, year, cast name, Lucia or build word, and nothing that claims more than was run", () => {
+    assert.doesNotMatch(source, BIOGRAPHY);
+    assert.doesNotMatch(source, /\b(?:18|19)\d{2}\b/);
+    assert.doesNotMatch(source, /Lucia|Peterhans/);
+    assert.doesNotMatch(bareWords(source), BUILD_WORDS);
+    assert.doesNotMatch(source, NUMBER_OF);
+    assert.doesNotMatch(source, /\/suits:/);
+  });
+});
+
+describe("develop/REFERENCES.md (spec section 5)", () => {
+  const text = read(PHOTO_REFS);
+  const rows = referenceRows(text);
+  const byWork = (re) => rows.filter((r) => re.test(`${r[1]} ${r[3]}`));
+  const otherIds = Object.entries(REFS).filter(([craft]) => craft !== "develop").flatMap(([, f]) => referenceRows(read(f)).map((r) => r[0]));
+
+  test("every row is complete and valid, ids are unique, and none repeats an id of another file", () => {
+    assert.ok(rows.length >= 15, `${rows.length} rows`);
+    for (const cells of rows) assert.deepEqual(rowProblems(cells), [], cells[0]);
+    assert.equal(new Set(rows.map((r) => r[0])).size, rows.length);
+    assert.deepEqual(rows.map((r) => r[0]).filter((id) => otherIds.includes(id)), []);
+  });
+
+  test("every row is opened, and there are no lending rows and no pointer rows (no primary craft book was found)", () => {
+    for (const r of rows) {
+      assert.equal(r[5], "opened", r[0]);
+      assert.match(r[6], /^free \(https:\/\/\S+\)$/, r[0]);
+    }
+  });
+
+  test("a Wikibooks or Wikipedia row says secondary in its Edition, and its Pointer names a revision date and a part of the page", () => {
+    const wiki = rows.filter((r) => /Wikibooks|Wikipedia/.test(r[1]));
+    assert.ok(wiki.length >= 14, `${wiki.length} wiki rows`);
+    for (const r of wiki) {
+      assert.match(r[2], /secondary/, r[0]);
+      assert.match(r[3], /revision \d{4}-\d{2}-\d{2}/, `${r[0]}: the pointer has no revision date`);
+      assert.match(r[3], /section|opening|lead|whole page/i, `${r[0]}: the pointer says no part of the page`);
+    }
+  });
+
+  test("the works of spec section 5 are all there", () => {
+    for (const re of [
+      /Exposure controls/, /Exposure \(photography\)/, /Modern Photography, Composition/, /Modern Photography, Light/, /Rule of thirds/,
+      /Photographic lighting/, /Golden hour/, /Color temperature/, /Color balance/, /Still life photography/, /Light tent/, /Curve \(tonality\)/,
+      /Modern Photography, Editing/, /Digital processing/,
+    ]) assert.ok(byWork(re).length >= 1, String(re));
+  });
+
+  test("the partly fitting rows say short or thin in their rule", () => {
+    for (const re of [/Still life photography/, /Light tent/, /Curve \(tonality\)/, /Modern Photography, Editing/, /Digital processing/]) {
+      const [row] = byWork(re);
+      assert.match(row[4], /short|thin/i, row[0]);
+    }
+  });
+
+  test("the LightCraft README is a tool row: mechanics only, opened, free, never a craft rule", () => {
+    const [tool] = byWork(/LightCraft/);
+    assert.ok(tool, "no LightCraft row");
+    assert.match(tool[4], /^Tool row, for mechanics only:/);
+    assert.match(tool[6], /^free \(https:\/\/github\.com\/storytold\/lightcraft\)$/);
+    assert.ok(!citedRows(read(PHOTO_TOOL)).some((id) => id === tool[0] && /craft rule/i.test(read(PHOTO_TOOL).split("\n").find((l) => l.includes(id)) ?? "")), "the tool row is cited for a craft rule");
+  });
+
+  test("no cast name, no Lucia, and the introduction says what a lending book is and that none is here", () => {
+    assert.doesNotMatch(text, new RegExp(`\\b(?:${CAST}|Peterhans|Lucia)\\b`, "i"));
+    assert.match(text, /no primary craft book/i);
+  });
+});
+
+describe("the photograph's pages (docs/characters/peterhans.md, docs/tools/develop.md)", () => {
+  for (const file of PHOTO_PAGES) {
+    const page = read(file);
+    describe(file, () => {
+      test("has the four standard sections, in order", () => {
+        assert.deepEqual(headings(page).slice(0, 4).length, 4);
+        assert.deepEqual(headings(page).filter((h) => ["What it does", "When to reach for it", "Common questions", "It's working if"].includes(h)), ["What it does", "When to reach for it", "Common questions", "It's working if"]);
+        assert.ok(section(page, "It's working if").trim().length > 0);
+      });
+      test("no year, persona, biography, avoided topic, build word, number of jobs or markup", () => {
+        assert.doesNotMatch(page, /\b(?:18|19)\d{2}\b/);
+        assert.doesNotMatch(page, BIOGRAPHY);
+        assert.doesNotMatch(page, /Lucia/);
+        assert.doesNotMatch(bareWords(page), BUILD_WORDS);
+        assert.doesNotMatch(page, NUMBER_OF);
+        assert.deepEqual([speechHits(page), quoteHits(page), topicHits(page)], [[], [], []]);
+        assert.doesNotMatch(page, /!\[[^\]]*\]\(/);
+        assert.doesNotMatch(prose(page), /<(?:div|span|style|table)\b|style=|\S · \S|^[A-Z][A-Z0-9 ]{9,}$/m);
+      });
+      test("calls only bauhaus skills", () => {
+        assert.deepEqual(unnamespaced(page), []);
+        assert.doesNotMatch(page, /\/suits:/);
+      });
+    });
+  }
+  test("the character page says it is the name only and the photograph is the owner's, and the tool page says the source is never changed", () => {
+    assert.match(read(PHOTO_PAGES[0]), /`develop`/);
+    assert.match(read(PHOTO_PAGES[0]), /stance/i);
+    assert.match(read(PHOTO_PAGES[1]), /never changed|never written/i);
+    assert.match(read(PHOTO_PAGES[1]), /`develop\.controls`/);
+  });
+});
+
+describe("the package ships no image of anyone's work and never names Lucia", () => {
+  const walk = (dir) =>
+    readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? (e.name === "node_modules" || e.name.startsWith(".") ? [] : walk(`${dir}/${e.name}`)) : [`${dir}/${e.name}`],
+    );
+  const tree = [...walk("skills"), ...walk("docs")];
+  test("no image file under skills or docs", () => {
+    assert.deepEqual(tree.filter((f) => /\.(?:jpe?g|png|gif|webp|tiff?|dng|raw|cr2|cr3|arw|nef|svg)$/i.test(f)), []);
+  });
+  test("no Markdown image, and no Lucia, in any text file under skills, docs or the README", () => {
+    for (const file of [...tree.filter((f) => /\.(?:md|json|mjs)$/.test(f)), "README.md"]) {
+      const text = read(file);
+      assert.doesNotMatch(text, /!\[[^\]]*\]\([^)]*\)/, `${file}: an image`);
+      assert.deepEqual(luciaHits(text), [], file);
+    }
+  });
+  test("an image link and Lucia are caught", () => {
+    assert.match("![a](b.png)", /!\[[^\]]*\]\([^)]*\)/);
+    assert.deepEqual(luciaHits("Lucia"), ["Lucia"]);
+  });
+});
+
 // ---- the writer and the concept tool (spec WRT, W1 to W10, I4, ADR 0002) ----
 
 describe("the writer", () => {
@@ -1366,7 +1747,8 @@ describe("the writer", () => {
     assert.match(source, /\| the writer \| `breuer` \|/);
     assert.match(source, /\| the writer \| `mies` \|/);
     assert.match(source, /\| the writer \| `moholy-nagy` \|/);
-    for (const to of ["bayer", "breuer", "mies", "moholy-nagy"]) assert.match(hand, new RegExp(`\`handed to ${to}\``));
+    assert.match(source, /\| the writer \| `peterhans` \|/);
+    for (const to of ["bayer", "breuer", "mies", "moholy-nagy", "peterhans"]) assert.match(hand, new RegExp(`\`handed to ${to}\``));
     assert.match(hand, /`open questions for gropius`/, "the I4 case has its own first-line value");
     assert.match(source, /\| the writer \| the lead \|/);
     assert.match(hand, /first line/i);
@@ -1542,7 +1924,7 @@ describe("the words boundary (Q7)", () => {
     assert.match(page, /\*\*Who writes the words\?\*\* The writer[^\n]*except documents and the PDF build, which are donna's/i);
   });
   test("every designer page and character says who owns the words", () => {
-    for (const name of ["bayer", "breuer", "mies", "moholy-nagy"]) {
+    for (const name of ["bayer", "breuer", "mies", "moholy-nagy", "peterhans"]) {
       assert.match(read("skills/characters", name, "SKILL.md"), /writer owns the (?:idea and the )?words of the pieces made here/i, name);
       assert.match(read("docs/characters", `${name}.md`), /writer owns the words of the pieces made here/i, name);
       assert.match(read("docs/characters", `${name}.md`), /donna keeps long documents and the PDF build/i, name);
@@ -1621,7 +2003,7 @@ const STANCE_LATER = {
   breuer: "none of his own text was opened, so the stance waits for an opened text",
 };
 // A character added by a later branch (peterhans) writes its stance in its own PR; until it exists it is not here.
-const STANCE_NOW = ["bayer", "gropius", "mies", "moholy-nagy", "ogilvy"];
+const STANCE_NOW = ["bayer", "gropius", "mies", "moholy-nagy", "ogilvy", "peterhans"];
 const stanceLines = (source) => section(source, "Stance").split("\n").map((l) => l.trim()).filter(Boolean);
 const FIRST_PERSON = /\b(?:i|me|my|mine|we|us|our|ours)\b/i;
 const ATTRIBUTING = /\b(?:said|says|wrote|believed|believes|argued|argues|insisted|claimed|declared|quoted)\b/i;

@@ -23,6 +23,8 @@
     "./skills/characters/moholy-nagy",
     "./skills/tools/shots",
     "./skills/tools/storyboard",
-    "./skills/tools/motion"
+    "./skills/tools/motion",
+    "./skills/characters/peterhans",
+    "./skills/tools/develop"
   ]
 }

@@ -12,6 +12,7 @@ None yet.
 - **[concept](./concept/SKILL.md)**: The idea, the insight, the story and the words of one piece, from the brief's intake and the research, with a words file for the designer.
 - **[critique](./critique/SKILL.md)**: The craft pass on a finished piece: the numbers first, then a render, then a ranked list of findings.
 - **[design](./design/SKILL.md)**: The design method: the banned defaults, a plan checked against the brief, the project's rules first, and the checks for colour, tokens, trends and briefs.
+- **[develop](./develop/SKILL.md)**: A photograph developed or prepared in LightCraft: exposure, colour and straightening set as stated values, a JPG, a PNG preview and the command that made them, with the source left untouched.
 - **[email](./email/SKILL.md)**: HTML email layout and look, built on live text and tables and linted against the client limits.
 - **[massing](./massing/SKILL.md)**: The form and volume of a building or space as a SolidCraft model: a saved script, a closed-body check, an isometric image and the figures, handed on as a design study.
 - **[motion](./motion/SKILL.md)**: An animated title, graphic or effect as an EffectCraft project: a saved command list, keyframes read back, a poster frame that is the reduced-motion version, and a GIF render.

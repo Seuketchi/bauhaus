@@ -576,7 +576,7 @@ hand("pdfcraft-cli checks the plan PDF as ok (PLN5)", ["cadcraft-cli", "pdfcraft
   assert.match(checked.stdout + checked.stderr, /checked 1 files: \{"ok": 1\}/);
 });
 
-hand("lightcraft-cli answers --version and runs one headless command on the demo library, writing no file (ARTCRAFT.md, the LightCraft row)", ["lightcraft-cli"], () => {
+hand("lightcraft-cli answers --version and runs one headless command on the demo library, writing no file (ARTCRAFT.md, run 17)", ["lightcraft-cli"], () => {
   const before = readdirSync(work, { recursive: true }).length;
   assert.match(run(["lightcraft-cli", "--version"]).stdout, /^lightcraft-cli 0\.19\.0\b/);
   const listed = run(["lightcraft-cli", "run", "--demo", "engine.commands"]);
@@ -834,4 +834,424 @@ hand("the poster's text pair passes the contrast check with --min (MOT4)", ["eff
   assert.equal(check.status, 0, check.stdout);
   const fails = spawnSync("timeout", ["20", process.execPath, CHECK, "contrast", "#777777", "#888888", "--min", "4.5"], { encoding: "utf8", env });
   assert.notEqual(fails.status, 0, "a failing pair stops the run");
+});
+
+// ---- develop: LightCraft (spec DEV1 to DEV7), run 2026-11-07 on lightcraft-cli 0.19.0 ----
+//
+// LightCraft acts after capture. A job renders one file (`render`) or opens a library inside the output directory,
+// imports the source photograph and exports (`run`). The source is read and never written. The app does not refuse an
+// out-of-range value (it clamps it), so the job checks every value against `develop.controls` before the run (DEV3).
+import { createHash } from "node:crypto";
+import { crc32, deflateSync } from "node:zlib";
+
+// A few controls from `lightcraft-cli run --demo develop.controls` (lightcraft-cli 0.19.0, 2026-11-07). The test against the
+// real catalogue below fails when one of these drifts.
+const LIGHT_CATALOGUE = [
+  { id: "wb.temp", min: 2000, max: 50000 },
+  { id: "wb.tint", min: -150, max: 150 },
+  { id: "light.exposure", min: -5, max: 5 },
+  { id: "light.contrast", min: -100, max: 100 },
+  { id: "light.highlights", min: -100, max: 100 },
+  { id: "light.shadows", min: -100, max: 100 },
+  { id: "light.whites", min: -100, max: 100 },
+  { id: "light.blacks", min: -100, max: 100 },
+  { id: "curve.highlights", min: -100, max: 100 },
+  { id: "curve.lights", min: -100, max: 100 },
+  { id: "curve.darks", min: -100, max: 100 },
+  { id: "curve.shadows", min: -100, max: 100 },
+  { id: "color.vibrance", min: -100, max: 100 },
+  { id: "color.saturation", min: -100, max: 100 },
+  { id: "crop.angle", min: -45, max: 45 },
+];
+
+// What is wrong with the values a job sets, against the catalogue: an unknown control, a value that is not a number, or one outside min and max.
+function controlProblems(catalogue, sets) {
+  const byId = new Map(catalogue.map((c) => [c.id, c]));
+  return sets.flatMap(([id, raw]) => {
+    const control = byId.get(id);
+    if (!control) return [`${id}: not a control of develop.controls`];
+    const value = typeof raw === "number" ? raw : raw === "" ? NaN : Number(raw);
+    if (!Number.isFinite(value)) return [`${id}: "${raw}" is not a number`];
+    if (value < control.min || value > control.max) return [`${id}: ${value} is outside ${control.min} to ${control.max}`];
+    return [];
+  });
+}
+
+// The controls a command sets: `--set C=V` on render, and `develop.set control=C value=V` on run.
+function setsOf(command) {
+  const argv = words(command);
+  const sets = [];
+  argv.forEach((word, i) => {
+    if (word === "--set" && argv[i + 1]) {
+      const [id, ...value] = argv[i + 1].split("=");
+      sets.push([id, value.join("=")]);
+    }
+    if (word === "crop.straighten") {
+      const angle = /^angle=(.*)$/.exec(argv[i + 1] ?? "");
+      sets.push(["crop.angle", angle ? angle[1] : ""]);
+    }
+    if (word === "develop.set") {
+      const pairs = {};
+      for (const next of argv.slice(i + 1)) {
+        const m = /^(control|value)=(.*)$/.exec(next);
+        if (!m) break;
+        pairs[m[1]] = m[2];
+      }
+      sets.push([pairs.control ?? "", pairs.value ?? ""]);
+    }
+  });
+  return sets;
+}
+
+// The files a lightcraft-cli command writes, each with the long edge it asks for: a render has one, a library run has one per app.export.
+function outputsOf(command) {
+  const argv = words(command);
+  const at = argv.indexOf("lightcraft-cli");
+  if (at < 0) return [];
+  if (argv[at + 1] === "render") return [[argv[argv.indexOf("-o") + 1], argv.includes("--size") ? Number(argv[argv.indexOf("--size") + 1]) : undefined]];
+  const found = [];
+  argv.forEach((w, i) => {
+    if (w !== "app.export") return;
+    const next = argv.indexOf("app.export", i + 1);
+    const own = argv.slice(i + 1, next < 0 ? undefined : next);
+    const path = own.find((x) => x.startsWith("path="))?.slice(5);
+    const edge = own.find((x) => /^longEdge=\d+$/.test(x));
+    found.push([path, edge ? Number(edge.slice(9)) : undefined]);
+  });
+  return found;
+}
+
+// What is wrong with one lightcraft-cli command line: the call, the paths and the options. Empty means it follows ARTCRAFT.md.
+function lightcraftProblems(command, outDir) {
+  const argv = words(command);
+  const at = argv.indexOf("lightcraft-cli");
+  if (at < 0) return [];
+  const sub = argv[at + 1];
+  const problems = callProblems(argv.slice(at));
+  if (argv[0] !== "timeout") problems.push("the call does not run under timeout");
+  if (!["render", "run"].includes(sub)) problems.push(`lightcraft-cli ${sub} is not used`);
+  for (const bad of ["mcp", "--connect", "--bridge", "--allow-any-path", "--allow-path"]) if (argv.includes(bad)) problems.push(`${bad} is not used`);
+  for (const name of ["XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME"]) {
+    const set = argv.slice(0, at).find((w) => w.startsWith(`${name}=`));
+    if (!set) problems.push(`${name} is not set under the output directory`);
+    else if (!underDir(set.slice(name.length + 1), outDir)) problems.push(`${set}: outside ${outDir}`);
+  }
+  if (argv.some((w) => w === "format=original" || w === '"format":"original"')) problems.push("format=original writes a copy and a sidecar");
+  const under = (label, value) => {
+    if (value === undefined) problems.push(`${label} has no value`);
+    else if (!isAbsolute(value)) problems.push(`${label} ${value}: not an absolute path`);
+    else if (!underDir(value, outDir)) problems.push(`${label} ${value}: outside ${outDir}`);
+  };
+  const absolute = (label, value) => {
+    if (value === undefined) problems.push(`${label} has no value`);
+    else if (!isAbsolute(value)) problems.push(`${label} ${value}: not an absolute path`);
+  };
+  const after = (flag) => argv[argv.indexOf(flag) + 1];
+  if (sub === "render") {
+    absolute("the input", argv[at + 2]);
+    under("-o", after("-o"));
+    if (!argv.includes("--size")) problems.push("render has no --size, so the output is the full size of the source");
+  }
+  if (sub === "run") {
+    if (argv.includes("--library")) under("--library", after("--library"));
+    else problems.push("run has no --library inside the output directory");
+    argv.forEach((w, i) => {
+      if (w === "--import") absolute("--import", argv[i + 1]);
+      const m = /^path=(.*)$/.exec(w);
+      if (m) under("path=", m[1]);
+    });
+    for (const [path, edge] of outputsOf(command)) if (edge === undefined) problems.push(`the export to ${path ?? "an unnamed path"} has no longEdge, so it writes at the app's default size`);
+  }
+  return problems;
+}
+
+describe("develop: the control check, on fixtures (DEV3)", () => {
+  test("a value inside min and max passes, and the ends pass", () => {
+    assert.deepEqual(controlProblems(LIGHT_CATALOGUE, [["light.exposure", 0.5], ["light.exposure", "-5"], ["wb.temp", "6500"], ["wb.temp", 50000]]), []);
+  });
+  test("an unknown control is refused", () => {
+    assert.deepEqual(controlProblems(LIGHT_CATALOGUE, [["light.nope", 1]]), ["light.nope: not a control of develop.controls"]);
+  });
+  test("a value below min or above max is refused, because the app would clamp it without an error", () => {
+    assert.deepEqual(controlProblems(LIGHT_CATALOGUE, [["light.exposure", 9]]), ["light.exposure: 9 is outside -5 to 5"]);
+    assert.deepEqual(controlProblems(LIGHT_CATALOGUE, [["wb.temp", 1999]]), ["wb.temp: 1999 is outside 2000 to 50000"]);
+  });
+  test("a value that is not a number, or is empty, is refused", () => {
+    assert.equal(controlProblems(LIGHT_CATALOGUE, [["light.exposure", "warm"]]).length, 1);
+    assert.equal(controlProblems(LIGHT_CATALOGUE, [["light.exposure", ""]]).length, 1);
+  });
+  test("a straighten angle is checked against crop.angle, so a turn past 45 degrees is refused", () => {
+    assert.deepEqual(setsOf("lightcraft-cli run crop.straighten angle=1.5"), [["crop.angle", "1.5"]]);
+    assert.deepEqual(controlProblems(LIGHT_CATALOGUE, setsOf("lightcraft-cli run crop.straighten angle=60")), ["crop.angle: 60 is outside -45 to 45"]);
+  });
+  test("setsOf reads --set on render and develop.set on run", () => {
+    assert.deepEqual(setsOf("lightcraft-cli render a.jpg -o b.jpg --set light.exposure=0.5 --set wb.temp=5600"), [["light.exposure", "0.5"], ["wb.temp", "5600"]]);
+    assert.deepEqual(setsOf("lightcraft-cli run develop.auto develop.set control=light.exposure value=-0.3 app.export path=/x.jpg"), [["light.exposure", "-0.3"]]);
+  });
+});
+
+describe("develop: the call rules, on fixtures (DEV1, DEV2, DEV4, DEV7)", () => {
+  const O = "/project/study";
+  const XDG = `XDG_DATA_HOME=${O}/xdg/data XDG_CONFIG_HOME=${O}/xdg/config XDG_CACHE_HOME=${O}/xdg/cache`;
+  const render = `timeout 20 env ${XDG} lightcraft-cli render /photos/a.jpg -o ${O}/developed.jpg --set light.exposure=0.5 --size 1600 --quality 90`;
+  const library = `timeout 20 env ${XDG} lightcraft-cli run --library ${O}/library --import /photos/a.jpg develop.auto develop.set control=light.exposure value=0.5 app.export path=${O}/developed.jpg longEdge=1600`;
+  test("outputsOf reads the long edge of each export, so a preview and a full-size export in one run are judged apart", () => {
+    assert.deepEqual(outputsOf("lightcraft-cli run app.export path=/a.jpg longEdge=3000 app.export path=/b.png longEdge=1600"), [["/a.jpg", 3000], ["/b.png", 1600]]);
+    assert.deepEqual(outputsOf("lightcraft-cli render /i.jpg -o /o.png --size 800"), [["/o.png", 800]]);
+    assert.deepEqual(outputsOf("lightcraft-cli run app.export path=/a.jpg longEdge=3000 app.export path=/b.png"), [["/a.jpg", 3000], ["/b.png", undefined]]);
+  });
+  test("a second export with no longEdge is refused even when the first has one", () => {
+    assert.ok(lightcraftProblems(`${library} app.export path=${O}/preview.png`, O).some((p) => /preview\.png has no longEdge/.test(p)));
+  });
+  test("a render and a library run that follow the rules pass, and the source may be anywhere because it is only read", () => {
+    assert.deepEqual(lightcraftProblems(render, O), []);
+    assert.deepEqual(lightcraftProblems(library, O), []);
+  });
+  test("a relative or outside output is refused", () => {
+    assert.ok(lightcraftProblems(render.replace(`-o ${O}/developed.jpg`, "-o developed.jpg"), O).some((p) => /not an absolute path/.test(p)));
+    assert.ok(lightcraftProblems(render.replace(`-o ${O}/developed.jpg`, "-o /tmp/developed.jpg"), O).some((p) => /outside/.test(p)));
+    assert.ok(lightcraftProblems(library.replace(`path=${O}/developed.jpg`, "path=/tmp/developed.jpg"), O).some((p) => /outside/.test(p)));
+  });
+  test("a library outside the output directory, or none, is refused", () => {
+    assert.ok(lightcraftProblems(library.replace(`--library ${O}/library`, "--library /home/owner/Library"), O).some((p) => /outside/.test(p)));
+    assert.ok(lightcraftProblems(library.replace(`--library ${O}/library `, ""), O).some((p) => /no --library/.test(p)));
+  });
+  test("merge, snapshot, denoise-serve, mcp, --connect and the other subcommands are refused", () => {
+    for (const sub of ["merge", "snapshot", "denoise-serve", "synth-merge", "commands"]) assert.ok(lightcraftProblems(render.replace("render", sub), O).length > 0, sub);
+    assert.ok(lightcraftProblems(`${library} --connect`, O).some((p) => /--connect/.test(p)));
+    assert.ok(lightcraftProblems(library.replace("run --library", "mcp --library"), O).length > 0);
+  });
+  test("format=original, a render with no --size and an export with no longEdge are refused", () => {
+    assert.ok(lightcraftProblems(`${library} format=original`, O).some((p) => /format=original/.test(p)));
+    assert.ok(lightcraftProblems(render.replace("--size 1600 ", ""), O).some((p) => /--size/.test(p)));
+    assert.ok(lightcraftProblems(library.replace(" longEdge=1600", ""), O).some((p) => /longEdge/.test(p)));
+  });
+  test("a call with no timeout, or with the settings directories not set under the output directory, is refused", () => {
+    assert.ok(lightcraftProblems(render.replace("timeout 20 ", ""), O).length > 0);
+    assert.ok(lightcraftProblems(render.replace(`XDG_CACHE_HOME=${O}/xdg/cache`, "XDG_CACHE_HOME=/home/owner/.cache"), O).some((p) => /outside/.test(p)));
+    assert.ok(lightcraftProblems(render.replace(` XDG_CONFIG_HOME=${O}/xdg/config`, ""), O).some((p) => /XDG_CONFIG_HOME/.test(p)));
+  });
+  test("the launcher and the window app are refused", () => {
+    assert.ok(callProblems("lightcraft --control 7980").length > 0);
+    assert.ok(callProblems("artcraft-launcher --help").length > 0);
+  });
+});
+
+describe("the examples in the develop skill", () => {
+  const skill = readFileSync(join(here, "..", "skills", "tools", "develop", "SKILL.md"), "utf8");
+  const fences = [...skill.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)].map((m) => m[1]);
+  const lines = fences.flatMap((t) => t.replace(/\\\n\s*/g, " ").split("\n")).filter((l) => /lightcraft-cli/.test(l));
+  test("there is a render, a preview render and a library run", () => {
+    assert.ok(lines.some((l) => /lightcraft-cli render/.test(l) && /\.jpg/.test(l)), "a render to JPG");
+    assert.ok(lines.some((l) => /lightcraft-cli render/.test(l) && /\.png/.test(l)), "a render to PNG for critique");
+    assert.ok(lines.some((l) => /lightcraft-cli run/.test(l) && /--library/.test(l) && outputsOf(l).some(([p]) => /\.jpg$/.test(p)) && outputsOf(l).some(([p]) => /\.png$/.test(p))), "a library run that exports the JPG and the PNG preview");
+    assert.ok(lines.some((l) => /lightcraft-cli run --demo develop\.controls/.test(l)), "the catalogue");
+  });
+  test("every command line follows the rules, every control is in the catalogue and inside min and max, and a preview is at most 2000 pixels", () => {
+    for (const line of lines) {
+      if (/--demo/.test(line)) {
+        assert.deepEqual(callProblems(line.replace(/^timeout \d+ (?:env (?:[A-Z_]+=\S+ )+)?/, "")), [], line);
+        continue;
+      }
+      assert.deepEqual(lightcraftProblems(line, "/project/study"), [], line);
+      assert.deepEqual(controlProblems(LIGHT_CATALOGUE, setsOf(line)), [], line);
+      for (const [path, edge] of outputsOf(line)) if (/\.png$/.test(path)) assert.ok(edge <= 2000, `${line}: a preview over 2000 pixels`);
+    }
+  });
+});
+
+// ---- the run ----
+
+// A flat grey PNG, 8 bit RGB, made here so no fixture file lives in the repo and no photograph of anyone is needed.
+function greyPng(width, height, level) {
+  const chunk = (type, data) => {
+    const head = Buffer.alloc(4);
+    head.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
+    const tail = Buffer.alloc(4);
+    tail.writeUInt32BE(crc32(body));
+    return Buffer.concat([head, body, tail]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(width * 3, level)]);
+  const raw = Buffer.concat(Array.from({ length: height }, () => row));
+  return Buffer.concat([Buffer.from("89504e470d0a1a0a", "hex"), chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
+}
+
+// The mean red, green and blue of an 8 bit PNG of colour type 2 or 6.
+function pngMean(file) {
+  const b = readFileSync(file);
+  let pos = 8;
+  let ihdr;
+  const idat = [];
+  while (pos < b.length) {
+    const n = b.readUInt32BE(pos);
+    const type = b.toString("latin1", pos + 4, pos + 8);
+    const body = b.subarray(pos + 8, pos + 8 + n);
+    if (type === "IHDR") ihdr = { width: body.readUInt32BE(0), height: body.readUInt32BE(4), depth: body[8], colour: body[9] };
+    if (type === "IDAT") idat.push(body);
+    pos += 12 + n;
+  }
+  assert.equal(ihdr.depth, 8, "an 8 bit PNG");
+  assert.ok([2, 6].includes(ihdr.colour), "an RGB or RGBA PNG");
+  const bpp = ihdr.colour === 2 ? 3 : 4;
+  const stride = ihdr.width * bpp;
+  const raw = inflateSync(Buffer.concat(idat));
+  let prev = Buffer.alloc(stride);
+  const sum = [0, 0, 0];
+  for (let y = 0; y < ihdr.height; y++) {
+    const filter = raw[y * (stride + 1)];
+    const line = Buffer.from(raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1)));
+    for (let x = 0; x < stride; x++) {
+      const a = x >= bpp ? line[x - bpp] : 0;
+      const up = prev[x];
+      const c = x >= bpp ? prev[x - bpp] : 0;
+      let add = 0;
+      if (filter === 1) add = a;
+      else if (filter === 2) add = up;
+      else if (filter === 3) add = (a + up) >> 1;
+      else if (filter === 4) {
+        const p = a + up - c;
+        const pa = Math.abs(p - a);
+        const pb = Math.abs(p - up);
+        const pc = Math.abs(p - c);
+        add = pa <= pb && pa <= pc ? a : pb <= pc ? up : c;
+      }
+      line[x] = (line[x] + add) & 255;
+    }
+    for (let x = 0; x < stride; x += bpp) for (let k = 0; k < 3; k++) sum[k] += line[x + k];
+    prev = line;
+  }
+  return sum.map((v) => v / (ihdr.width * ihdr.height));
+}
+
+// The size a JPEG says it is, from its start-of-frame marker.
+function jpegSize(file) {
+  const b = readFileSync(file);
+  assert.equal(b.subarray(0, 2).toString("hex"), "ffd8", `${file} is not a JPEG`);
+  let i = 2;
+  while (i + 9 < b.length) {
+    if (b[i] !== 0xff) {
+      i++;
+      continue;
+    }
+    const marker = b[i + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) return { width: b.readUInt16BE(i + 7), height: b.readUInt16BE(i + 5) };
+    i += 2 + b.readUInt16BE(i + 2);
+  }
+  assert.fail("no frame header in the JPEG");
+}
+const sha = (file) => createHash("sha256").update(readFileSync(file)).digest("hex");
+const jsonLines = (text) => text.split("\n").filter((l) => l.startsWith("{")).map((l) => JSON.parse(l));
+
+const photoDir = join(out, "photo");
+mkdirSync(photoDir);
+const source = join(photoDir, "source.png");
+writeFileSync(source, greyPng(640, 360, 128));
+const sourceHash = sha(source);
+
+hand("lightcraft-cli lists its controls with an id, min, max, default and section (V18, DEV3)", ["lightcraft-cli"], () => {
+  const r = run(["lightcraft-cli", "run", "--demo", "develop.controls"]);
+  assert.equal(r.status, 0, r.stderr);
+  const [line] = jsonLines(r.stdout);
+  assert.equal(line.ok, true);
+  const catalogue = line.result;
+  assert.ok(catalogue.length >= 100, `${catalogue.length} controls`);
+  for (const c of catalogue) for (const key of ["id", "min", "max", "default", "section"]) assert.ok(key in c, `${c.id ?? "a control"} has no ${key}`);
+  for (const known of LIGHT_CATALOGUE) {
+    const live = catalogue.find((c) => c.id === known.id);
+    assert.ok(live, `${known.id} is no longer a control`);
+    assert.deepEqual({ min: live.min, max: live.max }, { min: known.min, max: known.max }, known.id);
+  }
+});
+
+hand("lightcraft-cli render writes a JPEG of the stated long edge and never touches the source (V16, DEV1, DEV4)", ["lightcraft-cli"], () => {
+  const developed = join(photoDir, "developed.jpg");
+  const r = run(["lightcraft-cli", "render", source, "-o", developed, "--set", "light.exposure=0.5", "--set", "wb.temp=6500", "--size", "320", "--quality", "90"]);
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(jpegSize(developed), { width: 320, height: 180 });
+  assert.notEqual(developed, source);
+  assert.equal(sha(source), sourceHash, "the source photograph changed");
+  assert.deepEqual(readdirSync(photoDir).filter((f) => /\.xmp$/i.test(f)), [], "a sidecar beside the source");
+  assert.ok(readFileSync(developed).includes("LightCraft"), "the file names the app that made it");
+});
+
+hand("lightcraft-cli render writes a PNG preview of the stated long edge, which critique can take (DEV6)", ["lightcraft-cli"], () => {
+  const preview = join(photoDir, "preview.png");
+  const r = run(["lightcraft-cli", "render", source, "-o", preview, "--size", "320"]);
+  assert.equal(r.status, 0, r.stderr);
+  const size = pngSize(preview);
+  assert.equal(Math.max(size.width, size.height), 320);
+  assert.ok(Math.max(size.width, size.height) <= 2000);
+});
+
+hand("an unknown control is refused by the app, and an out-of-range value is not: it is clamped without an error (DEV3)", ["lightcraft-cli"], () => {
+  const unknown = run(["lightcraft-cli", "render", source, "-o", join(photoDir, "unknown.jpg"), "--set", "light.nope=1", "--size", "64"]);
+  assert.notEqual(unknown.status, 0);
+  assert.match(unknown.stderr, /unknown control/);
+  const library = join(photoDir, "library-clamp");
+  const clamped = run(["lightcraft-cli", "run", "--library", library, "--import", source, "develop.set", "control=light.exposure", "value=9", "develop.get"]);
+  assert.equal(clamped.status, 0, clamped.stderr);
+  const get = jsonLines(clamped.stdout).find((l) => l.command === "develop.get");
+  assert.equal(get.result.light.exposure, 5, "the app clamps 9 to the top of the range and says nothing");
+  assert.deepEqual(controlProblems(LIGHT_CATALOGUE, [["light.exposure", 9]]), ["light.exposure: 9 is outside -5 to 5"], "so the job's own check refuses it first");
+});
+
+hand("the library flow imports, develops and exports with every line ok, writes only inside the output directory, and leaves the source alone (V17, DEV2, DEV4)", ["lightcraft-cli"], () => {
+  const library = join(photoDir, "library");
+  const exported = join(photoDir, "lib-out.jpg");
+  const r = run(["lightcraft-cli", "run", "--library", library, "--import", source, "develop.auto", "develop.set", "control=light.exposure", "value=0.5", "app.export", `path=${exported}`, "longEdge=320", "app.export", `path=${join(photoDir, "lib-preview.png")}`, "longEdge=160"]);
+  assert.equal(r.status, 0, r.stderr);
+  const lines = jsonLines(r.stdout);
+  assert.equal(lines.length, 4);
+  assert.deepEqual(pngSize(join(photoDir, "lib-preview.png")), { width: 160, height: 90 }, "a second export in the same run, to a PNG by its extension");
+  assert.ok(lines.every((l) => l.ok === true), r.stdout);
+  const written = lines.find((l) => l.command === "app.export").result;
+  assert.equal(Math.max(written.width, written.height), 320);
+  assert.deepEqual(written.sidecars, []);
+  assert.deepEqual(jpegSize(exported), { width: 320, height: 180 });
+  const side = readdirSync(library);
+  for (const f of ["catalog.lock", "catalog.snap", "view.json"]) assert.ok(side.includes(f), `the library has no ${f}`);
+  assert.equal(sha(source), sourceHash, "the source photograph changed");
+  assert.deepEqual(readdirSync(photoDir).filter((f) => /\.xmp$/i.test(f)), [], "--import wrote a sidecar beside the source");
+});
+
+hand("crop.set sets the shape of the export, in fractions of the frame, and crop.straighten takes an angle in degrees (V17, DEV8)", ["lightcraft-cli"], () => {
+  const exported = join(photoDir, "cropped.jpg");
+  const r = run(["lightcraft-cli", "run", "--library", join(photoDir, "library-crop"), "--import", source, "crop.set", "rect=[0,0,0.5,1]", "crop.straighten", "angle=0", "app.export", `path=${exported}`, "longEdge=360"]);
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(jsonLines(r.stdout).every((l) => l.ok === true), r.stdout);
+  assert.deepEqual(jpegSize(exported), { width: 320, height: 360 }, "half the width of a 640 by 360 source, the whole height");
+  assert.equal(sha(source), sourceHash);
+});
+
+hand("develop.auto after develop.set replaces the set, so the job runs develop.auto first and the manual sets after it (V17)", ["lightcraft-cli"], () => {
+  const exposureAfter = (name, steps) => {
+    const r = run(["lightcraft-cli", "run", "--library", join(photoDir, name), "--import", source, ...steps, "develop.get"]);
+    assert.equal(r.status, 0, r.stderr);
+    const lines = jsonLines(r.stdout);
+    return { exposure: lines.find((l) => l.command === "develop.get").result.light.exposure, auto: lines.find((l) => l.command === "develop.auto")?.result };
+  };
+  const setThenAuto = exposureAfter("library-set-auto", ["develop.set", "control=light.exposure", "value=-0.5", "develop.auto"]);
+  assert.equal(setThenAuto.exposure, setThenAuto.auto.exposure, "develop.auto replaced the earlier set");
+  assert.notEqual(setThenAuto.exposure, -0.5);
+  const autoThenSet = exposureAfter("library-auto-set", ["develop.auto", "develop.set", "control=light.exposure", "value=-0.5"]);
+  assert.equal(autoThenSet.exposure, -0.5, "the manual set after develop.auto holds");
+});
+
+hand("a higher wb.temp warms the picture and a lower one cools it: red rises and blue falls as the value goes up", ["lightcraft-cli"], () => {
+  const mean = (temp) => {
+    const file = join(photoDir, `temp-${temp}.png`);
+    const r = run(["lightcraft-cli", "render", source, "-o", file, "--set", `wb.temp=${temp}`, "--size", "64"]);
+    assert.equal(r.status, 0, r.stderr);
+    return pngMean(file);
+  };
+  const cool = mean(3000);
+  const warm = mean(9000);
+  assert.ok(warm[0] > cool[0], `red: ${cool[0]} at 3000, ${warm[0]} at 9000`);
+  assert.ok(warm[2] < cool[2], `blue: ${cool[2]} at 3000, ${warm[2]} at 9000`);
 });
