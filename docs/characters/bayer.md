@@ -6,7 +6,7 @@
 
 It calls four tools, each on a stated fact: `design` when no brief file exists, `brand` when the brief asks for an identity or no `DESIGN.md` exists, `email` when the piece is an HTML email, and `critique` when a finished piece exists that this session did not make. The default is not to call.
 
-The split is fixed. Donna keeps the words and the PDF build, `bayer` owns layout and look, and louis reviews. App and web screens go to `breuer`.
+The split is fixed. The writer owns the words of the pieces made here, donna keeps long documents and the PDF build, `bayer` owns layout and look, and louis reviews. App and web screens go to `breuer`.
 
 ## When to reach for it
 
@@ -14,11 +14,11 @@ The split is fixed. Donna keeps the words and the PDF build, `bayer` owns layout
 - An HTML email needs its layout and look.
 - A finished identity or email from another session needs a craft pass.
 
-Skip it for document text, email copy and app screens.
+Skip it for document text and app screens, and for the words themselves.
 
 ## Common questions
 
-**Who writes the email copy?** Donna. The email carries labelled slots for donna's words and plain-text part.
+**Who writes the email copy?** The writer. `bayer` takes the words from `words.md`, by slot id, and writes none.
 
 **What does a hand-over say?** The piece and its state, the files made, the checks run with their result, the reference rows the brief cites and what was not checked. For an email it also says that the email was not tested in Outlook for Windows.
 
@@ -31,4 +31,4 @@ Skip it for document text, email copy and app screens.
 - The `DESIGN.md` it writes passes `check.mjs design` and its token file passes `check.mjs tokens`.
 - An email it builds passes `check.mjs email`, with every colour pair computed.
 - Every piece started from a brief file that cites reference rows.
-- Words in its pieces appear only where the brief supplied them or donna wrote them.
+- Every word in its pieces comes from `words.md`, and a line that does not fit the picture is sent back to the writer.

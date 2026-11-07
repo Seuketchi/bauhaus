@@ -5,7 +5,7 @@ description: The spec for one app or web screen, with an image of each state mad
 
 # Screens
 
-The spec for one app or web screen: what it is for, what it shows in each state, every string on it and the rules it was checked against. Follow the `design` method first: its precedence list, its bans and its checks. The references for this craft are in `REFERENCES.md` in this folder.
+The spec for one app or web screen: what it is for, what it shows in each state, every string on it and the rules it was checked against. Follow the `design` method first: its precedence list, its bans and its checks. The references for this craft are in `REFERENCES.md` in this folder, and the registers, the look of a kind of screen read from real ones, are in `REGISTERS.md`.
 
 This skill writes no app code. The spec and the images go to the project's own gates and owners.
 
@@ -25,6 +25,7 @@ The spec starts with `Rules applied:` and lists each rule used as `file:heading`
 ## Before you draw
 
 - Write the brief file for the screen with the format in `design`, and cite at least three rows of `REFERENCES.md`, only rows marked `opened`. A lower minimum with a reason may be accepted when fewer than three opened rows fit the screen; the floor is one opened row, and the brief states the reason. A row marked `not opened` is never counted.
+- Start from the register of the screen's kind in `REGISTERS.md` when one fits, and add what the piece's own research shows. The register is a starting point and not a template, and the project's own rules outrank it: the brief names the register used and what the piece departs from.
 - The target size of the frame comes from the project's own rules or from the owner. If neither gives one, ask the owner and never guess; the hand-over says that none was given.
 - If the `ui-ux-pro-max` package is installed, `/ui-ux-pro-max:ui-ux-pro-max` may be called once for a suggestion on style, palette or type. It is never required, and a suggestion ranks below the project's own rules. Copy none of its data or text into the spec.
 
@@ -44,7 +45,7 @@ The spec starts with `Rules applied:` and lists each rule used as `file:heading`
 
 ### Strings
 
-Read the project's l10n rules first. When the project keeps its text in keys, give each string as its key with its English text. When it has no such rule, write `No l10n rule found`, give the plain text and say where keys would go. Short interface strings come from the brief. Long-form copy is donna's.
+Read the project's l10n rules first. When the project keeps its text in keys, give each string as its key with its English text. When it has no such rule, write `No l10n rule found`, give the plain text and say where keys would go. Short interface strings come from the brief or from the writer's `words.md`. Document-length text is donna's.
 
 ### States that keep the same dimensions
 

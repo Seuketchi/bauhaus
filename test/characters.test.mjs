@@ -33,7 +33,7 @@ const prose = (source) => source.replace(/^(```|~~~)[\s\S]*?^\1/gm, "").replace(
 
 // CAST1. A cast name followed in the same sentence by a speech verb; a quoted sentence in a paragraph that names someone;
 // and the topics a character file or docs page must never touch (spec section 4).
-const CAST = "Gropius|Bayer|Breuer|Albers|Moholy-Nagy|Moholy|Mies(?: van der Rohe)?";
+const CAST = "Gropius|Bayer|Breuer|Albers|Ogilvy|Moholy-Nagy|Moholy|Mies(?: van der Rohe)?";
 const VERBS = "said|says|wrote|writes|believed|believes|argued|argues|taught that|teaches that|insisted|claimed|declared";
 const speechHits = (text) => [...text.matchAll(new RegExp(`\\b(?:${CAST})\\b[^.!?\\n]{0,80}?\\b(?:${VERBS})\\b`, "gi"))].map((m) => m[0]);
 const quoteHits = (text) =>
@@ -48,7 +48,7 @@ const TOPICS = {
   "a death date": /\bdied\b|\bdeath\b|\bdead\b|\bpassed away\b/i,
 };
 const topicHits = (text) => Object.entries(TOPICS).filter(([, re]) => re.test(text)).map(([name]) => name);
-const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+|ludwig\s+)?(?:gropius|bayer|breuer|mies)\b/i;
+const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+|ludwig\s+|david\s+)?(?:gropius|bayer|breuer|mies|ogilvy)\b/i;
 // Breuer is cast by analogy only: no furniture, workshop, steel or "for the body" in any file.
 const BIOGRAPHY = /\b(?:Weimar|Dessau|ARCO|founded|was born|born in|studied|apprentic\w+|furniture|carpentry|workshop|tubular|steel)\b|for the body/i;
 
@@ -122,7 +122,7 @@ describe("registration", () => {
   test("plugin.json lists the characters and the tools, and has no version", () => {
     const wanted = ["skills/characters/bayer", "skills/characters/gropius", "skills/tools/design", "skills/tools/brand", "skills/tools/email", "skills/tools/critique"];
     assert.deepEqual(registered.slice(0, wanted.length), wanted);
-    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans"]);
+    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans", "skills/characters/ogilvy", "skills/tools/concept"]);
     assert.ok(!registered.some((d) => /ui-ux-pro-max/.test(d)), "the optional lookup is not a skill of this package");
     assert.equal("version" in plugin, false);
     for (const dir of registered) assert.ok(exists(dir, "SKILL.md"), `${dir} has no SKILL.md`);
@@ -134,9 +134,9 @@ describe("registration", () => {
       const model = readme.split(/^## /m).find((s) => s.startsWith("Model-invoked")) ?? "";
       for (const name of names) assert.match(model, new RegExp(`\\]\\(\\./${name}/SKILL\\.md\\)`), `${name} is not under Model-invoked in skills/${bucket}/README.md`);
     };
-    listed("characters", ["bayer", "breuer", "gropius", "mies"]);
-    listed("tools", ["brand", "critique", "design", "email", "massing", "plans", "screens"]);
-    const BUCKET_OF = { breuer: "characters", mies: "characters", screens: "tools", massing: "tools", plans: "tools" };
+    listed("characters", ["bayer", "breuer", "gropius", "mies", "ogilvy"]);
+    listed("tools", ["brand", "concept", "critique", "design", "email", "massing", "plans", "screens"]);
+    const BUCKET_OF = { breuer: "characters", mies: "characters", ogilvy: "characters", screens: "tools", massing: "tools", plans: "tools", concept: "tools" };
     for (const [name, bucket] of Object.entries(BUCKET_OF)) {
       assert.doesNotMatch(read("skills", bucket, name, "SKILL.md"), /^disable-model-invocation:/m);
       const line = read("skills", bucket, "README.md").split("\n").find((l) => l.includes(`./${name}/SKILL.md`));
@@ -150,7 +150,10 @@ describe("registration", () => {
     assert.doesNotMatch(readme, /screens job and its character follow/i, "the status line still says UI/UX is to come");
     assert.match(readme, /screens/i);
     assert.equal(readme.split("\n").filter((l) => /^\| Marcel Breuer \|/.test(l)).length, 1, "the cast table keeps its one Breuer row");
-    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Ludwig Mies van der Rohe|Josef Albers) \|/.test(l)).length, 5, "the five rows");
+    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Ludwig Mies van der Rohe|Josef Albers|David Ogilvy) \|/.test(l)).length, 6, "one row for each person");
+    assert.match(readme, /^\| David Ogilvy \| Writer\. The idea, the story and the words\. \|$/m, "the Ogilvy row names the role by craft");
+    assert.match(readme, /not only people of the school|a writer from outside the school/i, "the README says the cast is no longer only the school's");
+    assert.doesNotMatch(readme, /The cast are historical designers/, "the cast line no longer says designers only");
     assert.match(readme, /^\| Ludwig Mies van der Rohe \| Space designer\. Form, plans, structure\. \|$/m, "the Mies row names the role by craft");
     assert.match(readme, /massing/i);
     assert.match(readme, /plans/i);
@@ -166,6 +169,7 @@ describe("registration", () => {
 
 // Each character calls exactly these, each with one trigger stated as a fact about the task.
 const CALLS = {
+  ogilvy: ["concept"],
   gropius: ["design", "critique"],
   bayer: ["design", "brand", "email", "critique"],
   breuer: ["design", "screens", "critique"],
@@ -179,6 +183,7 @@ const TRIGGERS = {
   screens: /task is an app or web screen/i,
   massing: /task is the form or volume of a building or space/i,
   plans: /task is a floor plan, a section or a sheet/i,
+  concept: /brief has an `Intake` and no `Idea` yet|piece needs words that no `words\.md` holds/i,
 };
 // BRE2: breuer's critique trigger is a finished screen.
 const TRIGGER_OF = (name, skill) => (name === "breuer" && skill === "critique" ? /finished screen exists that this session did not make/i : TRIGGERS[skill]);
@@ -264,20 +269,73 @@ describe("characters", () => {
       assert.match(rules, /`bayer`[^.]*brand[^.]*logos[^.]*email/i);
       assert.match(rules, /`breuer`[^.]*(?:app|screens)/i);
       assert.match(rules, /`mies`[^.]*(?:space|form|plans|structure)/i);
-      assert.match(rules, /brief and `DESIGN\.md`/);
+      assert.match(rules, /brief, the words file and `DESIGN\.md`/);
       assert.match(rules, /makes no piece/i);
     });
     test("the craft pass is not a sign-off and louis rules", () => assert.match(source, /not a sign-off/i));
   });
 
+  describe("gropius runs the intake and hands the concept to the writer (I1, BRF1, flow)", () => {
+    const source = read("skills/characters/gropius/SKILL.md");
+    const rules = section(source, "Hard rules");
+    const page = read("docs/characters/gropius.md");
+    test("a brief means all eleven sections: Intake and Research before the writer, Idea, Insight and Story the writer's", () => {
+      assert.match(rules, /Intake, Idea, Insight, Story and Research/);
+      assert.match(rules, /all eleven sections/i);
+      assert.match(rules, /Idea, Insight and Story are the writer's/i);
+    });
+    test("asks the owner the intake questions once, through design, and keeps the answers word for word", () => {
+      assert.match(source, /\| Someone asks for a visual piece \|[^\n]*asks the owner[^\n]*once[^\n]*`\/bauhaus:design`/i);
+      assert.match(source, /word for word/i);
+    });
+    test("copies none of the intake questions, which live in design", () => {
+      for (const q of ["Who are you?", "Where are you going?", "What is special?", "How should it feel?"]) assert.ok(!source.includes(q) && !page.includes(q), q);
+    });
+    test("hands the concept to the writer, and the writer hands on to the designer", () => {
+      assert.match(source, /\| the lead \| the writer \|/);
+      assert.match(rules, /hand the (?:brief|piece) to the writer before a designer|the writer takes the brief before a designer/i);
+      assert.match(section(source, "Hand over"), /`handed to ogilvy`/);
+      assert.doesNotMatch(source, /\/bauhaus:ogilvy/, "the writer is named, never called");
+    });
+    test("the writer hands brief and words.md straight to the designer: the lead has one route to a designer, the skipped intake (I5, WRT3)", () => {
+      assert.doesNotMatch(source, /writer has handed the brief and the words file back/i);
+      assert.doesNotMatch(page, /writer[^.]*and then hands the piece to `bayer`/, "the docs page gives the one route too");
+      assert.match(page, /who hands it with the words to `bayer`[^.]*`breuer`[^.]*`mies`[^.]*only when the intake is skipped/);
+      assert.doesNotMatch(source, /\| the writer \| the lead \| the brief with Idea/);
+      const table = section(source, "What the lead does");
+      const toDesigner = table.split("\n").filter((l) => /hands the piece to the designer/.test(l));
+      assert.equal(toDesigner.length, 1);
+      assert.match(toDesigner[0], /named the designer[^|]*complete brief|complete brief[^|]*named the designer/i);
+      const others = section(source, "Working with the others").split("\n");
+      for (const to of ["bayer", "breuer", "mies"]) assert.match(others.find((l) => l.includes(`| the lead | \`${to}\``)), /intake is skipped|skipped intake/i, to);
+      assert.match(others.find((l) => /^\| the writer \| the lead/.test(l)), /only[^|]*open|open[^|]*only/i);
+      assert.deepEqual([...new Set(named(source))].sort(), ["critique", "design"]);
+    });
+    test("skips the intake when the owner named the designer and a complete brief exists, and says what complete means", () => {
+      assert.match(source, /skip the intake/i);
+      assert.match(source, /complete brief[^.\n]*all eleven sections|all eleven sections[^.\n]*complete/i);
+    });
+    test("the docs page says the same", () => {
+      assert.match(page, /intake/i);
+      assert.match(page, /`ogilvy`/);
+      assert.match(page, /eleven sections/i);
+    });
+  });
+
   describe("bayer (BAY1 to BAY4)", () => {
     const source = read("skills/characters/bayer/SKILL.md");
-    test("states the split: donna keeps words and the PDF build, this character owns layout and look, louis reviews", () => {
+    test("states the split: the writer owns the words of pieces made here, donna keeps long documents and the PDF build, this character owns layout and look, louis reviews", () => {
       const all = source;
-      assert.match(all, /donna keeps the words and the PDF build/i);
+      assert.match(all, /writer owns the idea and the words of the pieces made here/i);
+      assert.match(all, /donna keeps long documents and the PDF build/i);
       assert.match(all, /owns layout and look/i);
       assert.match(all, /louis reviews/i);
       assert.match(all, /app and web screens go to `breuer`/i);
+    });
+    test("takes the words from words.md, writes none, and leaves no labelled slots for donna", () => {
+      assert.match(section(source, "Hard rules"), /take the words from `words\.md`; write none/i);
+      assert.match(section(source, "Hard rules"), /names and taglines are the writer's/i);
+      assert.doesNotMatch(source, /labelled slots|leave the words to donna/i);
     });
     test("the precedence list is pointed at, not restated", () => {
       assert.match(source, /precedence list[^.]*`\/bauhaus:design`/i);
@@ -305,6 +363,11 @@ describe("breuer (BRE1 to BRE3)", () => {
     assert.match(hand, /each PNG/);
     assert.match(hand, /`Rules applied:`/);
     assert.match(hand, /not checked/i);
+  });
+  test("the split names the writer, and donna keeps long documents and the PDF build", () => {
+    assert.match(source, /writer owns the words of the pieces made here/i);
+    assert.match(source, /donna keeps long documents and the PDF build/i);
+    assert.doesNotMatch(source, /donna keeps the words/i);
   });
   test("donna, louis and the lead are roles and never calls, and bayer's work is not taken on", () => {
     assert.match(source, /donna/i);
@@ -409,9 +472,10 @@ const REFS = {
   screens: "skills/tools/screens/REFERENCES.md",
   massing: "skills/tools/massing/REFERENCES.md",
   plans: "skills/tools/plans/REFERENCES.md",
+  concept: "skills/tools/concept/REFERENCES.md",
 };
 // The least number of rows each file holds.
-const ROW_FLOOR = { brand: 4, email: 4, screens: 4, massing: 4, plans: 4 };
+const ROW_FLOOR = { brand: 4, email: 4, screens: 4, massing: 4, plans: 4, concept: 5 };
 
 describe("REFERENCES.md rows", () => {
   test("a complete row has no problem", () => assert.deepEqual(rowProblems(GOOD_ROW), []));
@@ -579,6 +643,59 @@ describe("job skills: shared rules", () => {
   }
 });
 
+// ---- the registers (Q3, RES4, RES5) ----
+
+const REGISTER_FILES = {
+  email: ["Sports", "Tech", "Fashion", "Beauty and personal care", "Food and drink", "Finance and fintech", "E-commerce and retail", "Travel"],
+  screens: ["Mobile app screens", "Landing and product pages"],
+  brand: ["Brand identity sheets"],
+};
+
+describe("REGISTERS.md in email, screens and brand", () => {
+  for (const [craft, names] of Object.entries(REGISTER_FILES)) {
+    const file = `skills/tools/${craft}/REGISTERS.md`;
+    test(`${file} holds exactly its registers, each with a date, a review-by date and a source`, () => {
+      const text = read(file);
+      const registers = text.split(/^## /m).slice(1);
+      assert.deepEqual(registers.map((r) => r.split("\n")[0].trim()), names);
+      for (const r of registers) {
+        assert.match(r, /^Date: 2026-11-07$/m);
+        assert.match(r, /^Review by: 2027-05-07$/m, "six months after the date, as TRENDS.md");
+        assert.match(r, /https?:\/\/\S+/);
+        for (const h of ["Layout", "Type", "Colour", "Story", "CTA", "Sources"]) assert.match(r, new RegExp(`^### ${h}$`, "m"), `${r.split("\n")[0]}: ${h}`);
+      }
+    });
+    test(`${file} says a register is a starting point and ranks as an optional reference, and copies no picture`, () => {
+      const text = read(file);
+      assert.match(text, /starting point, not a template/i);
+      assert.match(text, /names the register it used and what it departs from/i);
+      assert.match(text, /optional reference/i);
+      assert.match(text, /No (?:picture|page) is copied/i);
+      assert.doesNotMatch(text, /!\[[^\]]*\]\(/, "an embedded image");
+    });
+    test(`${file} names no studio that was kept out, no build word and no cast name`, () => {
+      const text = bareWords(read(file));
+      assert.doesNotMatch(text, /jh[- ]?studios/i);
+      assert.doesNotMatch(text, BUILD_WORDS);
+      assert.doesNotMatch(text, new RegExp(`\\b(?:${CAST})\\b`, "i"));
+      assert.doesNotMatch(text, /\/suits:/);
+    });
+    test(`${craft}/SKILL.md names its REGISTERS.md and says the brief names the register used (RES5)`, () => {
+      const source = job(craft);
+      assert.match(source, /REGISTERS\.md/);
+      assert.match(source, /names? the register (?:it|the piece) used|register used/i);
+    });
+  }
+  test("no picture is shipped under skills or docs", () => {
+    const walk = (dir) => readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(`${dir}/${e.name}`) : [`${dir}/${e.name}`]));
+    assert.deepEqual([...walk("skills"), ...walk("docs")].filter((f) => /\.(png|jpe?g|gif|webp|bmp)$/i.test(f)), []);
+  });
+  test("the email registers cover eight categories and leave out the studio kept as reference only", () => {
+    assert.equal(REGISTER_FILES.email.length, 8);
+    assert.doesNotMatch(read("skills/tools/email/REGISTERS.md"), /jh/i);
+  });
+});
+
 describe("brand (B1 to B7)", () => {
   const source = job("brand");
   const has = (re, why) => assert.match(source, re, why);
@@ -618,8 +735,9 @@ describe("brand (B1 to B7)", () => {
     has(/new \*\*Decided\*\* date/);
     has(/replaces the old entry/i);
   });
-  test("writes words only where the brief supplies them (B7), and only brand creates a DESIGN.md", () => {
-    has(/words only where the brief supplies them|only where the brief supplies the words/i);
+  test("names and taglines come from the writer's words.md (B7), and only brand creates a DESIGN.md", () => {
+    has(/names and taglines come from the writer's `words\.md`/i);
+    has(/writes? none of its own/i);
     has(/only `brand` creates a `DESIGN\.md`|only this skill creates a `DESIGN\.md`/i);
   });
 });
@@ -627,15 +745,16 @@ describe("brand (B1 to B7)", () => {
 describe("email (E1 to E7)", () => {
   const source = job("email");
   const has = (re, why) => assert.match(source, re, why);
-  test("output set and slots for donna's words (E1)", () => {
+  test("output set, and words taken from words.md with no slots left for anyone (E1)", () => {
     has(/email\.html/);
     has(/PNG/);
     has(/figcraft-cli/);
     has(/640/);
     has(/375/);
-    has(/labelled slots/i);
+    has(/words come from `words\.md`/i);
     has(/plain-text part/i);
-    has(/donna/i);
+    has(/writes none of the words/i);
+    assert.doesNotMatch(source, /labelled slots|donna/i);
   });
   test("runs check.mjs email first (E2) and every pair through contrast (E4)", () => {
     has(/check\.mjs email/);
@@ -675,6 +794,53 @@ describe("email (E1 to E7)", () => {
     assert.match(render, /raise the height/i);
   });
   test("colour values are inline hex taken from the token file", () => has(/inline hex/i));
+});
+
+describe("email starts as a comp (CMP1 to CMP7, CMP-B)", () => {
+  const source = job("email");
+  const has = (re, why) => assert.match(source, re, why);
+  test("a whole-page comp in FigCraft, 600 px wide, comes first, and the HTML is built after the owner sees it (CMP1, CMP2)", () => {
+    has(/starts as a whole-page comp in FigCraft, 600 px wide/i);
+    has(/owner sees the comp before the HTML is built/i);
+    has(/gate/i);
+  });
+  test("the comp's type, sizes and button are the spec for the HTML, in a 600 px container, with live text and a real button, rendered beside the comp (CMP3)", () => {
+    has(/comp'?s type, sizes and button are the spec for the HTML/i);
+    has(/600 px container/i);
+    has(/render[^.\n]*beside the comp at the same width/i);
+  });
+  test("the lint and the tells check run on the HTML, never on the comp, and the comp's contrast pairs are checked one by one (CMP4)", () => {
+    has(/lint[^.\n]*tells check run on the HTML, never on the comp/i);
+    has(/looked at by eye/i);
+    has(/check\.mjs contrast[^.\n]*--min|--min[^.\n]*pair/i);
+  });
+  test("a tells run that exits 3 on a comp is reported as not run, never as a pass (CMP5)", () => {
+    has(/exits 3 on a comp is reported as `not run`, never as a pass/i);
+  });
+  test("the output set is the comp, its export, research.md, then email.html, the assets and the two renders (CMP6)", () => {
+    const out = section(source, "Output");
+    for (const f of ["comp.figcraft", "comp.png", "research.md", "email.html", "words.md"]) assert.ok(out.includes(f), f);
+    assert.ok(out.indexOf("comp.figcraft") < out.indexOf("email.html"), "the comp comes first");
+    assert.match(out, /render[^.\n]*640 px[^.\n]*375 px|640[^.\n]*375/i);
+  });
+  test("pictures are used at the size they were supplied, and the ceiling comes from P6 of the research (CMP7)", () => {
+    has(/not enlarged past the size[^.\n]*P6/i);
+    has(/`--scale 2` doubles the pixels and does not sharpen a small source/);
+  });
+  test("the docs page says the email starts as a 600 px comp that the owner sees first", () => {
+    const page = read("docs/tools/email.md");
+    assert.match(page, /starts as a whole-page comp[^.\n]*600 px/i);
+    assert.match(page, /owner sees the comp before the HTML is built/i);
+    assert.match(page, /comp\.figcraft/);
+  });
+  test("still says not tested in Outlook for Windows (CMP-B, E5)", () => {
+    has(/not tested in Outlook for Windows/);
+    assert.match(section(source, "Hand over"), /not tested in Outlook for Windows/);
+  });
+  test("the 640 limit of the lint still stands, and the comp's width is the owner's 600", () => {
+    has(/at 640 px or narrower|640 px/);
+    has(/600/);
+  });
 });
 
 describe("critique (C1 to C9)", () => {
@@ -725,10 +891,23 @@ describe("critique (C1 to C9)", () => {
     has(/exit 2/);
     has(/side-by-side/i);
   });
-  test("copy tells T25 to T27 are donna's to fix, and T25 and T26 count toward the exit code (C9)", () => {
+  test("copy tells T25 to T27 are the writer's to fix, and T25 and T26 count toward the exit code (C9)", () => {
     has(/T25 to T27/);
-    has(/donna/i);
-    has(/T25 and T26/);
+    has(/the writer's to fix/i);
+    has(/T25 and T26 still count toward the exit code/);
+    has(/T27 (?:is|stays) a warning/);
+    assert.doesNotMatch(source, /donna/i);
+  });
+  test("also judges the piece against the brief's Idea and Story, as a judged finding with no new exit code (O10)", () => {
+    has(/Idea/);
+    has(/judges? the piece against the brief's `Idea` and `Story`/i);
+    has(/two words/i);
+    has(/beat[^.\n]*carried by/i);
+    has(/judged[^.\n]*no (?:new )?exit code|no (?:new )?exit code[^.\n]*judged/i);
+  });
+  test("reads a built email against its comp and reports a move that was lost (CMP-C)", () => {
+    has(/built email against (?:its|the) comp/i);
+    has(/move that was lost/i);
   });
   test("a trend is named as a reason only if it is in TRENDS.md, and an applied trend missing from section 8 is reported", () => {
     has(/TRENDS\.md/);
@@ -812,8 +991,10 @@ describe("screens (S1 to S7)", () => {
     has(/l10n rules first/i);
     has(/key[^.]*English text/i);
     has(/`No l10n rule found`/);
+    has(/words\.md/);
     has(/donna/i);
-    has(/long-form/i);
+    has(/document-length/i);
+    assert.doesNotMatch(source, /long-form/i);
   });
   test("a deliverable cites three rows, or states a lower minimum with a reason and a floor of one; not opened rows are never counted", () => {
     has(/at least three rows/i);
@@ -1131,5 +1312,276 @@ describe("reference row ids across files", () => {
     for (const file of Object.values(REFS)) {
       for (const r of referenceRows(read(file)).filter((x) => /Wikibooks|Wikipedia/.test(x[1]))) assert.match(r[2], /secondary/, `${file}: ${r[0]}`);
     }
+  });
+});
+
+// ---- the writer and the concept tool (spec WRT, W1 to W10, I4, ADR 0002) ----
+
+describe("the writer", () => {
+  const source = read("skills/characters/ogilvy/SKILL.md");
+  const rules = section(source, "Hard rules");
+  const hand = section(source, "Hand over");
+
+  test("is the writer: owns the idea, the insight, the story and the words of every piece made here (W1)", () => {
+    assert.match(frontmatter(source), /^name: ogilvy$/m);
+    assert.match(source, /owns the idea, the insight, the story and the words/i);
+    assert.match(rules, /owns the idea, the insight, the story and the words of every piece made here/i);
+    assert.doesNotMatch(frontmatter(source), NUMBER_OF);
+  });
+  test("reads Intake and works from it, never asks the owner again, and lists what is missing for the lead (I4)", () => {
+    assert.match(rules, /reads `Intake`/);
+    assert.match(rules, /does not ask the owner again/i);
+    assert.match(rules, /list[^.\n]*open[^.\n]*lead[^.\n]*ask/i);
+  });
+  test("takes the brief from the lead and hands brief and words.md to the designer by name, and calls no character", () => {
+    assert.match(source, /\| the lead \| the writer \|/);
+    assert.match(source, /\| the writer \| `bayer` \|/);
+    assert.match(source, /\| the writer \| `breuer` \|/);
+    assert.match(source, /\| the writer \| `mies` \|/);
+    for (const to of ["bayer", "breuer", "mies"]) assert.match(hand, new RegExp(`\`handed to ${to}\``));
+    assert.match(hand, /`open questions for gropius`/, "the I4 case has its own first-line value");
+    assert.match(source, /\| the writer \| the lead \|/);
+    assert.match(hand, /first line/i);
+    assert.match(hand, /`words\.md`/);
+    assert.match(hand, /not checked/i);
+    assert.doesNotMatch(source, /\/bauhaus:(?:bayer|breuer|mies|gropius|ogilvy)/);
+  });
+  test("the designer may send a line back, and the writer changes the line and does not argue the layout (W9)", () => {
+    assert.match(rules, /designer may send a line back/i);
+    assert.match(rules, /changes the line and does not argue the layout/i);
+  });
+  test("the words are a file with slot ids, not slots left open (W10)", () => {
+    assert.match(rules, /`words\.md`[^.\n]*slot id/i);
+    assert.match(rules, /designer places them and writes none/i);
+  });
+  test("the split with donna is stated: documents and the PDF build stay with donna, the precedence list is pointed at", () => {
+    assert.match(rules, /donna keeps (?:long )?documents and the PDF build/i);
+    assert.match(rules, /precedence list[^.\n]*`design`/i);
+    assert.doesNotMatch(source, /^\d\. The project's own checked-in rules/m);
+  });
+  test("a conflict between the brief and a project rule is named and put to the owner, and screen strings follow the project's l10n shape", () => {
+    assert.match(rules, /contradicts a project rule[^.\n]*stop[^.\n]*name the rule[^.\n]*ask the owner/i);
+    assert.match(rules, /l10n/i);
+  });
+  test("the sample line is about the work", () => {
+    const [line] = samples(section(source, "Voice"));
+    assert.match(line, /words\.md|idea/i);
+  });
+});
+
+describe("the concept tool", () => {
+  const source = read("skills/tools/concept/SKILL.md");
+  const has = (re, why) => assert.match(source, re, why);
+  test("name equals folder, the description names the work, and it names its references", () => {
+    has(/^---\nname: concept\ndescription: .+\n---/);
+    has(/REFERENCES\.md/);
+    assert.doesNotMatch(frontmatter(source), NUMBER_OF);
+  });
+  test("every row it cites exists in its own REFERENCES.md and was opened", () => {
+    const rows = new Map(referenceRows(read(REFS.concept)).map((r) => [r[0], r]));
+    const cited = citedRows(source);
+    assert.ok(cited.length >= 4, `cites ${cited.length} rows`);
+    for (const id of cited) {
+      assert.ok(rows.has(id), `${id} is not a row of concept/REFERENCES.md`);
+      assert.equal(rows.get(id)[5], "opened");
+    }
+  });
+  test("the idea comes from a fact found in the research, and the insight names its research row (W2)", () => {
+    has(/idea comes from a fact/i);
+    has(/never from (?:the writer's )?taste alone/i);
+    has(/insight[^.\n]*research row/i);
+  });
+  test("the idea is cut to two words, and an idea that cannot be is not yet one (W3)", () => {
+    has(/two words/i);
+    has(/`Two words: <word> <word>`/);
+    has(/not yet one idea/i);
+  });
+  test("the story is 3 to 5 beats, each with what carries it, and reads from pictures, crops and order before copy (W4)", () => {
+    has(/3 to 5 beats/);
+    has(/carried by/);
+    has(/pictures, crops and order before it reads from the copy/i);
+    has(/`Story: none\. Reason: <why>`/);
+  });
+  test("a formula does not replace an idea (W5)", () => {
+    has(/formula does not replace an idea/i);
+    has(/defended only because it follows the rules[^.\n]*fails/i);
+  });
+  test("plain words: as people speak, short, no jargon, read aloud the next morning and edit (W6)", () => {
+    has(/the way people speak/i);
+    has(/short words, short sentences/i);
+    has(/no jargon/i);
+    has(/aloud/i);
+    has(/next morning/i);
+  });
+  test("says plainly what the reader should do (W7)", () => {
+    has(/says? plainly what the reader should do/i);
+  });
+  test("claims only what was checked: no spec, date, figure or performance claim without a research row (W8)", () => {
+    has(/no spec, date, figure or performance claim/i);
+    has(/unless a research row backs it/i);
+  });
+  test("words.md holds each line with the slot id the layout uses, and the research row for any claim (W10)", () => {
+    has(/`words\.md`/);
+    has(/slot id/i);
+    has(/\| Slot \| Words \| Research row \|/);
+    has(/designer places them and writes none/i);
+  });
+  test("checks the brief with check.mjs by its path from the plugin root", () => {
+    has(/node skills\/tools\/design\/check\.mjs brief/);
+  });
+  test("long documents and the PDF build are donna's, screen strings follow the project's l10n shape, and the project's rules win", () => {
+    has(/donna/i);
+    has(/l10n/i);
+    has(/project'?s own rules[^.\n]*(?:win|outrank|come first)/i);
+  });
+  test("names no cast member, no build word, no call into another package, and no lending-only book", () => {
+    const text = bareWords(source);
+    assert.doesNotMatch(text, BUILD_WORDS);
+    assert.doesNotMatch(text, new RegExp(`\\b(?:${CAST})\\b`, "i"));
+    assert.doesNotMatch(source, /\/suits:|\/ui-ux-pro-max:/);
+    assert.doesNotMatch(source, /\]\(\.\.\//, "a link into another folder");
+  });
+});
+
+describe("concept/REFERENCES.md", () => {
+  const rows = referenceRows(read(REFS.concept));
+  const find = (re) => rows.filter((r) => re.test(r[1]));
+  test("holds the five opened sources, each with a free link, and no lending-only book", () => {
+    assert.equal(rows.length, 5);
+    for (const r of rows) {
+      assert.equal(r[5], "opened", r[0]);
+      assert.match(r[6], /^free \(https:\/\//, r[0]);
+    }
+    assert.equal(find(/How to Write/).length, 1, "the memo on plain writing");
+    assert.equal(find(/Letter of 15 May/).length, 1, "the letter on persuasion");
+    assert.equal(find(/D&AD/).length, 1, "the two-words exercise");
+    assert.equal(find(/Collins/).length, 1);
+    assert.equal(find(/Koto/).length, 1);
+  });
+  test("its ids repeat no id of any other references file", () => {
+    const others = Object.entries(REFS).filter(([craft]) => craft !== "concept").flatMap(([, f]) => referenceRows(read(f)).map((r) => r[0]));
+    assert.deepEqual(rows.map((r) => r[0]).filter((id) => others.includes(id)), []);
+  });
+});
+
+describe("ADR 0002, the writer and the cast", () => {
+  const adr = read("docs/adr/0002-the-writer-and-the-cast.md");
+  test("has a date, a context, a decision and consequences", () => {
+    assert.match(adr, /^# .+/m);
+    assert.match(adr, /^Date: 2026-11-07$/m);
+    for (const title of ["Context", "Decision", "Consequences"]) assert.match(adr, new RegExp(`^## ${title}$`, "m"));
+  });
+  test("records the theme change, the gate that Kállai failed and the name chosen", () => {
+    assert.match(adr, /theme change/i);
+    assert.match(adr, /not only people of the school|no longer only/i);
+    assert.match(adr, /Kállai/);
+    assert.match(adr, /gate/i);
+    assert.match(adr, /Ogilvy/);
+    assert.match(adr, /plain-writing method|memo/i);
+  });
+  test("says what the name gives and what it does not: a method for words, a stance for ideas, from two opened texts", () => {
+    assert.match(adr, /method for (?:the )?words/i);
+    assert.match(adr, /stance for (?:the )?ideas?/i);
+    assert.match(adr, /two writers' opened texts|two opened texts/i);
+  });
+  test("keeps the rules for a real person: craft only, no biography, no quoted words, names as names only", () => {
+    assert.match(adr, /craft only/i);
+    assert.match(adr, /no biography/i);
+    assert.match(adr, /never quoted|paraphrase/i);
+  });
+  test("adds the writer to the casting rationale and says the rights position is the private repo of ADR 0001", () => {
+    assert.match(adr, /^\| David Ogilvy \| Writer \|/m);
+    assert.match(adr, /0001/);
+    assert.match(adr, /public release re-opens/i);
+  });
+  test("is a decision record and not a character file: it holds the person's death year, which no character file may", () => {
+    assert.match(adr, /\b1999\b/);
+  });
+});
+
+describe("the words boundary (Q7)", () => {
+  const pages = [...registered.map((d) => `${d}/SKILL.md`), ...files("docs/characters"), ...files("docs/tools")];
+  test("no skill or page still says the words are donna's, or leaves slots for her", () => {
+    for (const file of pages) {
+      const text = read(file);
+      assert.doesNotMatch(text, /donna keeps the words|the words stay donna|leave the words to donna|labelled slots|words come from donna|\bwrites? the email copy\?\*\* Donna/i, file);
+    }
+  });
+  test("gropius: the words come from the writer, except documents and the PDF build, which are donna's", () => {
+    const rules = section(read("skills/characters/gropius/SKILL.md"), "Hard rules");
+    assert.match(rules, /words come from the writer, except documents and the PDF build, which are donna's/i);
+    const page = read("docs/characters/gropius.md");
+    assert.match(page, /\*\*Who writes the words\?\*\* The writer[^\n]*except documents and the PDF build, which are donna's/i);
+  });
+  test("every designer page and character says who owns the words", () => {
+    for (const name of ["bayer", "breuer", "mies"]) {
+      assert.match(read("skills/characters", name, "SKILL.md"), /writer owns the (?:idea and the )?words of the pieces made here/i, name);
+      assert.match(read("docs/characters", `${name}.md`), /writer owns the words of the pieces made here/i, name);
+      assert.match(read("docs/characters", `${name}.md`), /donna keeps long documents and the PDF build/i, name);
+    }
+  });
+  test("the email, brand and critique pages name the writer", () => {
+    for (const page of ["email", "brand", "critique"]) assert.match(read("docs/tools", `${page}.md`), /writer/i, page);
+  });
+});
+
+// ---- the spec edits for the writer and the flow (spec section 11 of the amendment) ----
+
+describe("specs/design-package.md carries the writer and the flow", () => {
+  const spec = read("specs/design-package.md");
+  const solution = spec.split(/^## Solution$/m)[1].split(/^## User Stories$/m)[0];
+  const stories = spec.split(/^## User Stories$/m)[1].split(/^## Implementation Decisions$/m)[0];
+  const three = spec.split(/^### 3\./m)[1].split(/^### 4\./m)[0];
+  const cast = spec.split(/^### 4\./m)[1].split(/^### 5\./m)[0];
+  const tree = spec.split(/^### 8\./m)[1].split(/^### 9\./m)[0];
+  const acceptance = spec.split(/^### 9\./m)[1].split(/^### 10\./m)[0];
+
+  test("the solution gives the flow and the writer, and the words boundary replaces donna keeps the words", () => {
+    assert.match(solution, /grill, research, concept and story, craft, crit|grill[^.\n]*research[^.\n]*concept and story[^.\n]*craft[^.\n]*crit/i);
+    assert.match(solution, /\*\*David Ogilvy\*\* is the writer/);
+    assert.match(solution, /`concept`/);
+    assert.match(solution, /research step/i);
+    assert.doesNotMatch(solution, /Donna keeps the words and the PDF build/);
+    assert.match(solution, /The writer owns the words of the pieces made here; donna keeps long documents and the PDF build/);
+  });
+  test("user story 26 is the writer's, and there are stories for the intake, the idea, the story and the comp", () => {
+    assert.match(stories, /26\. As the writer, I want the designer to take the words from my file/);
+    assert.doesNotMatch(stories, /As donna, I want the designer to leave the words/);
+    for (const re of [/intake/i, /one idea[^.\n]*two words|two words/i, /story[^.\n]*beats/i, /comp/i]) assert.match(stories.split("32. ")[1] ?? "", re);
+  });
+  test("section 3 has the new blocks: concept, intake, research, the brief, the comp and the writer", () => {
+    for (const id of ["BRF1", "BRF2", "BRF3", "RES1", "RES2", "RES3", "RES4", "RES5", "RES6", "CMP1", "CMP7", "CMP-A", "CMP-B", "CMP-C", "W1", "W10", "I1", "I6", "D16"]) assert.ok(three.includes(`- ${id} `) || three.includes(`**${id}`), id);
+    assert.match(three, /\*\*`concept`/);
+  });
+  test("D13 is replaced by BRF1, E1 takes its words from words.md, B7 and C9 name the writer, S7 keeps document text with donna", () => {
+    assert.match(three, /- D13 [^\n]*[Rr]eplaced by BRF1/);
+    assert.match(three, /- E1 [^\n]*words come from `words\.md`/);
+    assert.doesNotMatch(three, /labelled slots/);
+    assert.match(three, /- B7 [^\n]*come from the writer's file/);
+    assert.match(three, /- C9 [^\n]*writer to fix/);
+    assert.match(three, /- S7 [^\n]*document-length/i);
+    assert.match(spec, /18\. \*\*harvey\.\*\* Copy tells \(T25 to T27\)[^\n]*writer's to fix/);
+  });
+  test("section 4 adds the writer's row and says the cast is no longer only the school's, with ADR 0002", () => {
+    assert.match(cast, /^\| David Ogilvy, 1911 to 1999 \| Writer/m);
+    assert.match(cast, /0002/);
+    assert.match(cast, /theme change/i);
+  });
+  test("section 8 lists the ten new files, and the PR-F row holds them under the cap", () => {
+    for (const f of ["skills/characters/ogilvy/SKILL.md", "docs/characters/ogilvy.md", "skills/tools/concept/SKILL.md", "skills/tools/concept/REFERENCES.md", "docs/tools/concept.md", "skills/tools/design/RESEARCH.md", "skills/tools/email/REGISTERS.md", "skills/tools/screens/REGISTERS.md", "skills/tools/brand/REGISTERS.md", "docs/adr/0002-the-writer-and-the-cast.md"]) assert.ok(tree.includes(f), f);
+    assert.match(tree, /\| 6\. The writer and the flow[^\n]*\| 10 \|/);
+  });
+  test("section 9 adds the acceptance step for the flow", () => {
+    assert.match(acceptance, /^12\. /m);
+    assert.match(acceptance, /five questions in one message/);
+    assert.match(acceptance, /check\.mjs research/);
+    assert.match(acceptance, /600 px comp/);
+  });
+  test("the testing decisions name the research check, the brief and the writer's scans, and question 5 is closed with the boundary sentence", () => {
+    const testing = spec.split(/^## Testing Decisions$/m)[1].split(/^## Out of Scope$/m)[0];
+    assert.match(testing, /`research`|research file/i);
+    assert.match(testing, /writer/i);
+    assert.match(spec, /5\. \*\*harvey\.\*\* Who owns the strings[^\n]*Closed:[^\n]*The writer owns the words of the pieces made here; donna keeps long documents and the PDF build/);
+    assert.match(spec, /^21\. \*\*owner\.\*\*[^\n]*Closed/m);
   });
 });

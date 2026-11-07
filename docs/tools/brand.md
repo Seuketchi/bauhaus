@@ -18,7 +18,7 @@ Skip it for a single email, a screen or a document that the project's existing `
 
 ## Common questions
 
-**Who writes the words?** Whoever the brief names. `brand` writes names and taglines only where the brief supplies them.
+**Who writes the words?** The writer. Names and taglines come from the writer's `words.md`, and `brand` writes none of its own.
 
 **Why must the logo come from VectorCraft?** So it can be made again. The step command is saved beside the SVG, and running it again writes a file of the same byte length, or the differences are listed. A hand-written SVG fails.
 

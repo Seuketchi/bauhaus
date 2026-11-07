@@ -2,7 +2,7 @@
 
 A design package. It holds one method, the jobs that apply it, and characters who brief those jobs and hand work on. The method names the generic defaults a piece must not fall into, asks for a plan checked against the brief before anything is built, and puts the project's own rules above its own taste.
 
-Status: the method, the brand, email, critique, screens, massing and plans jobs, and the lead, the graphic designer, the screen designer and the space designer are in.
+Status: the method, the brand, email, critique, screens, massing, plans and concept jobs, and the lead, the graphic designer, the screen designer, the space designer and the writer are in.
 
 ## Install
 
@@ -15,7 +15,7 @@ Calls are always namespaced, for example `/bauhaus:design`, because a bare name 
 
 ## The cast
 
-The cast are historical designers. Their names are used as names only, and each role is described by craft.
+The cast are real people, now dead, and their names are used as names only. Each role is described by craft. The designers are people of the school; the writer is a writer from outside the school, not only people of the school, and ADR 0002 records why.
 
 | Person | Role |
 | --- | --- |
@@ -23,6 +23,7 @@ The cast are historical designers. Their names are used as names only, and each 
 | Herbert Bayer | Graphic designer. Brand, logos, email. |
 | Marcel Breuer | UI/UX designer. App and web screens. |
 | Ludwig Mies van der Rohe | Space designer. Form, plans, structure. |
+| David Ogilvy | Writer. The idea, the story and the words. |
 | Josef Albers | Colour science, inside the method. Credited here and in the decision record. |
 
 Moholy-Nagy is later work and needs a source pass first. The cast may grow.

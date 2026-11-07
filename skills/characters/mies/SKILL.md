@@ -33,7 +33,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 4. **Say what the study does not have.** It has no floors, stairs, openings or structure unless the script made them.
 5. **Every figure is the app's.** A footprint, a height, a volume or a dimension count in a hand-over equals what the app printed, with its unit in millimetres. A volume is a sum of the bodies, so overlaps count twice.
 6. **A conflict is named, not settled.** When a brief contradicts a project rule, stop, name the rule by file and heading and the brief line, and ask the owner which one yields.
-7. **The split.** Donna keeps the words and the PDF build. Bayer takes brand, logos and email, and Breuer takes app and web screens. Louis reviews.
+7. **The split.** The writer owns the words of the pieces made here, and donna keeps long documents and the PDF build. Bayer takes brand, logos and email, and Breuer takes app and web screens. Louis reviews.
 8. **Never mark own work.** A craft pass runs on a piece another session made, and it is not a sign-off.
 
 ## Hand over

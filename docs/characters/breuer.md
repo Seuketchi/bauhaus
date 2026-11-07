@@ -8,7 +8,7 @@ It calls three tools, each on a stated fact: `design` when no brief file exists,
 
 The project's own rules and its design gate come first. When a brief contradicts one, the designer stops, names the rule by file and heading and the brief line, and asks the owner which yields. The designer writes no app code.
 
-The split is fixed. Donna keeps the words and the PDF build, `bayer` takes brand, logos and email, and louis reviews.
+The split is fixed. The writer owns the words of the pieces made here, donna keeps long documents and the PDF build, `bayer` takes brand, logos and email, and louis reviews.
 
 ## When to reach for it
 
@@ -32,4 +32,4 @@ Skip it for brand, logos, email and document text.
 - Every screen spec starts with the rules it applied, and the headings exist in the files named.
 - No app code appears in its output.
 - Every colour pair in its notes is computed.
-- Words in its screens come from the brief or from donna.
+- Words in its screens come from the writer's `words.md`, in the project's own l10n shape.

@@ -4,19 +4,20 @@
 
 `design` is the method every visual job follows. It holds the stance, the list of generic defaults a piece must not fall into, the plan-then-check pass that catches a default before it is drawn, the rule that the project's own rules win, and a small checker that computes the numbers.
 
-The checker, `check.mjs`, is a dependency-free Node script with eight commands: `contrast` computes the WCAG 2.2 ratio of two colours (it exits 0 on a failing pair unless `--min` is passed); `design` checks a project's `DESIGN.md`; `tokens` checks a token file and its modes; `document-css` writes the six document properties from it; `trends` checks the dated trends file; `brief` checks the brief for a piece; `email` lints an HTML email; `tells` runs the 29 rows of `TELLS.md` on a piece.
+The checker, `check.mjs`, is a dependency-free Node script with these commands: `contrast` computes the WCAG 2.2 ratio of two colours (it exits 0 on a failing pair unless `--min` is passed); `design` checks a project's `DESIGN.md`; `tokens` checks a token file and its modes; `document-css` writes the six document properties from it; `trends` checks the dated trends file; `brief` checks the brief for a piece, which has eleven sections; `research` checks the research file for a piece; `email` lints an HTML email; `tells` runs the 29 rows of `TELLS.md` on a piece.
 
-It also owns the rules for driving the command-line apps (`ARTCRAFT.md`), the formats of `DESIGN.md`, the token file and the brief (`DESIGN-MD.md`), the tells (`TELLS.md`) and the trends (`TRENDS.md`).
+It also owns the intake, the five questions put to the owner once before a brief is written, the research step (`RESEARCH.md`), the rules for driving the command-line apps (`ARTCRAFT.md`), the formats of `DESIGN.md`, the token file and the brief (`DESIGN-MD.md`), the tells (`TELLS.md`) and the trends (`TRENDS.md`).
 
 ## When to reach for it
 
-- Before any visual piece: a brand, an email, a logo, an app or web screen. Read it, write the brief file and the token plan, and only then build.
+- Before any visual piece: a brand, an email, a logo, an app or web screen. Read it, run the intake when no complete brief exists, write the brief file and the token plan, and only then build.
+- When a piece needs the facts of its job and a look read from finished work of the same kind: the research step writes `research.md`, checked by `check.mjs research`.
 - When a colour pair needs a number, not an opinion: `check.mjs contrast <fg> <bg> --min 4.5`.
 - When a project needs a `DESIGN.md` or a token file checked, or a brand needs the six document properties for a PDF.
 - When a finished piece must be checked for the banned defaults: `check.mjs tells`.
 - When a trend is proposed: look it up in `TRENDS.md`. A trend is used only when the brief asks, and only when it is on trial.
 
-Skip it for words alone (document text and email copy), which it leaves to whoever writes them.
+Skip it for the words of a document, which it leaves to whoever writes them. The words of a piece made here come from the writer's file.
 
 ## Common questions
 
@@ -35,7 +36,8 @@ Skip it for words alone (document text and email copy), which it leaves to whoev
 ## It's working if
 
 - A `DESIGN.md` for a project passes `check.mjs design`, its token file passes `check.mjs tokens`, and every colour pair in it has a computed ratio at or above its threshold.
-- A piece starts from a brief that passes `check.mjs brief` and cites at least three reference rows, or states a lower minimum with a reason.
+- A piece starts from a brief that passes `check.mjs brief` with all eleven sections and cites at least three reference rows, or states a lower minimum with a reason.
+- The research file for a piece passes `check.mjs research`, and every rule it takes from a source rests on a source marked `opened`.
 - `check.mjs tells` on a finished piece gives `PASS: no tells`, with a render and the brand's data supplied, and exits 1 on a piece that carries a default the brief did not earn.
 - No piece in the project falls into a ban in `TELLS.md` without a dated reason in the brief or in `DESIGN.md` under **Not to do**.
 - The project's own rules were read first, and a conflict with the brief was named and not resolved silently.

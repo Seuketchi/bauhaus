@@ -2,11 +2,11 @@
 
 ## What it does
 
-`email` builds the layout and look of one HTML email. It produces `email.html` with live text, a real link button and alt text on every image; the image assets as PNG files made by FigCraft; and a render at 640 px and 375 px wide made in headless Chrome.
+`email` builds the layout and look of one HTML email. It starts as a whole-page comp in FigCraft, 600 px wide, and the owner sees the comp before the HTML is built. The comp's type, sizes and button are the spec for the HTML. It produces `comp.figcraft`, `comp.png` and `email.html` with live text, a real link button and alt text on every image; the image assets as PNG files made by FigCraft; and a render at 640 px and 375 px wide made in headless Chrome.
 
 It lints the email with `check.mjs email` against `LIMITS.md`, a table of client limits where each row has a feature, a pattern, a client, a support level, a test date and a caniemail page. A row whose support is `none` fails the email. Any other level is a note.
 
-Copy and the plain-text part come from whoever writes the words. `email` leaves labelled slots for them.
+The words come from the writer's `words.md`, by slot id, and so does the plain-text part. `email` writes none of them.
 
 ## When to reach for it
 
@@ -29,6 +29,7 @@ Skip it for the words of the email, for a web page or an app screen.
 
 - `check.mjs email email.html --limits LIMITS.md` passes and prints which `LIMITS.md` it read.
 - Every colour pair passes `check.mjs contrast --min`: 4.5:1 for text and 3:1 for a button or other interface part.
+- The comp was shown to the owner first, and the render of the HTML sits beside it at the same width.
 - Both renders exist, at 640 px and at 375 px, and the email reads with images blocked.
 - The hand-over says the email was not tested in Outlook for Windows and gives the date the limits were re-read.
 - The brief for the email cites at least three rows of `REFERENCES.md`, or states a lower minimum with a reason.

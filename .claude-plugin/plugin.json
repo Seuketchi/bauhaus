@@ -17,6 +17,8 @@
     "./skills/tools/screens",
     "./skills/characters/mies",
     "./skills/tools/massing",
-    "./skills/tools/plans"
+    "./skills/tools/plans",
+    "./skills/characters/ogilvy",
+    "./skills/tools/concept"
   ]
 }
