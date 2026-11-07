@@ -103,7 +103,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - D11 [T] `check.mjs document-css <file.tokens>` writes the six custom properties (`--accent`, `--ink`, `--muted`, `--line`, `--tint`, `--font`) from the `document` group, resolving aliases, and fails if any cannot be resolved.
 - D12 [T] `check.mjs trends <TRENDS.md> --as-of <date>` fails an entry that lacks one of its eight fields, has a status other than `Watch`, `Trial` or `Retired`, or is past its review-by date on that date (section 11).
 - D8 [T] `check.mjs email <file.html>`: see E2.
-- D9 [T] D1's bans are the 28 tells of `TELLS.md` (section 10), not a separate list; the method points at that one file. A tell passes only when the piece's brief or the brand data names the choice.
+- D9 [T] D1's bans are the 29 tells of `TELLS.md` (section 10), not a separate list; the method points at that one file. A tell passes only when the piece's brief or the brand data names the choice.
 - D13 [T] `check.mjs brief <brief.md>` accepts a valid brief and rejects one missing audience, job, tone, must-not-look-like, surface or references, or one that names a tell id not in `TELLS.md` (section 10).
 - D14 [T] The colour rules of `design` cite WCAG 2.2 (opened) and say a colour's reading depends on its neighbours, so pairs are checked in place as well as by ratio. They cite no lending-only book (section 10).
 
@@ -371,13 +371,14 @@ Given one real small brief from one of the owner's projects (the asenso app has 
 6. `critique`, run by a session other than the maker, reports every seeded defect (C6) and edits nothing.
 7. Louis reviews each PR against this spec once, with one re-review at most, and checks every piece against `TELLS.md` (section 10). An auditor maps the work to AC ids D1 to D14, B1 to B7, E1 to E7, S1 to S7, C1 to C9, GRO1 to GRO4, BAY1 to BAY4, BRE1 to BRE3, CAST1; a violated criterion or an unrequested change keeps the PR in draft.
 8. Each piece in steps 3 and 5 started from a brief file that passes D13 and cites at least three reference rows. `critique` exits 0 and reports `PASS: no tells` on each, exits 1 on a seeded piece that carries one tell of each kind the checklist lists, and exits 2 on a seeded piece that cites no reference.
-9. The 28 checks of `TELLS.md` have been run on three real ArtCraft-built files, and every false positive is either fixed or listed in the file (the research proposed the checks and did not run them).
+9. The 29 checks of `TELLS.md` have been run on three real ArtCraft-built files, and every false positive is either fixed or listed in the file (the research proposed the checks and did not run them).
+10. `design/TRENDS.md` holds the 9 seed entries of section 11 and `check.mjs trends` passes on it. A tenth, "Email shaped for automated inbox summaries", was dropped because it had no opened source.
 
 ### 10. References and the machine-made look
 
-**From `references-research.md` (rachel, 2026-11-07). Every check in it is a proposal that was not run; none of the 28 has been tested for false positives.** The planner's numbering called this section 5; it is section 10 here. The proposed encoding is the researcher's inference, and this section is my decision on it, for the owner to confirm.
+**From `references-research.md` (rachel, 2026-11-07). Every check in it is a proposal that was not run; none of the 29 has been tested for false positives.** The planner's numbering called this section 5; it is section 10 here. The proposed encoding is the researcher's inference, and this section is my decision on it, for the owner to confirm.
 
-What the research found: the canon that can be opened now is the Vignelli Canon (a Wayback copy), the NASA Graphics Standards Manual (title and page count only), WCAG 2.2, Apple's guideline data, caniemail, Really Good Emails and Vitruvius. Every other book on the list (Müller-Brockmann, Albers, Bringhurst, Rand, Ching, Alexander, Mascelli, Katz) is lending-only at the Internet Archive. The 28 tells come from three primary sources (Anthropic's frontend-design, Impeccable's craft floor, ui-ux-pro-max) and two designer blogs; copy tells rest on one primary source.
+What the research found: the canon that can be opened now is the Vignelli Canon (a Wayback copy), the NASA Graphics Standards Manual (title and page count only), WCAG 2.2, Apple's guideline data, caniemail, Really Good Emails and Vitruvius. Every other book on the list (Müller-Brockmann, Albers, Bringhurst, Rand, Ching, Alexander, Mascelli, Katz) is lending-only at the Internet Archive. The 29 tells come from three primary sources (Anthropic's frontend-design, Impeccable's craft floor, ui-ux-pro-max) and two designer blogs; copy tells rest on one primary source.
 
 Two cautions from the sources, both kept: a tell is a default, not a crime, and a brief that names it earns it; and banning one look pushes the generating tool to its next most probable look (found only in a search summary, so inferred), which is why bans are paired with positive references.
 
@@ -395,25 +396,28 @@ Two cautions from the sources, both kept: a tell is a default, not a crime, and 
 
 **3. The brand's grid, type scale, palette and spacing scale are data,** kept in the project's token file (section 5), not in prose: a `grid` group (columns, gutter, margin), a `type` group (the ratio or step list and the body measure), a `space` group (the spacing scale) and the palette. `check.mjs tells` reads them for T20 and T21. With no such data, T20 and T21 cannot run and the check exits 3 (a failure), unless the brief names the choice.
 
-**4. `TELLS.md` holds the 28 checkable tells** (`design/TELLS.md`). One row each: id, tell, check, check type (`file`, `render` or `text`), source and `status: proposed, not run`. A tell passes only when the brief or the brand data names the choice. The 28, from the research:
+**4. `TELLS.md` holds the 29 checkable tells** (`design/TELLS.md`). One row each: id, tell, check, check type (`file`, `render` or `text`), source and `status: proposed, not run`. A tell passes only when the brief or the brand data names the choice. The 29, from the research:
 
 | Ids | Tells | Type |
 | --- | --- | --- |
 | T1 to T3 | default font with no reason; indigo-to-purple gradient; gradient text | file |
-| T4 to T7 | centred hero over three equal cards; identical cards everywhere; one radius and one soft shadow on everything; ghost card (a 1 px border under a wide soft shadow) | render (T7 is also file-checkable) |
+| T4 | centred hero over three equal cards | render |
+| T5 to T7 | identical cards everywhere; one radius and one soft shadow on everything; ghost card (a 1 px border under a wide soft shadow) | file (the look can also be seen in a render) |
 | T8 to T14 | coloured side stripe; hard offset shadow; glass or blur as decoration; emoji or glyph as icon; tracked-caps eyebrow; dot-joined meta line; "WORD, dash, fragment" label | file |
 | T15, T16 | numbered markers on non-sequences; one accented word in a headline | file or render, set when the row is written |
 | T17, T18 | hero big number with a small label; cream, serif and terracotta, or near-black with one acid accent | render |
 | T19 | tinted near-black standing in for black | file |
-| T20, T21 | no grid; no type scale | render, against the brand data |
+| T20 | no grid | render, against the brand data |
+| T21 | no type scale | file, against the brand data |
 | T22 to T24 | identical entrance on every section; mono as costume; the accessibility floor (contrast 4.5:1 and 3:1, targets of at least 24 CSS px and 44 pt on iOS, visible focus, text of at least 12 px) | file or render, set when the row is written |
 | T25 to T27 | placeholder copy; buzzword and rhythm copy; copy with no specific detail (**T27 is a warning, not a failure**) | text |
 | T28 | stock-sketch SVG or stripe pattern as illustration | file |
+| T29 | broadsheet hairlines: hairline rules, no rounded corner, dense columns | file |
 
 - T26's wordlist rests on search summaries of blog pages the researcher did not open, so the row is marked inferred.
 - T24 repeats the numbers of D6 and E4 on purpose; one check function serves all three.
 - Impeccable's detector (62 rules, Apache-2.0, a `NOTICE.md` at its root) was not read in full. Decision: write our own checks and read its rule list for ideas only; nothing is copied (open question 16).
-- Tests: [T] each of the 28 rows has a check, a type, a source and a status; [T] each `file` and `text` row has a fixture the check flags and one it passes, in `test/design.test.mjs`; [R] each `render` row has a fixture run locally with ArtCraft and Chrome (not in CI, as in seam 3 of the testing decisions).
+- Tests: [T] each of the 29 rows has a check, a type, a source and a status; [T] each `file` and `text` row has a fixture the check flags and one it passes, in `test/design.test.mjs`; [R] each `render` row has a fixture run locally with ArtCraft and Chrome (not in CI, as in seam 3 of the testing decisions).
 
 **5. `critique` fails a piece on any tell the brief does not name, and fails a piece that cites no reference.** The contract is C7 to C9. The script covers `file` and `text` tells and, given a render, the `render` tells; "feels like a template" needs a person, so the side-by-side against one chosen reference row stays a reviewer step (C8). **Louis checks against the same file:** his done test for a design piece gains `Dn: no tell in TELLS.md. Check: check.mjs tells <piece> --brief <brief>. Expect: exit 0` and `Dm: the piece cites at least three rows of REFERENCES.md. Check: the brief's references list. Expect: three or more, each id present`. He does not judge taste (picks 6). A tell that survives critique and louis is a blocker, and he cites the `TELLS.md` row.
 
@@ -435,7 +439,7 @@ The rule:
 6. **One dated file, `design/TRENDS.md`,** owned by `design`. A project's `DESIGN.md` holds only the entry name, the date reviewed and the brief line (section 5, row 8). Entry fields: name, what it is, originator and date, source URLs, counter-evidence, project types it suits, status, review-by date.
 7. **A trend is never written from a page that could not be read.** An entry that rests on Material 3 or the Apple guideline body text is not written until that page is read in a browser. Press and search snippets are never evidence.
 
-Seed entries, all `Watch`, each with its counter-evidence and its one-source warnings kept (the dates and sources are the researcher's; the review-by date is set when the file is written):
+Nine seed entries, all `Watch`, each with its counter-evidence and its one-source warnings kept (the dates and sources are the researcher's; the review-by date is set when the file is written):
 
 | Entry | Originator and date | Counter-evidence kept in the entry |
 | --- | --- | --- |
@@ -448,9 +452,8 @@ Seed entries, all `Watch`, each with its counter-evidence and its one-source war
 | Bespoke type and motion identities | Pentagram's work listing, 2026 | One studio's listing, not a trend report. |
 | Maximal, surreal imagery | Adobe Creative Trends 2026, 2026-01-08 | Adobe sells stock and Firefly against it. |
 | Brand systems built to flex for generated output | Pentagram, Figma, undated | Undated sources. |
-| Email shaped for automated inbox summaries | Litmus and Validity blog, 2026-05-08 | One vendor blog. |
 
-Not seeded, with the reason: dark-mode email is the `email` job's rule (E6), not a trend; sender verification (BIMI, SPF, DKIM, DMARC) is not design; accessibility as a measured practice is the floor in rule 5; "Vernacular and local specificity" rests on two studio pages and is added only when a brief asks. Trends the researcher looked for and did not find a source for are not entered.
+Not seeded, with the reason: "Email shaped for automated inbox summaries" (Litmus and Validity blog, 2026-05-08) was dropped, because it rests on one vendor blog and no source was opened; dark-mode email is the `email` job's rule (E6), not a trend; sender verification (BIMI, SPF, DKIM, DMARC) is not design; accessibility as a measured practice is the floor in rule 5; "Vernacular and local specificity" rests on two studio pages and is added only when a brief asks. Trends the researcher looked for and did not find a source for are not entered.
 
 Tests:
 
@@ -466,7 +469,7 @@ The file count rises by one (`design/TRENDS.md`), which moves PR 2 to 9 files. T
 
 - A good test checks behaviour a person can see: a script's output for known input, a file that must exist, a command's exit status. It does not check how the code is written.
 - **Seam 1 (highest): `npm run check-skills`.** The same shape as suits's script: every skill has a `SKILL.md` whose name is its folder, a description, an entry in `plugin.json`, a line in its bucket README, a docs page with the four sections (What it does, When to reach for it, Common questions, It's working if), characters have Voice and When to call, relative links resolve, and `claude plugin validate` passes. bauhaus adds: every `/pkg:skill` call is `/bauhaus:` except the one S6 allows; no `/suits:` call; no ui-ux-pro-max data. `test/check-skills.test.mjs` builds good and bad skill trees in a temporary directory and asserts the script names each problem, so there are no fixture files in the repo.
-- **Seam 2: `check.mjs`.** `test/design.test.mjs` runs it on known inputs: the contrast pairs of D6, valid and invalid `DESIGN.md`, token-file, trends and `document-css` cases of D7, D10, D11 and D12, good and bad email fragments of E2, a `LIMITS.md` row with no date or URL, valid and invalid briefs (D13), the 28 tell fixtures and the exit codes 0 to 3 of `check.mjs tells` (C7).
+- **Seam 2: `check.mjs`.** `test/design.test.mjs` runs it on known inputs: the contrast pairs of D6, valid and invalid `DESIGN.md`, token-file, trends and `document-css` cases of D7, D10, D11 and D12, good and bad email fragments of E2, a `LIMITS.md` row with no date or URL, valid and invalid briefs (D13), the 29 tell fixtures and the exit codes 0 to 3 of `check.mjs tells` (C7).
 - **Seam 3: the headless ArtCraft run.** `test/artcraft.test.mjs` runs the verified commands of section 7 against a temporary directory and asserts a PNG (dimensions), an SVG (`viewBox`) and a PDF (`pdfcraft-cli check` status `ok`). It skips with a printed reason when a CLI is not on `PATH`, because a plain CI runner does not have ArtCraft (whether it can is UNVERIFIED). `npm run test:artcraft` fails instead of skipping, and is the local gate before a PR is marked ready. Every call is under `timeout 20`. A test never starts a GUI binary or the launcher.
 - **Seam 4: character contracts.** `test/characters.test.mjs` ports the suits character tests (sections present, "default is not to call", calls resolve and are in `plugin.json`, no build-process words, a sample line of 30 words or fewer, a plain register for anything written for others), and adds the GRO, BAY, BRE and CAST1 criteria as phrase assertions, including the scan for a cast name followed by a speech verb and for the avoided topics of section 4.
 - **What the tests do not prove:** that the generating tool obeys a written rule. Phrase tests prove the rule is written. Behaviour is shown by the acceptance run (section 9), the critique pass and the louis review.
@@ -506,7 +509,7 @@ Each carries my recommendation.
 13. **harvey.** The DTCG format is a Community Group Report, not a W3C Standard, and its status text contradicts itself. Recommend: adopt 2025.10 pinned in the front matter, and treat a version change as a decision. Alternative: a simpler own JSON shape, which gives up the format Carbon has moved to (release v11.119.0, 2026-10-21, per the researcher).
 14. **owner.** Whether a trend is ever applied without the brief asking. Recommend: never; `Trial` status plus a brief line is the only way in. Alternative: allow a project to list a standing trend in `DESIGN.md`, which this spec treats as following a trend by default.
 15. **owner.** The architecture and film canon is lending-only apart from Vitruvius. Recommend: the owner supplies the books or a library account (Ching, Alexander, Mascelli, Katz, and Müller-Brockmann for grids) when the later crafts are wanted; until then the architect and the director stay unspecified.
-16. **harvey.** Own the 28 checks, or reuse Impeccable's detector (62 rules, Apache-2.0). Recommend: own, reading its rule list for ideas only, since the detector and our files are unread against each other. Also run the 28 checks on three real files before PR 3 is marked ready, since none has been run (acceptance step 9).
+16. **harvey.** Own the 29 checks, or reuse Impeccable's detector (62 rules, Apache-2.0). Recommend: own, reading its rule list for ideas only, since the detector and our files are unread against each other. Also run the 29 checks on three real files before PR 3 is marked ready, since none has been run (acceptance step 9).
 17. **harvey.** A piece that cites fewer than three reference rows fails (exit 2). Recommend: keep, because bans alone move the look; allow a brief to name a smaller number with a reason (a logo mark needs fewer rows than a brand).
 18. **harvey.** Copy tells (T25 to T27) concern donna's words but fail a designer's piece. Recommend: critique reports them as donna's to fix and still counts T25 and T26 in the exit code; T27 stays a warning.
 19. **harvey.** UI/UX: Breuer (an analogy only: objects built for the body) or Albers (rachel's pick: a direct craft, with colour then living inside the method)? Recommend Breuer for UI/UX and Albers inside `design`. Reason: colour contrast serves every job (brand, email, screens), so it belongs in the shared method; making Albers the UI/UX character would tie it to one job and leave the shared check with no home. Breuer was the owner's assignment, and the fit is an analogy, so no skill text relies on the biography. The file count is the same either way.

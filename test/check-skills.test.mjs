@@ -183,6 +183,25 @@ test("a link from one tool folder to a file in another tool folder is a problem"
   fails(three, "skills/tools/beta/SKILL.md: link ../gamma/REFERENCE.md leaves its skill folder, into skills/tools/gamma");
 });
 
+test("a link to a bare skill folder, with or without a trailing slash, is a problem", () => {
+  const three = {
+    ".claude-plugin/plugin.json": JSON.stringify({ name: "bauhaus", skills: ["./skills/characters/alpha", "./skills/tools/beta", "./skills/tools/gamma"] }),
+    "skills/tools/README.md": "# Tools\n\n## User-invoked\n\nNone yet.\n\n## Model-invoked\n\n- **[beta](./beta/SKILL.md)**: The second.\n- **[gamma](./gamma/SKILL.md)**: The third.\n",
+    "skills/tools/gamma/SKILL.md": "---\nname: gamma\ndescription: The third.\n---\n\n# Gamma\n",
+    "docs/tools/gamma.md": GOOD_DOC("Gamma"),
+  };
+  fails({ ...three, "skills/tools/beta/SKILL.md": `${GOOD["skills/tools/beta/SKILL.md"]}\nSee [gamma](../gamma).\n` }, "skills/tools/beta/SKILL.md: link ../gamma leaves its skill folder, into skills/tools/gamma");
+  fails({ ...three, "skills/tools/beta/SKILL.md": `${GOOD["skills/tools/beta/SKILL.md"]}\nSee [gamma](../gamma/).\n` }, "skills/tools/beta/SKILL.md: link ../gamma/ leaves its skill folder, into skills/tools/gamma");
+  fails(
+    { "skills/characters/alpha/SKILL.md": `${GOOD["skills/characters/alpha/SKILL.md"]}\nSee [beta](../../tools/beta).\n` },
+    "skills/characters/alpha/SKILL.md: link ../../tools/beta leaves its skill folder, into skills/tools/beta",
+  );
+});
+
+test("a link to its own bare folder, to a bucket directory or to the repo root is not a cross-folder link", () => {
+  passes({ "skills/tools/beta/SKILL.md": `${GOOD["skills/tools/beta/SKILL.md"]}\n[own](../beta), [bucket](..), [other bucket](../../characters), [root](../../..).\n` });
+});
+
 test("a link to its own folder, to a bucket README or to a docs page is not a cross-folder link", () => {
   passes({
     "skills/tools/beta/NOTES.md": "Notes.\n",

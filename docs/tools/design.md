@@ -4,7 +4,7 @@
 
 `design` is the method every visual job follows. It holds the stance, the list of generic defaults a piece must not fall into, the plan-then-check pass that catches a default before it is drawn, the rule that the project's own rules win, and a small checker that computes the numbers.
 
-The checker, `check.mjs`, is a dependency-free Node script with eight commands: `contrast` computes the WCAG 2.2 ratio of two colours; `design` checks a project's `DESIGN.md`; `tokens` checks a token file and its modes; `document-css` writes the six document properties from it; `trends` checks the dated trends file; `brief` checks the brief for a piece; `email` lints an HTML email; `tells` runs the 28 rows of `TELLS.md` on a piece.
+The checker, `check.mjs`, is a dependency-free Node script with eight commands: `contrast` computes the WCAG 2.2 ratio of two colours; `design` checks a project's `DESIGN.md`; `tokens` checks a token file and its modes; `document-css` writes the six document properties from it; `trends` checks the dated trends file; `brief` checks the brief for a piece; `email` lints an HTML email; `tells` runs the 29 rows of `TELLS.md` on a piece.
 
 It also owns the rules for driving the three ArtCraft command-line apps (`ARTCRAFT.md`), the formats of `DESIGN.md`, the token file and the brief (`DESIGN-MD.md`), the tells (`TELLS.md`) and the trends (`TRENDS.md`).
 
@@ -30,7 +30,7 @@ Skip it for words alone (document text and email copy), which it leaves to whoev
 
 **What about a colour in a wide-gamut space?** A ratio needs `srgb` components or a hex. A colour with neither says "cannot compute", and no ratio is guessed.
 
-**Are the 28 checks proven?** No. Every row is `proposed, not run` until the checks have been run on real files and each false positive is fixed or listed.
+**Are the 29 checks proven?** No. Every row is `proposed, not run` until the checks have been run on real files and each false positive is fixed or listed.
 
 ## It's working if
 

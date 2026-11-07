@@ -456,6 +456,7 @@ function designCommand({ positional, flags }) {
       const entry = trends.find((t) => t.name === name);
       if (!entry) add(`Trends in use: "${name}" is not an entry in TRENDS.md`);
       else if (entry.fields.Status === "Retired") add(`Trends in use: "${name}" is Retired`);
+      else if (entry.fields.Status === "Watch") add(`Trends in use: "${name}" is Watch; only a Trial entry may be applied`);
       else if (asOf && entry.fields["Review by"] < asOf) add(`Trends in use: "${name}" is past its review-by date ${entry.fields["Review by"]} on ${asOf}`);
     }
   }
@@ -746,6 +747,18 @@ const FILE_CHECKS = {
     if (/\bnot just\b[^.]*\b(but|it's|it is)\b/i.test(p.text)) found.push('the text has a "not just ..., but" pattern');
     return found;
   },
+  T29: (p) => {
+    // Hairline rules, no rounded corner anywhere and three or more column tracks: the broadsheet look.
+    const hairline = (v) => !/none|transparent/i.test(v) && /(?:^|\s)(?:0?\.\d+|[01])px\b/.test(v) && !/(?:^|\s)(?:[2-9]|[1-9]\d+)(?:\.\d+)?px\b/.test(v);
+    const rules = p.rules.filter((r) => declsNamed(r, "border", "border-top", "border-bottom", "border-left", "border-right").some(([, v]) => hairline(v)));
+    const rounded = p.rules.some((r) => declsNamed(r, "border-radius").some(([, v]) => v.split(/[\s/]+/).some((part) => toPx(part) > 0)));
+    const tracks = (v) => {
+      const repeat = /repeat\(\s*(\d+)\s*,/.exec(v)?.[1];
+      return repeat ? +repeat : v.trim().split(/\s+/).filter((t) => t && !/^(none|subgrid)$/.test(t)).length;
+    };
+    const columns = Math.max(0, ...p.rules.flatMap((r) => [...declsNamed(r, "grid-template-columns").map(([, v]) => tracks(v)), ...declsNamed(r, "column-count").map(([, v]) => Number(v) || 0)]));
+    return rules.length >= 3 && !rounded && columns >= 3 ? [`${rules.length} hairline rules, no rounded corner and ${columns} columns`] : [];
+  },
   T28: (p) => (/feTurbulence|repeating-linear-gradient/i.test(p.source) ? ["the piece uses a noise filter or a stripe pattern"] : []),
 };
 
@@ -854,6 +867,9 @@ const near = (rgb, target, tolerance) => rgb.every((c, i) => Math.abs(c - target
 const rgbOfHex = (hex) => parseColour(hex);
 const unpack = (key) => [key >> 16, (key >> 8) & 255, key & 255];
 
+// T20: content centred in a render counts as a container of its own only when it is narrower than the canvas by this many pixels.
+const CONTAINER_MINIMUM = 40;
+
 const RENDER_CHECKS = {
   T4: ({ w, bands }) => {
     const hero = bands[0];
@@ -901,7 +917,7 @@ const RENDER_CHECKS = {
     // measured from that container's edge, and the container's own edge counts as a line. Anything else is measured from the canvas.
     const left = Math.min(...blobs.map((b) => b.x0));
     const right = Math.max(...bands.flatMap((b) => b.blobs.map((blob) => blob.x1)));
-    const centred = right - left + 1 < w && Math.abs(left - (w - 1 - right)) <= 8;
+    const centred = w - (right - left + 1) >= CONTAINER_MINIMUM && Math.abs(left - (w - 1 - right)) <= 8;
     const [origin, width] = centred ? [left, right - left + 1] : [0, w];
     const colWidth = (width - 2 * brand.grid.margin - (brand.grid.columns - 1) * brand.grid.gutter) / brand.grid.columns;
     const starts = Array.from({ length: brand.grid.columns }, (_, i) => origin + brand.grid.margin + i * (colWidth + brand.grid.gutter));
@@ -1046,7 +1062,7 @@ function emailCommand({ positional, flags }) {
   } else {
     notes.push("LIMITS.md rows were not checked: no --limits file given");
   }
-  if (problems.length) return { code: 1, out: read, err: problems };
+  if (problems.length) return { code: 1, out: [...read, ...notes], err: problems };
   return { out: [`ok: ${positional[0]}`, ...read, ...notes] };
 }
 commands.email = emailCommand;

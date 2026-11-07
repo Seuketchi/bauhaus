@@ -19,7 +19,7 @@ Client support changes. Before each email is written, re-read every row against 
 
 | Feature | Pattern | Client | Support | Test date | Source |
 | --- | --- | --- | --- | --- | --- |
-| background-image | `background-image\s*:` | Outlook for Windows 2007 to 2019 | none | 2023-07-24 | https://www.caniemail.com/features/css-background-image/ |
+| background-image | `background-image\s*:(?!\s*none\b)|background\s*:[^;}"]*\burl\(` | Outlook for Windows 2007 to 2019 | none | 2023-07-24 | https://www.caniemail.com/features/css-background-image/ |
 | display:grid | `display\s*:\s*(?:inline-)?grid\b` | Outlook for Windows 2007 to 2019 and Windows Mail | none | 2019-02-28 | https://www.caniemail.com/features/css-display-grid/ |
 | @media (prefers-color-scheme) | `@media[^{]*prefers-color-scheme` | Gmail on desktop webmail, iOS, Android and mobile webmail | ignored | 2023-03-08 | https://www.caniemail.com/features/css-at-media-prefers-color-scheme/ |
 

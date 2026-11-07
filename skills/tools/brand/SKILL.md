@@ -17,8 +17,8 @@ Only `brand` creates a `DESIGN.md`. Every other job reads it.
 
 ## What to make
 
-1. **A token file** beside the `DESIGN.md`, in the format in `design`. Primitive colours, semantic colours that alias them, the type roles with a fallback stack, and the `grid`, `type` and `space` data the tells check against. Fill the `document` group, so the same brand can restyle a PDF. Check it: `node check.mjs tokens design.tokens`.
-2. **A `DESIGN.md`** that references the token file and copies no value from it. Its foundations name the mark as an entry with the file, the clear space and the minimum size in px, and the type roles with their fallback stack. Check it: `node check.mjs design DESIGN.md`. Run both from the `design` skill folder, with the project's files given by path.
+1. **A token file** beside the `DESIGN.md`, in the format in `design`. Primitive colours, semantic colours that alias them, the type roles with a fallback stack, and the `grid`, `type` and `space` data the tells check against. Fill the `document` group, so the same brand can restyle a PDF. Check it: `node skills/tools/design/check.mjs tokens design.tokens`.
+2. **A `DESIGN.md`** that references the token file and copies no value from it. Its foundations name the mark as an entry with the file, the clear space and the minimum size in px, and the type roles with their fallback stack. Check it: `node skills/tools/design/check.mjs design DESIGN.md`. The checker is named by its path from the plugin root; give the project's files by path.
 3. **The mark**, made by VectorCraft (below).
 4. **A specimen sheet** made by FigCraft (below).
 
@@ -27,7 +27,7 @@ Set up the identity so it can be applied the same way from the first piece to th
 ## Colour
 
 - Every pair listed in section 6 of the `DESIGN.md` is a pair of role paths. The ratio is computed by `check.mjs` from the token file and is never written by hand: at least 4.5:1 for text and 3:1 for interface parts and large text (row W1).
-- Check a single pair with `node check.mjs contrast <fg> <bg>`. A pair at 4.4999:1 fails and is shown as 4.4999.
+- Check a single pair with `node skills/tools/design/check.mjs contrast <fg> <bg>`. A pair at 4.4999:1 fails and is shown as 4.4999.
 - A colour reads against its neighbours, so look at the pairs in the specimen sheet as well as in the numbers.
 
 ## The mark

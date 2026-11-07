@@ -102,6 +102,14 @@ hand("figcraft-cli runs a steps file, renders a 600 by 300 PNG and exports a PDF
   assert.equal(readFileSync(heroPdf).subarray(0, 5).toString(), "%PDF-");
 });
 
+hand("figcraft-cli exports one PNG per top-level frame into an assets directory", () => {
+  const assets = join(out, "assets");
+  mkdirSync(assets);
+  const exported = run(["figcraft-cli", "export", native, "-o", `${assets}/`, "--format", "png", "--no-system-fonts", ...roots]);
+  assert.equal(exported.status, 0, exported.stderr);
+  assert.deepEqual(pngSize(join(assets, "hero.png")), { width: 600, height: 300 });
+});
+
 hand("vectorcraft-cli run writes an SVG with a viewBox, to an absolute path, with no root flag", () => {
   const rect = { x: 32, y: 32, width: 192, height: 192, radius: 24 };
   const args = [

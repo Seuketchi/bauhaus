@@ -19,7 +19,7 @@ The hand-off between a character and ArtCraft is a file path. There is no shared
 | Job | `figcraft-cli` | `vectorcraft-cli` | `pdfcraft-cli` | Other |
 | --- | --- | --- | --- | --- |
 | `brand` | `run steps.json --out x.figcraft`, `render x.figcraft -o x.png` | `run --cmd file.new --params J --cmd shape.rectangle --params J --export logo.svg`, `info logo.svg` | none | none |
-| `email` | `run`, `render` (with `--scale`, from `--help`, not run), `export -o assets/ --format png` (from `--help`, not run) | none | none | `google-chrome --headless=new --screenshot` for the HTML |
+| `email` | `run`, `render` (with `--scale`, from `--help`, not run), `export -o assets/ --format png` (run 2026-11-07) | none | none | `google-chrome --headless=new --screenshot` for the HTML |
 | `screens` | `run` with `frame.create {preset}` (`frame.presets` run 2026-11-07, to read the preset sizes), `export --node NAME --format png` | none | none | none |
 | `critique` | `render` | none | `info`, `render`, `check`, `audit` | headless Chrome for HTML |
 | `design` | none | none | none | `check.mjs` (Node) |
@@ -32,9 +32,10 @@ Each wrote only under a scratch directory, with `timeout 20`, and no window was 
 2. `vectorcraft-cli run --cmd file.new --params '{"width":256,"height":256,"units":"Pixels","backgroundContents":"white"}' --cmd shape.rectangle --params '{...,"radius":24}' --export mark.svg` printed one JSON result per step and wrote a valid SVG with a `viewBox`.
 3. `pdfcraft-cli` on that PDF: `info` printed a JSON summary, `check ... --json out.json` printed `checked 1 files: {"ok": 1}`, `audit` printed no findings, `render --page 1 --dpi 72` wrote a PNG.
 4. Headless Chrome on a one-table HTML file wrote a PNG at the window size, under `timeout 20`.
+5. `figcraft-cli export hero.figcraft -o assets/ --format png --no-system-fonts` and both roots, run 2026-11-07 on the file of run 1, wrote `assets/hero.png`, a 600 by 300 PNG: one file per top-level frame, named for the frame.
 
-`test/artcraft.test.mjs` repeats runs 1 to 3 against a temporary directory. `npm run test:artcraft` fails when a command-line app is missing, and `npm test` skips with the reason printed.
+`test/artcraft.test.mjs` repeats runs 1 to 3 and 5 against a temporary directory. `npm run test:artcraft` fails when a command-line app is missing, and `npm test` skips with the reason printed.
 
 ## Not run, so not relied on
 
-`figcraft-cli export` to PNG with `--scale`; the names `frame.presets` returns; whether FilmCraft, EffectCraft or DesignCraft have a `-cli` (they are not installed); whether a hosted runner can install the three packages.
+`figcraft-cli export` to PNG with `--scale`; whether FilmCraft, EffectCraft or DesignCraft have a `-cli` (they are not installed); whether a hosted runner can install the three packages.

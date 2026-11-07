@@ -778,3 +778,55 @@ describe("screens (S1 to S7)", () => {
     assert.doesNotMatch(source, /vectorcraft-cli/, "the screens job makes no vector file");
   });
 });
+
+// ---- the cleanup: wording that must stay true ----
+
+describe("cleanup wording", () => {
+  const referenceRow = (file, id) => referenceRows(read(file)).find((r) => r[0] === id);
+
+  test("V4 claims only what Canon page 8 says: a piece nobody understands has failed, and it is better when it needs no explanation", () => {
+    const row = referenceRow(REFS.brand, "V4");
+    assert.match(row[3], /PDF page 8, Pragmatics/);
+    assert.match(row[4], /understand/i);
+    assert.doesNotMatch(row[4], /simplify|until they do|not in the room|test that/i);
+    assert.equal(row[5], "opened");
+  });
+
+  test("RG1 is the package's own method, and stays opened so a skill can cite it", () => {
+    const row = referenceRow(REFS.email, "RG1");
+    assert.match(row[4], /package's own method/i);
+    assert.equal(row[5], "opened");
+    assert.match(read("skills/tools/email/SKILL.md"), /\(row RG1\)/);
+  });
+
+  test("the brand, email, screens and critique examples run check.mjs by its path from the plugin root", () => {
+    for (const tool of ["brand", "email", "screens", "critique"]) {
+      const text = read("skills", "tools", tool, "SKILL.md");
+      assert.doesNotMatch(text, /node check\.mjs/, `${tool}: a bare check.mjs path`);
+      assert.doesNotMatch(text, /from the `design` skill folder/, `${tool}: says to run from the design folder`);
+    }
+    assert.match(read("skills/tools/brand/SKILL.md"), /node skills\/tools\/design\/check\.mjs tokens design\.tokens/);
+    assert.match(read("skills/tools/brand/SKILL.md"), /node skills\/tools\/design\/check\.mjs design DESIGN\.md/);
+    assert.match(read("skills/tools/email/SKILL.md"), /node skills\/tools\/design\/check\.mjs email email\.html --limits skills\/tools\/email\/LIMITS\.md/);
+    assert.match(read("skills/tools/email/SKILL.md"), /node skills\/tools\/design\/check\.mjs contrast <fg> <bg>/);
+    assert.match(read("skills/tools/screens/SKILL.md"), /node skills\/tools\/design\/check\.mjs contrast <fg> <bg>/);
+    assert.match(read("skills/tools/critique/SKILL.md"), /node skills\/tools\/design\/check\.mjs tells /);
+    assert.match(read("skills/tools/design/SKILL.md"), /node check\.mjs <command>/, "the design skill's own line is unchanged");
+  });
+
+  test("screens: SC 3.3.8 offers an alternative or an assist, and SC 2.4.11 says not entirely hidden", () => {
+    const lines = read("skills/tools/screens/SKILL.md").split("\n");
+    assert.match(lines.find((l) => /SC 3\.3\.8/.test(l)), /unless an alternative or an assist is offered/);
+    const focus = lines.find((l) => /SC 2\.4\.11/.test(l));
+    assert.match(focus, /not entirely hidden/);
+    assert.doesNotMatch(read("skills/tools/screens/SKILL.md"), /not hidden/);
+  });
+
+  test("the people who build the screen are the project's own gates and owners", () => {
+    for (const file of ["skills/characters/breuer/SKILL.md", "skills/tools/screens/SKILL.md", "docs/tools/screens.md"]) {
+      const text = read(file);
+      assert.doesNotMatch(text, /people who build the screen/, file);
+      assert.match(text, /the project's own gates and owners/i, file);
+    }
+  });
+});

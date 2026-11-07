@@ -20,7 +20,7 @@ Skip it for an email, a logo or an identity, and for document text.
 
 ## Common questions
 
-**Does it write the screen's code?** No. The spec and the images go to the people who build the screen.
+**Does it write the screen's code?** No. The spec and the images go to the project's own gates and owners.
 
 **Where does the frame size come from?** From the project's rules or from the owner. If neither gives one, the hand-over says that none was given.
 

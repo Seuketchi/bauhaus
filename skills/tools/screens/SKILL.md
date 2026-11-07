@@ -7,7 +7,7 @@ description: The spec for one app or web screen, with an image of each state mad
 
 The spec for one app or web screen: what it is for, what it shows in each state, every string on it and the rules it was checked against. Follow the `design` method first: its precedence list, its bans and its checks. The references for this craft are in `REFERENCES.md` in this folder.
 
-This skill writes no app code. The spec and the images go to the people who build the screen.
+This skill writes no app code. The spec and the images go to the project's own gates and owners.
 
 ## The first step
 
@@ -75,11 +75,11 @@ Read each PNG after it is made. A frame whose content falls outside it, or a sta
 Each line is checked, and the spec says how.
 
 - **Target size.** SC 2.5.8 Target Size (Minimum), Level AA: a pointer target is at least 24 by 24 CSS pixels (row WC1). Five exceptions: spacing, equivalent, inline, a size set by the browser or platform and not changed by the design, and essential. Where the project rule is stricter, the project rule wins; on Apple platforms a control has a hit region of at least 44 by 44 points (row AH1), and the project's own number is used when it names one.
-- **Contrast.** Every colour pair is computed, never judged by eye: `node check.mjs contrast <fg> <bg>`, run from the `design` skill folder. Text needs 4.5:1 and interface parts 3:1 (row WC1). A pair at 4.4999:1 fails.
+- **Contrast.** Every colour pair is computed, never judged by eye: `node skills/tools/design/check.mjs contrast <fg> <bg>`, the path from the plugin root. Text needs 4.5:1 and interface parts 3:1 (row WC1). A pair at 4.4999:1 fails.
 - **Reflow.** SC 1.4.10 Reflow: the layout holds at a width of 320 CSS pixels without scrolling in two directions (row WC1).
-- **Focus.** SC 2.4.11 Focus Not Obscured (Minimum), Level AA: a focused control is not hidden behind other content.
+- **Focus.** SC 2.4.11 Focus Not Obscured (Minimum), Level AA: a focused control is not entirely hidden behind other content.
 - **Dragging.** SC 2.5.7 Dragging Movements, Level AA: anything done by dragging can also be done with a single pointer.
-- **Sign-in.** SC 3.3.8 Accessible Authentication (Minimum), Level AA: no step depends on remembering or retyping a code or a puzzle.
+- **Sign-in.** SC 3.3.8 Accessible Authentication (Minimum), Level AA: no step depends on remembering or retyping a code or a puzzle, unless an alternative or an assist is offered.
 
 ## Hand over
 

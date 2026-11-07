@@ -18,10 +18,10 @@ Run only on a piece this session did not make. The first line names the maker as
 ## Order of work
 
 1. **Read the craft's `REFERENCES.md`** before judging taste: `brand` for an identity, `email` for an email. The report cites the row each finding rests on, and only a row marked `opened` supports a rule.
-2. **Run the checks that need no eye.** Run them from the `design` skill folder, with the files given by path.
-   - Every colour pair: `node check.mjs contrast <fg> <bg>`.
-   - The tells: `node check.mjs tells <piece> --brief <brief> --brand <tokens> --render <png>`.
-   - An email as well: `node check.mjs email <file.html> --limits LIMITS.md`.
+2. **Run the checks that need no eye.** The checker is named by its path from the plugin root; give the files by path.
+   - Every colour pair: `node skills/tools/design/check.mjs contrast <fg> <bg>`.
+   - The tells: `node skills/tools/design/check.mjs tells <piece> --brief <brief> --brand <tokens> --render <png>`.
+   - An email as well: `node skills/tools/design/check.mjs email <file.html> --limits skills/tools/email/LIMITS.md`.
    - A PDF: `pdfcraft-cli check` and `pdfcraft-cli audit`.
 3. **Render the piece.**
 4. **Read the image**, then set it beside one chosen row of the craft's `REFERENCES.md`: a side-by-side, which only a reviewer can do.
