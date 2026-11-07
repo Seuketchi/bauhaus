@@ -48,7 +48,7 @@ const TOPICS = {
   "a death date": /\bdied\b|\bdeath\b|\bdead\b|\bpassed away\b/i,
 };
 const topicHits = (text) => Object.entries(TOPICS).filter(([, re]) => re.test(text)).map(([name]) => name);
-const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+|ludwig\s+|david\s+)?(?:gropius|bayer|breuer|mies|ogilvy)\b/i;
+const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+|ludwig\s+|david\s+|laszlo\s+)?(?:gropius|bayer|breuer|mies|ogilvy|moholy-nagy)\b/i;
 // Breuer is cast by analogy only: no furniture, workshop, steel or "for the body" in any file.
 const BIOGRAPHY = /\b(?:Weimar|Dessau|ARCO|founded|was born|born in|studied|apprentic\w+|furniture|carpentry|workshop|tubular|steel)\b|for the body/i;
 
@@ -122,7 +122,7 @@ describe("registration", () => {
   test("plugin.json lists the characters and the tools, and has no version", () => {
     const wanted = ["skills/characters/bayer", "skills/characters/gropius", "skills/tools/design", "skills/tools/brand", "skills/tools/email", "skills/tools/critique"];
     assert.deepEqual(registered.slice(0, wanted.length), wanted);
-    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans", "skills/characters/ogilvy", "skills/tools/concept"]);
+    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans", "skills/characters/ogilvy", "skills/tools/concept", "skills/characters/moholy-nagy", "skills/tools/shots", "skills/tools/storyboard", "skills/tools/motion"]);
     assert.ok(!registered.some((d) => /ui-ux-pro-max/.test(d)), "the optional lookup is not a skill of this package");
     assert.equal("version" in plugin, false);
     for (const dir of registered) assert.ok(exists(dir, "SKILL.md"), `${dir} has no SKILL.md`);
@@ -134,9 +134,9 @@ describe("registration", () => {
       const model = readme.split(/^## /m).find((s) => s.startsWith("Model-invoked")) ?? "";
       for (const name of names) assert.match(model, new RegExp(`\\]\\(\\./${name}/SKILL\\.md\\)`), `${name} is not under Model-invoked in skills/${bucket}/README.md`);
     };
-    listed("characters", ["bayer", "breuer", "gropius", "mies", "ogilvy"]);
-    listed("tools", ["brand", "concept", "critique", "design", "email", "massing", "plans", "screens"]);
-    const BUCKET_OF = { breuer: "characters", mies: "characters", ogilvy: "characters", screens: "tools", massing: "tools", plans: "tools", concept: "tools" };
+    listed("characters", ["bayer", "breuer", "gropius", "mies", "moholy-nagy", "ogilvy"]);
+    listed("tools", ["brand", "concept", "critique", "design", "email", "massing", "motion", "plans", "screens", "shots", "storyboard"]);
+    const BUCKET_OF = { breuer: "characters", mies: "characters", ogilvy: "characters", "moholy-nagy": "characters", screens: "tools", massing: "tools", plans: "tools", concept: "tools", shots: "tools", storyboard: "tools", motion: "tools" };
     for (const [name, bucket] of Object.entries(BUCKET_OF)) {
       assert.doesNotMatch(read("skills", bucket, name, "SKILL.md"), /^disable-model-invocation:/m);
       const line = read("skills", bucket, "README.md").split("\n").find((l) => l.includes(`./${name}/SKILL.md`));
@@ -150,16 +150,17 @@ describe("registration", () => {
     assert.doesNotMatch(readme, /screens job and its character follow/i, "the status line still says UI/UX is to come");
     assert.match(readme, /screens/i);
     assert.equal(readme.split("\n").filter((l) => /^\| Marcel Breuer \|/.test(l)).length, 1, "the cast table keeps its one Breuer row");
-    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Ludwig Mies van der Rohe|Josef Albers|David Ogilvy) \|/.test(l)).length, 6, "one row for each person");
+    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Ludwig Mies van der Rohe|László Moholy-Nagy|Josef Albers|David Ogilvy) \|/.test(l)).length, 7, "one row for each person");
     assert.match(readme, /^\| David Ogilvy \| Writer\. The idea, the story and the words\. \|$/m, "the Ogilvy row names the role by craft");
     assert.match(readme, /not only people of the school|a writer from outside the school/i, "the README says the cast is no longer only the school's");
     assert.doesNotMatch(readme, /The cast are historical designers/, "the cast line no longer says designers only");
     assert.match(readme, /^\| Ludwig Mies van der Rohe \| Space designer\. Form, plans, structure\. \|$/m, "the Mies row names the role by craft");
+    assert.match(readme, /^\| László Moholy-Nagy \| Shot and motion designer\. Shots, storyboards, animated titles\. \|$/m, "the Moholy-Nagy row names the role by craft");
     assert.match(readme, /massing/i);
     assert.match(readme, /plans/i);
+    for (const word of ["shots", "storyboard", "motion"]) assert.match(readme, new RegExp(word, "i"));
     const later = readme.split("\n").find((l) => /later work/i.test(l)) ?? "";
-    assert.match(later, /Moholy-Nagy/);
-    assert.doesNotMatch(later, /Mies/, "Mies is no longer later work");
+    assert.doesNotMatch(later, /Moholy-Nagy|Mies/, "Mies and Moholy-Nagy are no longer later work");
     assert.ok(readme.split(/\s+/).length >= 40);
     for (const [, target] of readme.matchAll(/\]\((\.\/[^)\s#]+)/g)) assert.ok(exists(target.slice(2)), `README links ${target}`);
   });
@@ -174,6 +175,7 @@ const CALLS = {
   bayer: ["design", "brand", "email", "critique"],
   breuer: ["design", "screens", "critique"],
   mies: ["design", "massing", "plans", "critique"],
+  "moholy-nagy": ["design", "shots", "storyboard", "motion", "critique"],
 };
 const TRIGGERS = {
   design: /no brief file exists/i,
@@ -183,10 +185,13 @@ const TRIGGERS = {
   screens: /task is an app or web screen/i,
   massing: /task is the form or volume of a building or space/i,
   plans: /task is a floor plan, a section or a sheet/i,
+  shots: /task is the shots of a film or a sequence/i,
+  storyboard: /task is the frames of a film in order, or an animatic/i,
+  motion: /task is an animated title, graphic or effect/i,
   concept: /brief has an `Intake` and no `Idea` yet|piece needs words that no `words\.md` holds/i,
 };
 // BRE2: breuer's critique trigger is a finished screen.
-const TRIGGER_OF = (name, skill) => (name === "breuer" && skill === "critique" ? /finished screen exists that this session did not make/i : TRIGGERS[skill]);
+const TRIGGER_OF = (name, skill) => (name === "breuer" && skill === "critique" ? /finished screen exists that this session did not make/i : name === "moholy-nagy" && skill === "critique" ? /finished frame exists that this session did not make/i : TRIGGERS[skill]);
 const characters = dirs("skills/characters");
 
 describe("characters", () => {
@@ -251,7 +256,7 @@ describe("characters", () => {
       });
 
       test("names donna and louis as roles and never calls them, and links nowhere outside its folder", () => {
-        assert.doesNotMatch(source, /`\/(?:donna|louis|breuer|screens|mies)`|\/bauhaus:breuer|\/bauhaus:mies|\/suits:|\/ui-ux-pro-max:/);
+        assert.doesNotMatch(source, /`\/(?:donna|louis|breuer|screens|mies)`|\/bauhaus:breuer|\/bauhaus:mies|\/bauhaus:moholy-nagy|\/suits:|\/ui-ux-pro-max:/);
         assert.doesNotMatch(source, /\]\(\.\.\/\.\.\/tools\//);
       });
     });
@@ -472,10 +477,13 @@ const REFS = {
   screens: "skills/tools/screens/REFERENCES.md",
   massing: "skills/tools/massing/REFERENCES.md",
   plans: "skills/tools/plans/REFERENCES.md",
+  shots: "skills/tools/shots/REFERENCES.md",
+  storyboard: "skills/tools/storyboard/REFERENCES.md",
+  motion: "skills/tools/motion/REFERENCES.md",
   concept: "skills/tools/concept/REFERENCES.md",
 };
 // The least number of rows each file holds.
-const ROW_FLOOR = { brand: 4, email: 4, screens: 4, massing: 4, plans: 4, concept: 5 };
+const ROW_FLOOR = { brand: 4, email: 4, screens: 4, massing: 4, plans: 4, concept: 5, shots: 5, storyboard: 4, motion: 3 };
 
 describe("REFERENCES.md rows", () => {
   test("a complete row has no problem", () => assert.deepEqual(rowProblems(GOOD_ROW), []));
@@ -579,7 +587,7 @@ describe("screens/REFERENCES.md", () => {
 
 // ---- the job skills ----
 
-const JOBS = ["brand", "email", "critique", "screens", "massing", "plans"];
+const JOBS = ["brand", "email", "critique", "screens", "massing", "plans", "shots", "storyboard", "motion"];
 const job = (name) => read("skills/tools", name, "SKILL.md");
 const citedRows = (source) =>
   [...source.matchAll(/\brows? ((?:[A-Z]{1,2}\d+)(?:(?:,\s*|\s+and\s+)[A-Z]{1,2}\d+)*)/g)].flatMap((m) => m[1].split(/,\s*|\s+and\s+/));
@@ -1143,6 +1151,25 @@ describe("mies (MIE1 to MIE5)", () => {
   });
 });
 
+describe("film and motion work goes from the writer to moholy-nagy, and the lead has no route back", () => {
+  const gropius = read("skills/characters/gropius/SKILL.md");
+  const ogilvy = read("skills/characters/ogilvy/SKILL.md");
+  test("gropius names moholy-nagy in the rule, the working table and the hand-over options, and still calls only design and critique", () => {
+    assert.match(section(gropius, "Hard rules"), /`moholy-nagy`[^.\n]*(?:film|motion|shots)/i);
+    assert.match(gropius, /\| the lead \| `moholy-nagy` \|/);
+    assert.match(section(gropius, "Hand over"), /`handed to moholy-nagy`/);
+    assert.match(read("docs/characters/gropius.md"), /`moholy-nagy`/);
+    assert.deepEqual([...new Set(named(gropius))].sort(), ["critique", "design"]);
+  });
+  test("the writer hands the brief and words.md to moholy-nagy, and no row sends it back through the lead", () => {
+    assert.match(ogilvy, /\| the writer \| `moholy-nagy` \|[^\n]*(?:shots|storyboard|animated)/);
+    assert.match(section(ogilvy, "Hand over"), /`handed to moholy-nagy`/);
+    assert.match(read("docs/characters/ogilvy.md"), /`moholy-nagy` for film and motion work/);
+    assert.doesNotMatch(gropius, /\| the writer \| the lead \| the brief with Idea/);
+    assert.doesNotMatch(gropius, /\/bauhaus:moholy-nagy/, "the film designer is named, never called");
+  });
+});
+
 describe("gropius routes space work to mies (MIE5)", () => {
   const source = read("skills/characters/gropius/SKILL.md");
   const page = read("docs/characters/gropius.md");
@@ -1338,7 +1365,8 @@ describe("the writer", () => {
     assert.match(source, /\| the writer \| `bayer` \|/);
     assert.match(source, /\| the writer \| `breuer` \|/);
     assert.match(source, /\| the writer \| `mies` \|/);
-    for (const to of ["bayer", "breuer", "mies"]) assert.match(hand, new RegExp(`\`handed to ${to}\``));
+    assert.match(source, /\| the writer \| `moholy-nagy` \|/);
+    for (const to of ["bayer", "breuer", "mies", "moholy-nagy"]) assert.match(hand, new RegExp(`\`handed to ${to}\``));
     assert.match(hand, /`open questions for gropius`/, "the I4 case has its own first-line value");
     assert.match(source, /\| the writer \| the lead \|/);
     assert.match(hand, /first line/i);
@@ -1514,7 +1542,7 @@ describe("the words boundary (Q7)", () => {
     assert.match(page, /\*\*Who writes the words\?\*\* The writer[^\n]*except documents and the PDF build, which are donna's/i);
   });
   test("every designer page and character says who owns the words", () => {
-    for (const name of ["bayer", "breuer", "mies"]) {
+    for (const name of ["bayer", "breuer", "mies", "moholy-nagy"]) {
       assert.match(read("skills/characters", name, "SKILL.md"), /writer owns the (?:idea and the )?words of the pieces made here/i, name);
       assert.match(read("docs/characters", `${name}.md`), /writer owns the words of the pieces made here/i, name);
       assert.match(read("docs/characters", `${name}.md`), /donna keeps long documents and the PDF build/i, name);
@@ -1592,8 +1620,8 @@ describe("specs/design-package.md carries the writer and the flow", () => {
 const STANCE_LATER = {
   breuer: "none of his own text was opened, so the stance waits for an opened text",
 };
-// Characters added by later branches (moholy-nagy, peterhans) write their stance in their own PR; until they exist they are not here.
-const STANCE_NOW = ["bayer", "gropius", "mies", "ogilvy"];
+// A character added by a later branch (peterhans) writes its stance in its own PR; until it exists it is not here.
+const STANCE_NOW = ["bayer", "gropius", "mies", "moholy-nagy", "ogilvy"];
 const stanceLines = (source) => section(source, "Stance").split("\n").map((l) => l.trim()).filter(Boolean);
 const FIRST_PERSON = /\b(?:i|me|my|mine|we|us|our|ours)\b/i;
 const ATTRIBUTING = /\b(?:said|says|wrote|believed|believes|argued|argues|insisted|claimed|declared|quoted)\b/i;

@@ -19,6 +19,10 @@
     "./skills/tools/massing",
     "./skills/tools/plans",
     "./skills/characters/ogilvy",
-    "./skills/tools/concept"
+    "./skills/tools/concept",
+    "./skills/characters/moholy-nagy",
+    "./skills/tools/shots",
+    "./skills/tools/storyboard",
+    "./skills/tools/motion"
   ]
 }

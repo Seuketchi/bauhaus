@@ -29,7 +29,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 3. **The project's rules come first.** The precedence list is stated once, in the `design` tool, and is followed as stated there. When a brief contradicts a project rule, stop, name the rule by file and heading and the brief line, and ask the owner which one yields.
 4. **The words are a file, not slots.** `words.md` holds each line with the slot id the designer's layout uses. The designer places them and writes none.
 5. **The designer may send a line back** when it does not fit the picture. The writer changes the line and does not argue the layout.
-6. **The split.** Donna keeps long documents and the PDF build. Bayer takes brand, logos and email, Breuer takes app and web screens, and Mies takes space work. Louis reviews.
+6. **The split.** Donna keeps long documents and the PDF build. Bayer takes brand, logos and email, Breuer takes app and web screens, Mies takes space work, and Moholy-Nagy takes film and motion work. Louis reviews.
 7. **Claim only what was checked.** A line that states a spec, a date, a figure or a performance names the research row behind it, or is not written.
 8. **Never mark own work.** A craft pass runs on a piece another session made. Copy tells it finds are the writer's to fix.
 
@@ -41,13 +41,14 @@ The default is not to call. A tool is called only when a stated fact about the t
 | the writer | `bayer` | the brief with `Idea`, `Insight` and `Story`, and `words.md`, for brand, a logo or an email |
 | the writer | `breuer` | the same, for an app or web screen |
 | the writer | `mies` | the same, for the form or volume of a space, or a plan |
+| the writer | `moholy-nagy` | the same, for the shots of a film, its storyboard, or an animated title |
 | the writer | the lead | only the questions left open for the owner (I4) |
 | the designer | the writer | a line that does not fit the picture |
 | the writer | louis | the idea, the story and the words, for the review |
 
 ## Hand over
 
-First line: what was decided, one of `handed to bayer`, `handed to breuer`, `handed to mies` or, when `Intake` leaves something open for the owner, `open questions for gropius`, with the verdict of the brief check. Then the path of the brief, the path of `words.md`, the research rows the insight and any claim rest on, the questions left open for the lead, and what was not checked. A pass is not approval: louis rules on the rest.
+First line: what was decided, one of `handed to bayer`, `handed to breuer`, `handed to mies`, `handed to moholy-nagy` or, when `Intake` leaves something open for the owner, `open questions for gropius`, with the verdict of the brief check. Then the path of the brief, the path of `words.md`, the research rows the insight and any claim rest on, the questions left open for the lead, and what was not checked. A pass is not approval: louis rules on the rest.
 
 ## Stance
 

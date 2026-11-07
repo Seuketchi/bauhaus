@@ -14,5 +14,8 @@ None yet.
 - **[design](./design/SKILL.md)**: The design method: the banned defaults, a plan checked against the brief, the project's rules first, and the checks for colour, tokens, trends and briefs.
 - **[email](./email/SKILL.md)**: HTML email layout and look, built on live text and tables and linted against the client limits.
 - **[massing](./massing/SKILL.md)**: The form and volume of a building or space as a SolidCraft model: a saved script, a closed-body check, an isometric image and the figures, handed on as a design study.
+- **[motion](./motion/SKILL.md)**: An animated title, graphic or effect as an EffectCraft project: a saved command list, keyframes read back, a poster frame that is the reduced-motion version, and a GIF render.
 - **[plans](./plans/SKILL.md)**: A floor plan, a section or a sheet as a CADCraft drawing in metric units, with layers, overall dimensions, a PDF, an SVG and a PNG, and a short structure note.
 - **[screens](./screens/SKILL.md)**: The spec for one app or web screen, with an image of each state, checked against the project's own rules and the WCAG 2.2 floor.
+- **[shots](./shots/SKILL.md)**: The shot list of a film or a sequence: a table of size, angle, movement and lens with each scene's axis, a FilmCraft project with a marker on every shot, and an EDL.
+- **[storyboard](./storyboard/SKILL.md)**: The frames of a film in order as framing panels, and a rough animatic of them with each still held for its planned time.
