@@ -322,10 +322,10 @@ const env = {
   XDG_CACHE_HOME: join(work, "xdg", "cache"),
   CADCRAFT_CONFIG_DIR: join(out, "cfg"),
 };
-function run(args, { cwd = work } = {}) {
+function run(args, { cwd = work, seconds = 20 } = {}) {
   assert.deepEqual(callProblems(args), [], args.join(" "));
   assert.deepEqual(outsidePaths(args, undefined, work), [], args.join(" "));
-  const r = spawnSync("timeout", ["20", ...args], { cwd, encoding: "utf8", env });
+  const r = spawnSync("timeout", [String(seconds), ...args], { cwd, encoding: "utf8", env });
   assert.notEqual(r.status, 124, `timed out: ${args.join(" ")}`);
   return r;
 }
@@ -624,7 +624,7 @@ function pixel(file, x, y) {
 // P4: the email skill's render call, run on an email taller than one screen, shows the whole of it at both widths.
 hand("the email skill's headless Chrome render shows an email 3,000 px tall to its last row at 640 and at 375 px wide", ["google-chrome"], () => {
   const skill = readFileSync(join(here, "..", "skills", "tools", "email", "SKILL.md"), "utf8");
-  const lines = skill.split("\n").filter((l) => /^timeout 20 google-chrome /.test(l));
+  const lines = skill.split("\n").filter((l) => /^timeout 60 google-chrome /.test(l));
   assert.equal(lines.length, 2, "one call per width");
   const mail = join(out, "tall-email.html");
   const rows = Array.from({ length: 30 }, (_, i) => `<tr><td style="height:100px;background:${i === 29 ? "#ff0000" : "#dddddd"}"></td></tr>`).join("");
@@ -636,7 +636,8 @@ hand("the email skill's headless Chrome render shows an email 3,000 px tall to i
       .replace(/--screenshot=\S+/, `--screenshot=${png}`)
       .replace(/file:\/\/\S+/, `file://${mail}`);
     assert.match(call, new RegExp(`--window-size=${width},\\d+`));
-    const made = run(call.replace(/^timeout 20 /, "").split(" "));
+    // Chrome is not an ArtCraft app: its calls run under timeout 60, which the skill's lines state and the test repeats.
+    const made = run(call.replace(/^timeout 60 /, "").split(" "), { seconds: 60 });
     assert.equal(made.status, 0, made.stderr);
     const size = pngSize(png);
     assert.equal(size.width, width);

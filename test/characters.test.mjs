@@ -787,9 +787,13 @@ describe("email (E1 to E7)", () => {
     has(/legibility (?:must )?not depend/i);
     has(/background that fails on a dark client/i);
   });
-  test("renders headless in Chrome under timeout 20 at both widths (E7)", () => {
+  test("renders headless in Chrome under timeout 60 at both widths (E7)", () => {
     has(/google-chrome --headless=new --screenshot/);
-    has(/timeout 20/);
+    const render = section(source, "Render");
+    const chrome = render.split("\n").filter((l) => /google-chrome /.test(l) && /--window-size=/.test(l));
+    assert.equal(chrome.length, 2, "one call per width");
+    for (const line of chrome) assert.match(line, /^timeout 60 google-chrome /, "Chrome is not an ArtCraft app: its calls get 60 seconds");
+    assert.match(render, /under `timeout 60`/);
   });
   test("does not say the PNG export with a scale has not been run, which ARTCRAFT.md records as run", () => {
     assert.doesNotMatch(source, /export[^.\n]*(?:scale|--scale)[^.\n]*has not been run/i);
