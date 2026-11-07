@@ -15,6 +15,10 @@ import { inflateSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  animaticLines, baseLines, boardProblems, boardSteps, clipFrames, edlLocs, expectedFrames, jsonl, markerPlan, motionProblems, parseShots,
+  setProblems, shotLines, shotMarkers, shotProblems, totalSeconds,
+} from "./film-lib.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CHECK = join(here, "..", "skills", "tools", "design", "check.mjs");
@@ -49,7 +53,7 @@ function hand(name, apps, body) {
 
 // The names a window app answers to (no -cli), and the launcher. None is ever started.
 const WINDOW_APPS = ["figcraft", "vectorcraft", "pdfcraft", "solidcraft", "cadcraft", "filmcraft", "effectcraft", "lightcraft", "artcraft-launcher"];
-const OUTPUT_FLAGS = ["--out", "--save", "--json-out", "--export", "-o", "--save-as"];
+const OUTPUT_FLAGS = ["--out", "--save", "--json-out", "--export", "-o", "--save-as", "--project", "--data-dir", "--commands", "--args-file"];
 const underDir = (path, dir) => resolve(path) === resolve(dir) || resolve(path).startsWith(resolve(dir) + sep);
 
 // A command as a list of words, from a list or from a line of text.
@@ -60,10 +64,12 @@ const words = (command) => (Array.isArray(command) ? command : [...command.match
 function commandPaths(command, outDir) {
   const argv = words(command);
   const problems = [];
+  // In FilmCraft and EffectCraft --save is a switch (save back to --project) and takes no path; --save-as takes one.
+  const switchSave = argv.includes("filmcraft-cli") || argv.includes("effectcraft-cli");
   argv.forEach((word, i) => {
     const assign = /^[A-Z][A-Z0-9_]*=(.*)$/.exec(word);
     if (assign && /^(?:\/|~|\.\.?\/)/.test(assign[1]) && !underDir(assign[1], outDir)) problems.push(`${word}: outside ${outDir}`);
-    if (OUTPUT_FLAGS.includes(word) && argv[i + 1] !== undefined) {
+    if (OUTPUT_FLAGS.includes(word) && !(switchSave && word === "--save") && argv[i + 1] !== undefined) {
       const value = argv[i + 1];
       if (!isAbsolute(value)) problems.push(`${word} ${value}: not an absolute path`);
       else if (!underDir(value, outDir)) problems.push(`${word} ${value}: outside ${outDir}`);
@@ -110,7 +116,11 @@ function callProblems(command) {
   if (WINDOW_APPS.includes(bin)) problems.push(`${bin} is a window app or the launcher`);
   if (bin === "cadcraft-cli" && sub === "run" && argv.filter((a) => a === "--export").length > 1) problems.push("cadcraft-cli run takes one --export");
   if (bin === "solidcraft-cli" && (sub === "render" || sub === "fuzz" || /^bench/.test(sub ?? ""))) problems.push(`solidcraft-cli ${sub} is not run`);
-  if (bin === "effectcraft-cli" && (sub === "script" || argv.includes("--eval"))) problems.push("effectcraft-cli runs no script and no --eval");
+  // FilmCraft and EffectCraft take their global flags first, so the subcommand is found anywhere in the line.
+  if (bin === "effectcraft-cli" && (argv.includes("script") || argv.includes("--eval") || argv.includes("--expression"))) problems.push("effectcraft-cli runs no script, no --eval and no expression");
+  if (bin === "filmcraft-cli" && (argv.includes("mcp") || argv.includes("bench-decode") || argv.includes("--bridge") || argv.includes("--allow-offline"))) problems.push("filmcraft-cli runs no mcp, no bench and no --bridge, and never passes --allow-offline");
+  if (bin === "effectcraft-cli" && (argv.includes("mcp") || argv.includes("bench") || argv.includes("--bridge"))) problems.push("effectcraft-cli runs no mcp, no bench and no --bridge");
+  if ((bin === "filmcraft-cli" || bin === "effectcraft-cli") && argv.some((a) => a.startsWith("--automation"))) problems.push(`a root flag would reach ${bin}`);
   if (bin === "lightcraft-cli" && (sub === "denoise-serve" || sub === "merge" || sub === "snapshot")) problems.push(`lightcraft-cli ${sub} is not used`);
   if (bin === "figcraft-cli") for (const flag of ["--automation-read-root", "--automation-write-root"]) if (!argv.includes(flag)) problems.push(`figcraft-cli ${sub} is missing ${flag}`);
   if ((bin === "vectorcraft-cli" && sub === "run") || bin === "solidcraft-cli" || bin === "cadcraft-cli") {
@@ -193,6 +203,28 @@ describe("the hand-off rules, on fixtures", () => {
     }
     assert.deepEqual(callProblems(["solidcraft-cli", "run", "a.json"]), []);
   });
+  test("filmcraft-cli and effectcraft-cli: no mcp, bench, --bridge, --allow-offline, script, --eval, expression or root flag, wherever the subcommand sits", () => {
+    for (const bad of [
+      "filmcraft-cli --data-dir /w/d mcp", "filmcraft-cli --demo bench-decode a.mp4", "filmcraft-cli --bridge 127.0.0.1:1 run a.jsonl", "filmcraft-cli --project /w/p.fcproj render --seconds 1 --out /w/f.png --allow-offline",
+      "filmcraft-cli run a.jsonl --automation-write-root /w", "effectcraft-cli --project /w/p.ecproj script a.jsx", "effectcraft-cli --eval 1", "effectcraft-cli --project /w/p.ecproj set A b c --expression x",
+      "effectcraft-cli mcp", "effectcraft-cli bench --comp A", "effectcraft-cli --bridge 1 run",
+    ]) assert.ok(callProblems(bad).length > 0, bad);
+    for (const good of ["filmcraft-cli --data-dir /w/d --save-as /w/p.fcproj run /w/a.jsonl", "filmcraft-cli --project /w/p.fcproj inspect sequence", "effectcraft-cli --empty --json --save-as /w/p.ecproj run --commands /w/m.json", "effectcraft-cli --project /w/p.ecproj --save set Title title transform/opacity 0 --time 0"]) {
+      assert.deepEqual(callProblems(good), [], good);
+    }
+  });
+  test("--save is a switch in filmcraft-cli and effectcraft-cli, and a path in solidcraft-cli and cadcraft-cli", () => {
+    assert.deepEqual(outsidePaths(`filmcraft-cli --project ${dir}/p.fcproj --save run ${dir}/a.jsonl`, undefined, dir), []);
+    assert.deepEqual(outsidePaths(`effectcraft-cli --project ${dir}/p.ecproj --save set A b c`, undefined, dir), []);
+    assert.ok(outsidePaths(`solidcraft-cli run ${dir}/a.json --save model.sc`, undefined, dir).length > 0);
+  });
+  test("a relative --project, --data-dir or --commands is flagged, and an absolute one under the output directory is not", () => {
+    for (const flag of ["--project", "--data-dir", "--commands"]) {
+      assert.ok(outsidePaths(`filmcraft-cli ${flag} p.fcproj run`, undefined, dir).length > 0, flag);
+      assert.ok(outsidePaths(`filmcraft-cli ${flag} /elsewhere/p run`, undefined, dir).length > 0, flag);
+      assert.deepEqual(outsidePaths(`filmcraft-cli ${flag} ${dir}/p run`, undefined, dir), [], flag);
+    }
+  });
   test("a cadcraft-cli run with two --export is flagged, and one is not", () => {
     assert.ok(callProblems(`cadcraft-cli run --export ${dir}/a.pdf --export ${dir}/a.svg`).some((p) => /one --export/.test(p)));
     assert.deepEqual(callProblems(`cadcraft-cli run --export ${dir}/a.pdf`), []);
@@ -235,7 +267,7 @@ describe("the hand-off rules, on fixtures", () => {
 
 // ---- the shipped skills obey the rules ----
 
-describe("the examples in the massing and plans skills", () => {
+describe("the examples in the massing, plans, shots, storyboard and motion skills", () => {
   const fences = (file, lang) => [...readFileSync(join(here, "..", file), "utf8").matchAll(new RegExp("^```" + lang + "\\n([\\s\\S]*?)^```", "gm"))].map((m) => m[1]);
   test("every script in the massing skill names its bodies with body_name and every plan view has a parallel camera", () => {
     const scripts = fences("skills/tools/massing/SKILL.md", "json").map((t) => JSON.parse(t)).filter(Array.isArray);
@@ -247,15 +279,37 @@ describe("the examples in the massing and plans skills", () => {
     }
     assert.ok(scripts.some((s) => s.some((x) => x.command === "file.export_view_dxf")), "the plan view is shown");
   });
-  test("every command line in the massing and plans skills passes the call rules, and every path is absolute under the output directory", () => {
-    for (const file of ["skills/tools/massing/SKILL.md", "skills/tools/plans/SKILL.md"]) {
-      const lines = fences(file, "").concat(fences(file, "sh"), fences(file, "bash")).flatMap((t) => t.replace(/\\\n\s*/g, " ").split("\n")).filter((l) => /-cli/.test(l));
+  // Each skill has its own output directory in its examples.
+  const OUT_OF = { massing: "/project/study", plans: "/project/study", shots: "/project/film", storyboard: "/project/film", motion: "/project/motion" };
+  test("every command line in the massing, plans, shots, storyboard and motion skills passes the call rules, and every path is absolute under the output directory", () => {
+    for (const [name, outDir] of Object.entries(OUT_OF)) {
+      const file = `skills/tools/${name}/SKILL.md`;
+      const lines = fences(file, "sh").flatMap((t) => t.replace(/\\\n\s*/g, " ").split("\n")).filter((l) => /-cli/.test(l));
       assert.ok(lines.length > 0, file);
       for (const line of lines) {
         assert.deepEqual(callProblems(line.replace(/^timeout \d+ (?:env (?:[A-Z_]+=\S+ )+)?/, "")), [], line);
-        assert.deepEqual(outsidePaths(line, undefined, "/project/study"), [], line);
+        assert.deepEqual(outsidePaths(line, undefined, outDir), [], line);
       }
     }
+  });
+  test("every FilmCraft script the shots and storyboard skills show is JSON lines with no path outside the output directory, and every figcraft step list is well-formed", () => {
+    for (const name of ["shots", "storyboard"]) {
+      const blocks = fences(`skills/tools/${name}/SKILL.md`, "json");
+      assert.ok(blocks.length > 0, name);
+      for (const block of blocks) {
+        const values = block.trim().startsWith("[") ? [JSON.parse(block)] : block.trim().split("\n").map((l) => JSON.parse(l));
+        for (const value of values) assert.deepEqual(scriptPaths(value, "/project/film"), [], name);
+      }
+    }
+    const lines = fences("skills/tools/shots/SKILL.md", "json").flatMap((b) => b.trim().split("\n")).map((l) => JSON.parse(l));
+    for (const line of lines) assert.ok(typeof line.id === "string" && line.params, "an id and its params");
+    assert.ok(lines.some((l) => l.id === "markers.add" && /; /.test(l.params.comment)), "a marker comment holds the angle and the movement");
+  });
+  test("the motion skill's command list builds a composition and a text layer, and it runs no script", () => {
+    const list = JSON.parse(fences("skills/tools/motion/SKILL.md", "json")[0]);
+    assert.deepEqual(list.map((c) => c.command), ["comp.new", "layer.newText"]);
+    assert.deepEqual(motionProblems(JSON.stringify(list)), []);
+    assert.deepEqual(setProblems(fences("skills/tools/motion/SKILL.md", "sh").flatMap((t) => t.split("\n"))), []);
   });
 });
 
@@ -595,4 +649,189 @@ hand("the email skill's headless Chrome render shows an email 3,000 px tall to i
 hand("the run leaves nothing outside the temporary directory: the settings directory is the output directory's (PLN8)", ["cadcraft-cli"], () => {
   assert.ok(underDir(env.CADCRAFT_CONFIG_DIR, out));
   assert.ok([env.XDG_DATA_HOME, env.XDG_CONFIG_HOME, env.XDG_CACHE_HOME].every((d) => underDir(d, work)));
+});
+
+// ---- shots, storyboard and motion: FilmCraft, FigCraft and EffectCraft (spec SHO, STO, MOT), run 2026-11-07 ----
+// filmcraft-cli 0.18.0, effectcraft-cli 0.22.0 and figcraft-cli 0.16.0, each under `timeout 20`, with the data directories under the temporary directory.
+
+const FILM = join(out, "film");
+mkdirSync(join(FILM, "data"), { recursive: true });
+const skillBlock = (name, lang, at = 0) => [...readFileSync(join(here, "..", "skills", "tools", name, "SKILL.md"), "utf8").matchAll(new RegExp("^```" + lang + "\\n([\\s\\S]*?)^```", "gm"))].map((m) => m[1])[at];
+// The shot list the skill shows is the one the run uses.
+const sampleShots = () => parseShots(skillBlock("shots", "md"));
+const printed = (r) => r.stdout.split("\n").filter((l) => l.startsWith("{")).map((l) => JSON.parse(l));
+const film = (...args) => run(["filmcraft-cli", "--data-dir", join(FILM, "data"), ...args]);
+const gifSize = (file) => {
+  const b = readFileSync(file);
+  assert.equal(b.toString("latin1", 0, 3), "GIF", `${file} is not a GIF`);
+  return { width: b.readUInt16LE(6), height: b.readUInt16LE(8) };
+};
+const script = (shots, lines) => {
+  const text = jsonl(lines);
+  for (const line of text.trim().split("\n")) assert.deepEqual(scriptPaths(line, work), [], line);
+  return text;
+};
+
+const shotsProject = join(FILM, "shots.fcproj");
+const shotsEdl = join(FILM, "shots.edl");
+
+hand("filmcraft-cli makes a sequence and a placeholder matte, places it, marks every shot, and exports an EDL with one LOC line per row (SHO3)", ["filmcraft-cli"], () => {
+  const shots = sampleShots();
+  assert.deepEqual(shotProblems(shots), []);
+  assert.equal(totalSeconds(shots), 21);
+  const base = join(FILM, "shots-base.jsonl");
+  writeFileSync(base, script(shots, baseLines(shots)));
+  const made = film("--save-as", shotsProject, "run", base);
+  assert.equal(made.status, 0, made.stdout + made.stderr);
+  const [seq, matte] = printed(made);
+  assert.ok(seq.ok && matte.ok, made.stdout);
+  const item = matte.result.item; // read from the printed line, never assumed
+
+  const file = join(FILM, "shots.jsonl");
+  writeFileSync(file, script(shots, shotLines(shots, { item, edl: shotsEdl, otio: join(FILM, "shots.otio") })));
+  const placed = film("--project", shotsProject, "--save", "run", file);
+  assert.equal(placed.status, 0, placed.stdout + placed.stderr);
+  const results = printed(placed);
+  assert.equal(results.length, 1 + 6 + 2);
+  assert.ok(results.every((l) => l.ok === true), placed.stdout);
+  assert.deepEqual(edlLocs(readFileSync(shotsEdl, "utf8")), markerPlan(shots).map((m) => m.name));
+  assert.ok(readFileSync(join(FILM, "shots.otio")).length > 0, "the OTIO file is written (its markers are not read)");
+});
+
+hand("the project's markers equal the table: the comment holds the angle and the movement, and the start is the sum of the lengths before it (SHO4)", ["filmcraft-cli"], () => {
+  const shots = sampleShots();
+  const sequence = JSON.parse(film("--project", shotsProject, "inspect", "sequence").stdout);
+  assert.deepEqual(shotMarkers(sequence), markerPlan(shots));
+  assert.deepEqual(markerPlan(shots).map((m) => m.seconds), [0, 4, 9, 12, 16, 19]);
+});
+
+hand("a frame renders at the start of each shot, exits 0 and so has no offline media (SHO5)", ["filmcraft-cli"], () => {
+  mkdirSync(join(FILM, "frames"), { recursive: true });
+  for (const [i, m] of markerPlan(sampleShots()).entries()) {
+    const png = join(FILM, "frames", `f${String(i + 1).padStart(2, "0")}.png`);
+    const r = film("--project", shotsProject, "render", "--seconds", String(m.seconds), "--out", png);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.deepEqual(pngSize(png), { width: 1920, height: 1080 });
+  }
+});
+
+hand("an empty sequence exports an EDL with no marker, which is why the markers sit on a placeholder matte (SHO3)", ["filmcraft-cli"], () => {
+  const dir = join(FILM, "empty");
+  mkdirSync(join(dir, "data"), { recursive: true });
+  const edl = join(dir, "empty.edl");
+  const lines = [
+    { id: "file.newSequence", params: { name: "Empty", width: 1920, height: 1080, fps: 24 } },
+    { id: "markers.add", params: { seconds: 0, name: "S01 ELS", comment: "objective, high; static" } },
+    { id: "file.exportEdl", params: { path: edl } },
+  ];
+  writeFileSync(join(dir, "empty.jsonl"), script(undefined, lines));
+  const r = run(["filmcraft-cli", "--data-dir", join(dir, "data"), "--save-as", join(dir, "empty.fcproj"), "run", join(dir, "empty.jsonl")]);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.deepEqual(edlLocs(readFileSync(edl, "utf8")), []);
+});
+
+hand("figcraft-cli makes one frame per shot at the ratio, FilmCraft holds each still for the table's length, and a duration with items is refused (STO1 to STO5)", ["figcraft-cli", "filmcraft-cli"], () => {
+  const shots = sampleShots();
+  const { steps, frameIds } = boardSteps(shots);
+  assert.deepEqual(boardProblems(shots, steps), []);
+  const board = join(FILM, "storyboard.json");
+  writeFileSync(board, JSON.stringify(steps));
+  const doc = join(FILM, "storyboard.figcraft");
+  const made = run(["figcraft-cli", "run", board, "--out", doc, "--no-system-fonts", ...roots]);
+  assert.equal(made.status, 0, made.stdout + made.stderr);
+  const results = printed(made);
+  assert.ok(results.every((l) => l.ok === true), made.stdout);
+  const frameResults = results.filter((l, i) => steps[i].command === "frame.create").map((l) => l.result.id);
+  assert.deepEqual(frameResults, frameIds, "the predicted ids are the ids the app handed out");
+
+  const frames = join(FILM, "board-frames");
+  mkdirSync(frames, { recursive: true });
+  const exported = run(["figcraft-cli", "export", doc, "-o", `${frames}/`, "--format", "png", "--no-system-fonts", ...roots]);
+  assert.equal(exported.status, 0, exported.stderr);
+  const names = readdirSync(frames).sort();
+  assert.deepEqual(names, ["S01.png", "S02.png", "S03.png", "S04.png", "S05.png", "S06.png"]);
+  for (const name of names) assert.deepEqual(pngSize(join(frames, name)), { width: 960, height: 540 }, name);
+  const contrast = spawnSync("timeout", ["20", process.execPath, CHECK, "contrast", "#111827", "#e9edf2", "--min", "4.5"], { encoding: "utf8", env });
+  assert.equal(contrast.status, 0, contrast.stdout);
+
+  const sb = join(FILM, "storyboard.fcproj");
+  const imported = film("--save-as", sb, "import", ...names.map((n) => join(frames, n)));
+  assert.equal(imported.status, 0, imported.stdout + imported.stderr);
+  const { items, errors } = JSON.parse(imported.stdout);
+  assert.deepEqual(errors, []);
+  assert.equal(items.length, 6);
+
+  const gif = join(FILM, "animatic.gif");
+  const animatic = join(FILM, "animatic.jsonl");
+  writeFileSync(animatic, script(shots, animaticLines(shots, items, { gif })));
+  const played = film("--project", sb, "--save-as", join(FILM, "animatic.fcproj"), "run", animatic);
+  assert.equal(played.status, 0, played.stdout + played.stderr);
+  const exportLine = printed(played).find((l) => l.id === "file.exportMedia");
+  assert.equal(exportLine.result.result.frames, 21 * 24, "the animatic is as long as the table");
+  assert.deepEqual(exportLine.result.offlineMedia, []);
+  assert.deepEqual(gifSize(gif), { width: 480, height: 270 });
+
+  const sequence = JSON.parse(film("--project", join(FILM, "animatic.fcproj"), "inspect", "sequence", "--compact").stdout);
+  assert.deepEqual(clipFrames(sequence), expectedFrames(shots));
+  assert.deepEqual(clipFrames(sequence), [96, 120, 72, 96, 72, 48]);
+
+  // A duration with items is refused, so the skill places one still at a time.
+  const bad = join(FILM, "bad.jsonl");
+  writeFileSync(bad, script(shots, [{ id: "file.newSequence", params: { name: "B", width: 960, height: 540, fps: 24 } }, { id: "timeline.place", params: { items: [items[0], items[1]], track: "V1", seconds: 0, duration: { seconds: 2 } } }]));
+  const refused = film("--project", sb, "run", bad);
+  assert.notEqual(refused.status, 0);
+  assert.match(refused.stdout + refused.stderr, /no `sourceIn` or `duration` with `items`/);
+});
+
+const MOTION = join(out, "motion");
+mkdirSync(MOTION, { recursive: true });
+const ec = (...args) => run(["effectcraft-cli", ...args]);
+const proj = join(MOTION, "motion.ecproj");
+
+hand("effectcraft-cli builds the composition from a command list, and every set that carries --save keeps its key (MOT1)", ["effectcraft-cli"], () => {
+  const list = join(MOTION, "motion.json");
+  writeFileSync(list, skillBlock("motion", "json"));
+  assert.deepEqual(motionProblems(readFileSync(list, "utf8")), []);
+  const made = ec("--empty", "--json", "--save-as", proj, "run", "--commands", list);
+  assert.equal(made.status, 0, made.stdout + made.stderr);
+  assert.ok(readFileSync(proj).length > 0);
+  for (const [value, time] of [["0", "0"], ["100", "1"]]) {
+    const set = ec("--project", proj, "--save", "set", "Title", "title", "transform/opacity", value, "--time", time);
+    assert.equal(set.status, 0, set.stdout + set.stderr);
+  }
+  const got = JSON.parse(ec("--project", proj, "get", "Title", "title", "transform/opacity", "--time", "0.5").stdout);
+  assert.equal(got.keys.length, 2, "get at the midpoint returns two keys");
+  assert.deepEqual(got.keys.map((k) => [k.compTime, k.value]), [[0, 0], [1, 100]]);
+  assert.equal(got.value, 50);
+});
+
+hand("a set with no --save is lost when the process ends (MOT1)", ["effectcraft-cli"], () => {
+  const copy = join(MOTION, "copy.ecproj");
+  writeFileSync(copy, readFileSync(proj));
+  assert.equal(ec("--project", copy, "set", "Title", "title", "transform/opacity", "42", "--time", "0").status, 0);
+  const got = JSON.parse(ec("--project", copy, "get", "Title", "title", "transform/opacity", "--time", "0").stdout);
+  assert.equal(got.value, 0, "the key set without --save did not reach the file");
+});
+
+hand("effectcraft-cli writes the poster at the composition's size and a GIF, and leaves its lock file beside the project (MOT2)", ["effectcraft-cli"], () => {
+  const poster = join(MOTION, "poster.png");
+  const r = ec("--project", proj, "render-frame", "--comp", "Title", "--time", "1.5", "--out", poster);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.deepEqual(pngSize(poster), { width: 960, height: 540 });
+  const gif = join(MOTION, "motion.gif");
+  const g = ec("--project", proj, "render", "--comp", "Title", "--out", gif, "--format", "gif", "--resolution", "half");
+  assert.equal(g.status, 0, g.stdout + g.stderr);
+  assert.deepEqual(gifSize(gif), { width: 480, height: 270 });
+  assert.match(g.stdout + g.stderr, /48 frames/);
+  assert.ok(readdirSync(MOTION).includes(".motion.ecproj.lock"), "the lock file is a side file the hand-over lists");
+});
+
+hand("the poster's text pair passes the contrast check with --min (MOT4)", ["effectcraft-cli"], () => {
+  const list = JSON.parse(skillBlock("motion", "json"));
+  const background = list[0].params.background;
+  const fill = list[1].params.fill;
+  const check = spawnSync("timeout", ["20", process.execPath, CHECK, "contrast", fill, background, "--min", "4.5"], { encoding: "utf8", env });
+  assert.equal(check.status, 0, check.stdout);
+  const fails = spawnSync("timeout", ["20", process.execPath, CHECK, "contrast", "#777777", "#888888", "--min", "4.5"], { encoding: "utf8", env });
+  assert.notEqual(fails.status, 0, "a failing pair stops the run");
 });

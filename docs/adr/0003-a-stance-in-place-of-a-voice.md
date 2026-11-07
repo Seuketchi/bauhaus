@@ -13,8 +13,8 @@ That leaves a character with a name and a job, and nothing that says what its cr
 - **Each character file gains a `## Stance`**, after `Hard rules` and `Hand over` and before `Voice`, of 3 to 6 lines. Each line is a plain statement of what the craft puts first, asks or refuses, in the third person and in our words. No first person, no quote, no verb that attributes words, no year, no place, and none of the biography words the tests scan for.
 - **A stance is not a voice.** It says what the craft does. It does not say how the character writes: that stays in the `Voice` section, in the plain professional register, with one sample line. The `Voice` section is unchanged.
 - **It lives in the character file.** Not in a file beside it, so a character stays one file.
-- **Each line rests on a research row.** The rows are listed in the table below and not in the character files, so those stay clean. A line rests on a row marked as opened in the research; the one row from a secondary page is marked.
-- **`breuer` waits.** None of his own text was opened, so `STANCE_LATER` in `test/characters.test.mjs` holds him, with the reason, and shrinks as stances are written. `moholy-nagy` and `peterhans` write their stance in the branches that add them.
+- **Each line rests on a research row.** The rows are listed in the table below and not in the character files, so those stay clean. A line rests on a row marked as opened in the research; a row from a secondary page is marked.
+- **`breuer` waits.** None of his own text was opened, so `STANCE_LATER` in `test/characters.test.mjs` holds him, with the reason, and shrinks as stances are written. `moholy-nagy` has its stance in the branch that adds it, and `peterhans` writes its own in the branch that adds it.
 - **The words are the writer's.** The research has a plain-speech row for the graphic designer too. It is left out of the designer's stance, because the writer now owns the words.
 - **Tests.** STN1 (3 to 6 lines, except for a character in `STANCE_LATER`), STN2 (the same scans as the rest of the file), STN3 (the `Voice` section still has exactly one sample line of at most 30 words) and STN4 (the position of the section). STN5, whether the owner reads a sample answer and sees the stance, no test can judge, and it is left to the owner.
 
@@ -33,6 +33,11 @@ That leaves a character with a name and a job, and nothing that says what its cr
 | mies | Wants the most effect for the least means. | CGR 4 r4 | opened |
 | mies | Knows each material, and expects nothing from a new one by itself. | CGR 4 r7 | opened, in translation |
 | mies | Refuses a form chosen because it looks like a style. | CGR 4 r1, r2 (would refuse) | opened |
+| moholy-nagy | Treats light as the material of the work, in the way colour is the material of a painter. | CGR 1 §5 r1 | opened |
+| moholy-nagy | Takes an unusual angle as a way to see more than the eye sees, and not as an error. | CGR 1 §5 r2 | opened |
+| moholy-nagy | Builds a film from tempo, tension and tone, and not only from a recorded story. | CGR 1 §5 r5 | opened |
+| moholy-nagy | Treats design as an attitude of planning and not as a trade. | CGR 1 §5 r6 | secondary, opened |
+| moholy-nagy | Refuses a picture made only to copy what the eye already expects. | CGR 1 §5 would refuse | opened; inferred from r2, which the source does not name |
 | ogilvy | Uses the words people use when they speak: short words, short sentences. | CGR 1b.4 r1 | opened |
 | ogilvy | Avoids jargon. | CGR 1b.4 r2 | opened |
 | ogilvy | Leaves a night between drafting and sending, reads the draft aloud, then edits. | CGR 1b.4 r3 | opened |
@@ -42,6 +47,6 @@ That leaves a character with a name and a job, and nothing that says what its cr
 ## Consequences
 
 - A stance line rests on a row. A line whose row is only a summary, or whose source is not opened, is not written. This is why `breuer` has none.
-- The writer's last line rests on a secondary page. If the owner would rather have only primary rows, it goes, and the writer's stance is four lines.
+- The writer's last line, and the shot and motion designer's line on design as an attitude of planning, rest on a secondary page. If the owner would rather have only primary rows, both go, and each of those two stances is four lines.
 - The tests prove a stance is written and clean. They do not prove it shows in a character's answers: that is STN5, and the owner's to read.
 - The rights position of ADR 0001 is unchanged. Nothing here quotes or attributes words to anyone, so the stance adds no new exposure.

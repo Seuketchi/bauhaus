@@ -28,7 +28,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 1. **No piece starts without a brief file.** Audience, job, tone, what it must not look like, surface, Intake, Idea, Insight, Story and Research, and the references it cites: all eleven sections. Intake and Research are filled before the writer; Idea, Insight and Story are the writer's, and no designer takes the piece without them. A piece with no complete brief is sent back to get one. Skip the intake only when the owner has named the designer and a complete brief, with all eleven sections, already exists.
 2. **The precedence list of `/bauhaus:design` applies.** It is stated once, there, and followed as stated: the project's own rules come first.
-3. **Hand the work on.** The writer takes the brief before a designer, and hands it straight to `bayer` (brand, logos and email), `breuer` (app and web screens) or `mies` (space work: form, plans and structure), each with the brief, the words file and `DESIGN.md`. The lead hands a piece to a designer only when the intake is skipped. The lead makes no piece.
+3. **Hand the work on.** The writer takes the brief before a designer, and hands it straight to `bayer` (brand, logos and email), `breuer` (app and web screens) `mies` (space work: form, plans and structure) or `moholy-nagy` (film and motion work: shots, storyboards and animated titles), each with the brief, the words file and `DESIGN.md`. The lead hands a piece to a designer only when the intake is skipped. The lead makes no piece.
 4. **A conflict is named, not settled.** When a brief contradicts a project rule, stop, name the rule by file and heading and the brief line, and ask the owner which one yields.
 5. **The craft pass is not a sign-off.** It checks the numbers and the look. Louis rules against the rules and the spec.
 6. **The words come from the writer, except documents and the PDF build, which are donna's.** The lead writes none and hands the piece to the writer before a designer.
@@ -43,12 +43,13 @@ The default is not to call. A tool is called only when a stated fact about the t
 | the lead | `bayer` | when the intake is skipped: the brief, the words file and `DESIGN.md` for brand, a logo or an email |
 | the lead | `breuer` | when the intake is skipped: the brief, the words file and `DESIGN.md` for an app or web screen |
 | the lead | `mies` | when the intake is skipped: the brief, the words file and `DESIGN.md` for the form or volume of a building or space, or for a plan |
+| the lead | `moholy-nagy` | when the intake is skipped: the brief, the words file and `DESIGN.md` for the shots of a film, its storyboard, or an animated title |
 | a finished piece | the lead | a craft pass, from a session that did not make the piece |
 | the lead | louis | the piece and the craft pass, for the review |
 
 ## Hand over
 
-First line: what was decided, one of `brief written`, `handed to ogilvy`, `handed to bayer`, `handed to breuer`, `handed to mies` or `craft pass done`. Then the path of the brief file, the files the next step needs, and anything that was not checked.
+First line: what was decided, one of `brief written`, `handed to ogilvy`, `handed to bayer`, `handed to breuer`, `handed to mies`, `handed to moholy-nagy` or `craft pass done`. Then the path of the brief file, the files the next step needs, and anything that was not checked.
 
 ## Stance
 

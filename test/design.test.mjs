@@ -1350,7 +1350,7 @@ test("ARTCRAFT.md rows for massing and plans, with runs 6 to 14 stamped with the
   assert.match(rows("plans"), /convert/);
   assert.match(rows("plans"), /pdfcraft-cli check/);
   const runs = text.split(/^## Verified runs/m)[1].split(/^## Not run/m)[0];
-  const items = runs.split("\n").filter((l) => /^\d+\. /.test(l));
+  const items = runs.split("\n").filter((l) => /^\d+\. /.test(l)).slice(0, 14);
   assert.equal(items.length, 5 + 9, "runs 1 to 5 stay, and nine new runs are added");
   const added = items.slice(5).join("\n");
   assert.match(added, /solidcraft-cli 0\.30\.1/);
@@ -1360,7 +1360,38 @@ test("ARTCRAFT.md rows for massing and plans, with runs 6 to 14 stamped with the
   assert.match(added, /invalid camera/);
   assert.match(added, /cannot be used multiple times/);
   assert.match(added, /ISO-10303-21;/);
-  assert.doesNotMatch(text, /filmcraft-cli run|effectcraft-cli --empty|lightcraft-cli render|\| `(?:shots|storyboard|motion|develop)` \|/, "the rows of the next two pull requests are not here");
+  assert.doesNotMatch(text, /lightcraft-cli render|\| `(?:develop|photographer)` \|/, "the row of the next pull request is not here");
+});
+
+test("ARTCRAFT.md rows for shots, storyboard and motion, with runs 15 to 23 stamped with the app version and the date", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  const header = text.split("\n").find((l) => l.startsWith("| Job |"));
+  const cells = (l) => l.split(/\|(?=(?:[^`]*`[^`]*`)*[^`]*$)/).slice(1, -1);
+  const rows = (job) => text.split("\n").find((l) => l.startsWith(`| \`${job}\` |`));
+  for (const job of ["shots", "storyboard", "motion"]) assert.equal(cells(rows(job)).length, cells(header).length, `${job}: the same columns as the other rows`);
+  assert.match(rows("shots"), /filmcraft-cli --data-dir D --save-as x\.fcproj run/);
+  assert.match(rows("shots"), /markers\.add/);
+  assert.match(rows("shots"), /file\.exportEdl/);
+  assert.match(rows("shots"), /render --seconds/);
+  assert.match(rows("storyboard"), /figcraft-cli run/);
+  assert.match(rows("storyboard"), /export -o frames\//);
+  assert.match(rows("storyboard"), /filmcraft-cli[^|]*import/);
+  assert.match(rows("storyboard"), /timeline\.place/);
+  assert.match(rows("motion"), /effectcraft-cli --empty/);
+  assert.match(rows("motion"), /render-frame/);
+  assert.match(rows("motion"), /render --comp[^|]*--format gif/);
+  const runs = text.split(/^## Verified runs/m)[1].split(/^## Not run/m)[0];
+  const items = runs.split("\n").filter((l) => /^\d+\. /.test(l));
+  assert.equal(items.length, 5 + 9 + 9, "runs 1 to 14 stay, and nine new runs are added");
+  const added = items.slice(14).join("\n");
+  assert.match(added, /filmcraft-cli 0\.18\.0/);
+  assert.match(added, /effectcraft-cli 0\.22\.0/);
+  assert.match(added, /figcraft-cli 0\.16\.0/);
+  for (const item of items.slice(14)) assert.match(item, /2026-11-07/, item.slice(0, 40));
+  assert.match(added, /no `\* LOC:` line|no marker/, "an empty sequence exports no marker");
+  assert.match(added, /no `sourceIn` or `duration` with `items`/);
+  assert.match(added, /\.motion\.ecproj\.lock/);
+  assert.match(added, /lost/);
 });
 
 test("the not-run list gains the unrun SolidCraft and CADCraft commands, and no longer says FilmCraft and EffectCraft are not installed", () => {

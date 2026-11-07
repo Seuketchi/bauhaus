@@ -2,7 +2,7 @@
 
 A design package. It holds one method, the jobs that apply it, and characters who brief those jobs and hand work on. The method names the generic defaults a piece must not fall into, asks for a plan checked against the brief before anything is built, and puts the project's own rules above its own taste.
 
-Status: the method, the brand, email, critique, screens, massing, plans and concept jobs, and the lead, the graphic designer, the screen designer, the space designer and the writer are in.
+Status: the method, the brand, email, critique, screens, massing, plans, concept, shots, storyboard and motion jobs, and the lead, the graphic designer, the screen designer, the space designer, the shot and motion designer and the writer are in.
 
 ## Install
 
@@ -24,11 +24,12 @@ The cast are real people, now dead, and their names are used as names only. Each
 | Marcel Breuer | UI/UX designer. App and web screens. |
 | Ludwig Mies van der Rohe | Space designer. Form, plans, structure. |
 | David Ogilvy | Writer. The idea, the story and the words. |
+| László Moholy-Nagy | Shot and motion designer. Shots, storyboards, animated titles. |
 | Josef Albers | Colour science, inside the method. Credited here and in the decision record. |
 
 Each character file carries a short stance: what the craft puts first and what it refuses, in plain lines. It is not a voice, and ADR 0003 records the rows each line rests on.
 
-Moholy-Nagy is later work and needs a source pass first. The cast may grow.
+More characters and jobs are later work, each after a source pass. The cast may grow.
 
 ## Layout
 

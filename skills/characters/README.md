@@ -12,4 +12,5 @@ None yet.
 - **[breuer](./breuer/SKILL.md)**: The screen designer. App and web screens, from a brief file and the project's own rules, with a spec and an image of each state.
 - **[gropius](./gropius/SKILL.md)**: The lead. Frames the brief, hands the piece to the right designer and runs the craft pass on pieces made elsewhere.
 - **[mies](./mies/SKILL.md)**: The space designer. Form, plans and structure, from a brief file and the project's own rules, handed back as a design study with its figures and an image.
+- **[moholy-nagy](./moholy-nagy/SKILL.md)**: The shot and motion designer. Shot lists, storyboards and animated titles, from a brief file and the project's own rules, handed back as a plan and a draft, not a cut.
 - **[ogilvy](./ogilvy/SKILL.md)**: The writer. The idea, the insight, the story and the words of every piece made here, from the brief's intake and the research, handed to the designer as the brief and a words file.
