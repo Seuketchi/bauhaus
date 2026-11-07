@@ -6,7 +6,7 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1239,7 +1239,7 @@ test("the screens row of ARTCRAFT.md records that frame.presets was run, with th
   assert.match(row, /export[^|]*--node[^|]*--format png/);
 });
 
-test("the email row of ARTCRAFT.md records the PNG export as run, and the not-run list keeps --scale and drops the preset names", () => {
+test("the email row of ARTCRAFT.md records the PNG export as run, and the not-run list keeps render --scale and drops the preset names", () => {
   const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
   const row = text.split("\n").find((l) => l.startsWith("| `email` |"));
   assert.ok(row, "no email row");
@@ -1248,8 +1248,81 @@ test("the email row of ARTCRAFT.md records the PNG export as run, and the not-ru
   assert.match(row, /`--scale`, from `--help`, not run/, "render with --scale stays not run");
   assert.match(text, /^5\. `figcraft-cli export[^\n]*--format png[^\n]*assets\/hero\.png/m, "a run record behind it");
   const notRun = text.split(/^## Not run, so not relied on/m)[1];
-  assert.match(notRun, /`figcraft-cli export` to PNG with `--scale`/);
+  assert.match(notRun, /`figcraft-cli render` with `--scale`/);
+  assert.doesNotMatch(notRun, /`figcraft-cli export` to PNG with `--scale`/, "export --scale 1 and 2 were run in sports-4");
   assert.doesNotMatch(notRun, /frame\.presets/);
+});
+
+// P1: what the trials ran against figcraft-cli, one line each, each marked run with the trial folder as the evidence.
+const FIGCRAFT_FACTS = [
+  [/`run` paths are absolute[^\n]*read and write roots/, "sports-4"],
+  [/`"parent": <frame id>`[^\n]*blank/, "sports"],
+  [/cannot refer to an earlier layer by name/, "sports-4"],
+  [/`image\.place` refuses SVG/, "sports"],
+  [/`export` overwrites a source file whose name matches/, "sports-2"],
+  [/mask is the lowest layer of its frame/, "sports-4"],
+  [/`effect\.add` needs `type` twice/, "sports-4"],
+  [/[Mm]ultiply goes on the clipped frame, not on the image/, "tech-2"],
+  [/`fills: \[\{type: "radialGradient", stops: \[[^\]]*\]\}\]`/, "tech-2"],
+  [/One failed step rolls back the whole script/, "sports-4"],
+  [/`export --scale 2` does not sharpen a small source/, "sports-4"],
+];
+const figcraftFacts = () => (shipped("skills", "tools", "design", "ARTCRAFT.md").split(/^## FigCraft facts from the trials\s*$/m)[1] ?? "").split(/^## /m)[0];
+
+test("ARTCRAFT.md records the FigCraft facts the trials found, each marked run with its trial folder", () => {
+  const bullets = figcraftFacts().split("\n").filter((l) => l.startsWith("- "));
+  assert.equal(bullets.length, FIGCRAFT_FACTS.length, "one bullet per fact");
+  for (const [fact, trial] of FIGCRAFT_FACTS) {
+    const bullet = bullets.find((l) => fact.test(l));
+    assert.ok(bullet, `no bullet for ${fact}`);
+    assert.match(bullet, /\(run, figcraft-cli [^)]*trial-email\/[\w-]+/, `${bullet.slice(0, 50)}: marked run, with the version and the trial folder`);
+    assert.ok(bullet.includes(`trial-email/${trial}`), `${bullet.slice(0, 50)}: evidence is trial-email/${trial}`);
+  }
+});
+
+test("the FigCraft facts section names what was not seen run, and the facts section sits before the commands table", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  assert.ok(text.indexOf("## FigCraft facts from the trials") > text.indexOf("## Rules"));
+  assert.match(figcraftFacts(), /Not run: [^\n]*`command\.batch`[^\n]*`as`/, "command.batch with as was not tried");
+});
+
+// P2
+test("ARTCRAFT.md has a LightCraft row in the table's shape, with the headless check that was run and the jobs that do not use it", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  const rows = text.split("\n").filter((l) => l.startsWith("|") && /lightcraft-cli/.test(l));
+  assert.equal(rows.length, 1, "one row");
+  const header = text.split("\n").find((l) => l.startsWith("| Job |"));
+  const cells = (l) => l.split(/\|(?=(?:[^`]*`[^`]*`)*[^`]*$)/).slice(1, -1);
+  assert.equal(cells(rows[0]).length, cells(header).length, "the same columns as the other rows");
+  assert.match(rows[0], /`lightcraft-cli --version`/);
+  assert.match(rows[0], /`lightcraft-cli run --demo engine\.commands`/);
+  assert.match(rows[0], /lightcraft-cli 0\.19\.0/);
+  assert.match(rows[0], /2026-11-07/);
+  assert.match(rows[0], /no job uses it yet/i);
+  assert.doesNotMatch(text, /lightcraft-cli render|\| `(?:develop|photographer)` \|/, "the photographer's row is not here");
+  const notRun = text.split(/^## Not run, so not relied on/m)[1];
+  assert.doesNotMatch(notRun, /LightCraft 0\.19\.0 does too|none of the three has a row/);
+  assert.match(notRun, /FilmCraft 0\.18\.0 and EffectCraft 0\.22\.0 are installed/);
+});
+
+// P3: contrast exits 0 on a failing pair unless --min is passed, so every example passes it.
+const mdFiles = (dir) => readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? mdFiles(join(dir, e.name)) : e.name.endsWith(".md") ? [join(dir, e.name)] : []));
+test("every contrast example in the skills and the pages passes --min", () => {
+  const examples = [...mdFiles("skills"), ...mdFiles("docs")].flatMap((f) =>
+    shipped(f).split("\n").flatMap((l, i) => [...l.matchAll(/`node [^`]*check\.mjs contrast [^`]*`/g)].map((m) => ({ at: `${f}:${i + 1}`, command: m[0] }))),
+  );
+  assert.ok(examples.length >= 4, "the examples are found");
+  for (const { at, command } of examples) assert.match(command, /--min (?:4\.5|3)\b/, `${at}: ${command}`);
+});
+
+test("where contrast is shown, the design tool and its page say it exits 0 on a failing pair unless --min is passed", () => {
+  for (const file of [["skills", "tools", "design", "SKILL.md"], ["docs", "tools", "design.md"]]) {
+    const text = shipped(...file);
+    assert.match(text, /exits? 0 on a failing pair unless `--min`/, file.join("/"));
+  }
+  for (const file of [["skills", "tools", "email", "SKILL.md"], ["skills", "tools", "brand", "SKILL.md"], ["skills", "tools", "screens", "SKILL.md"], ["skills", "tools", "critique", "SKILL.md"]]) {
+    assert.match(shipped(...file), /`--min`/, file.join("/"));
+  }
 });
 
 test("DESIGN-MD.md describes the front matter and the 11 sections in order", () => {

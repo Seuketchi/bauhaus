@@ -13,13 +13,13 @@ The piece's path, the brief for it, and the project's `DESIGN.md` if there is on
 
 ## Who made it
 
-Run only on a piece this session did not make. The first line names the maker as given. If the piece was made here, say so and stop.
+Run only on a piece this session did not make. "This session" is this conversation: a piece made in it was made here. The first line names the maker as given. If the piece was made here, say so and stop.
 
 ## Order of work
 
 1. **Read the craft's `REFERENCES.md`** before judging taste: `brand` for an identity, `email` for an email. The report cites the row each finding rests on, and only a row marked `opened` supports a rule.
 2. **Run the checks that need no eye.** The checker is named by its path from the plugin root; give the files by path.
-   - Every colour pair: `node skills/tools/design/check.mjs contrast <fg> <bg>`.
+   - Every colour pair: `node skills/tools/design/check.mjs contrast <fg> <bg> --min 4.5` (`--min 3` for an interface part). Without `--min` a failing pair still exits 0.
    - The tells: `node skills/tools/design/check.mjs tells <piece> --brief <brief> --brand <tokens> --render <png>`.
    - An email as well: `node skills/tools/design/check.mjs email <file.html> --limits skills/tools/email/LIMITS.md`.
    - A PDF: `pdfcraft-cli check` and `pdfcraft-cli audit`.

@@ -10,7 +10,8 @@
 import { test, after, describe } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { accessSync, constants, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { accessSync, constants, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { inflateSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -519,6 +520,76 @@ hand("pdfcraft-cli checks the plan PDF as ok (PLN5)", ["cadcraft-cli", "pdfcraft
   const checked = run(["pdfcraft-cli", "check", join(sheet, "plan.pdf")]);
   assert.equal(checked.status, 0, checked.stderr);
   assert.match(checked.stdout + checked.stderr, /checked 1 files: \{"ok": 1\}/);
+});
+
+hand("lightcraft-cli answers --version and runs one headless command on the demo library, writing no file (ARTCRAFT.md, the LightCraft row)", ["lightcraft-cli"], () => {
+  const before = readdirSync(work, { recursive: true }).length;
+  assert.match(run(["lightcraft-cli", "--version"]).stdout, /^lightcraft-cli 0\.19\.0\b/);
+  const listed = run(["lightcraft-cli", "run", "--demo", "engine.commands"]);
+  assert.equal(listed.status, 0, listed.stderr);
+  const [line] = listed.stdout.trim().split("\n");
+  const result = JSON.parse(line);
+  assert.equal(result.command, "engine.commands");
+  assert.equal(result.ok, true);
+  assert.ok(Array.isArray(result.result) && result.result.length > 100, "the command list is long");
+  assert.equal(readdirSync(work, { recursive: true }).length, before, "no file was written");
+});
+
+// The pixel at (x, y) of an 8-bit RGB or RGBA PNG that is not interlaced, which is what headless Chrome writes.
+function pixel(file, x, y) {
+  const b = readFileSync(file);
+  const { width } = pngSize(file);
+  assert.equal(b[24], 8, "8 bits");
+  assert.ok(b[25] === 2 || b[25] === 6, "RGB or RGBA");
+  assert.equal(b[28], 0, "not interlaced");
+  const bpp = b[25] === 2 ? 3 : 4;
+  const idat = [];
+  for (let at = 8; at < b.length; ) {
+    const length = b.readUInt32BE(at);
+    if (b.toString("latin1", at + 4, at + 8) === "IDAT") idat.push(b.subarray(at + 8, at + 8 + length));
+    at += 12 + length;
+  }
+  const raw = inflateSync(Buffer.concat(idat));
+  const stride = width * bpp;
+  let prev = Buffer.alloc(stride);
+  for (let row = 0; row <= y; row += 1) {
+    const filter = raw[row * (stride + 1)];
+    const line = Buffer.from(raw.subarray(row * (stride + 1) + 1, (row + 1) * (stride + 1)));
+    for (let i = 0; i < stride; i += 1) {
+      const a = i >= bpp ? line[i - bpp] : 0;
+      const up = prev[i];
+      const c = i >= bpp ? prev[i - bpp] : 0;
+      const guess = [0, a, up, (a + up) >> 1, (() => { const p = a + up - c; const pa = Math.abs(p - a), pb = Math.abs(p - up), pc = Math.abs(p - c); return pa <= pb && pa <= pc ? a : pb <= pc ? up : c; })()][filter];
+      line[i] = (line[i] + guess) & 255;
+    }
+    if (row === y) return [...line.subarray(x * bpp, x * bpp + 3)];
+    prev = line;
+  }
+}
+
+// P4: the email skill's render call, run on an email taller than one screen, shows the whole of it at both widths.
+hand("the email skill's headless Chrome render shows an email 3,000 px tall to its last row at 640 and at 375 px wide", ["google-chrome"], () => {
+  const skill = readFileSync(join(here, "..", "skills", "tools", "email", "SKILL.md"), "utf8");
+  const lines = skill.split("\n").filter((l) => /^timeout 20 google-chrome /.test(l));
+  assert.equal(lines.length, 2, "one call per width");
+  const mail = join(out, "tall-email.html");
+  const rows = Array.from({ length: 30 }, (_, i) => `<tr><td style="height:100px;background:${i === 29 ? "#ff0000" : "#dddddd"}"></td></tr>`).join("");
+  writeFileSync(mail, `<!doctype html><html><body style="margin:0"><table width="300" style="width:300px;border-collapse:collapse">${rows}</table></body></html>`);
+  for (const [width, line] of [[640, lines[0]], [375, lines[1]]]) {
+    const png = join(out, `tall-${width}.png`);
+    const call = line
+      .replace(/--user-data-dir=\S+/, `--user-data-dir=${join(out, "chrome")}`)
+      .replace(/--screenshot=\S+/, `--screenshot=${png}`)
+      .replace(/file:\/\/\S+/, `file://${mail}`);
+    assert.match(call, new RegExp(`--window-size=${width},\\d+`));
+    const made = run(call.replace(/^timeout 20 /, "").split(" "));
+    assert.equal(made.status, 0, made.stderr);
+    const size = pngSize(png);
+    assert.equal(size.width, width);
+    assert.ok(size.height > 3000, `${width}: the window is ${size.height} px, not taller than the email`);
+    assert.deepEqual(pixel(png, 10, 2999), [255, 0, 0], `${width}: the last row of the email is in the render`);
+    assert.deepEqual(pixel(png, 10, 3100), [255, 255, 255], `${width}: the page ground follows it`);
+  }
 });
 
 hand("the run leaves nothing outside the temporary directory: the settings directory is the output directory's (PLN8)", ["cadcraft-cli"], () => {

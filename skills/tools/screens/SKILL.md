@@ -75,7 +75,7 @@ Read each PNG after it is made. A frame whose content falls outside it, or a sta
 Each line is checked, and the spec says how.
 
 - **Target size.** SC 2.5.8 Target Size (Minimum), Level AA: a pointer target is at least 24 by 24 CSS pixels (row WC1). Five exceptions: spacing, equivalent, inline, a size set by the browser or platform and not changed by the design, and essential. Where the project rule is stricter, the project rule wins; on Apple platforms a control has a hit region of at least 44 by 44 points (row AH1), and the project's own number is used when it names one.
-- **Contrast.** Every colour pair is computed, never judged by eye: `node skills/tools/design/check.mjs contrast <fg> <bg>`, the path from the plugin root. Text needs 4.5:1 and interface parts 3:1 (row WC1). A pair at 4.4999:1 fails.
+- **Contrast.** Every colour pair is computed, never judged by eye: `node skills/tools/design/check.mjs contrast <fg> <bg> --min 4.5`, the path from the plugin root, with `--min 3` for an interface part. Without `--min` a failing pair still exits 0, so always pass it. Text needs 4.5:1 and interface parts 3:1 (row WC1). A pair at 4.4999:1 fails.
 - **Reflow.** SC 1.4.10 Reflow: the layout holds at a width of 320 CSS pixels without scrolling in two directions (row WC1).
 - **Focus.** SC 2.4.11 Focus Not Obscured (Minimum), Level AA: a focused control is not entirely hidden behind other content.
 - **Dragging.** SC 2.5.7 Dragging Movements, Level AA: anything done by dragging can also be done with a single pointer.

@@ -28,7 +28,7 @@ Skip it for the words of the email, for a web page or an app screen.
 ## It's working if
 
 - `check.mjs email email.html --limits LIMITS.md` passes and prints which `LIMITS.md` it read.
-- Every colour pair passes `check.mjs contrast`: 4.5:1 for text and 3:1 for a button or other interface part.
+- Every colour pair passes `check.mjs contrast --min`: 4.5:1 for text and 3:1 for a button or other interface part.
 - Both renders exist, at 640 px and at 375 px, and the email reads with images blocked.
 - The hand-over says the email was not tested in Outlook for Windows and gives the date the limits were re-read.
 - The brief for the email cites at least three rows of `REFERENCES.md`, or states a lower minimum with a reason.

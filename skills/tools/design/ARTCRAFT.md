@@ -21,6 +21,24 @@ SolidCraft is an independent app (its package says so) that the owner uses along
 - One `cadcraft-cli run` writes one `--export`: a second is refused with exit 2. More formats come from `convert` (`cadcraft-cli convert x.dxf x.svg`).
 - Each row of the commands table and each verified run carries an app version and the date.
 
+## FigCraft facts from the trials
+
+What the email trials ran against `figcraft-cli`, one fact each, with the version, the date and the trial folder (kept with the study notes) that is the evidence.
+
+- `run` paths are absolute (an image `path`, a script, an output), and `run` takes read and write roots (`--automation-read-root`, `--automation-write-root`) that hold them (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/sports-4).
+- Every shape needs `"parent": <frame id>`, or the export is blank: the shape sits on the page, `render` shows it and `export` of the frame does not. A new document's first frame has id 2, and child coordinates are relative to the frame (run, figcraft-cli version not recorded, 2026-11-07, trial-email/sports).
+- A script cannot refer to an earlier layer by name: `"parent": "$f"` after `"as": "f"` is rejected, because a parent must be a node id. A new document hands out ids 2, 3, 4 in creation order, so a builder predicts them and checks each against the result lines (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/sports-4).
+- `image.place` refuses SVG ("The image format could not be determined"). Make a PNG of the mark first, with `vectorcraft-cli convert x.svg x.png --scale 2` (run, figcraft-cli version not recorded, 2026-11-07, trial-email/sports).
+- `export` overwrites a source file whose name matches a frame: it names each file for its frame and writes into the folder it is given. Keep frame names unlike the source names, or export into another folder (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/sports-2).
+- A mask is the lowest layer of its frame and masks the layers above it. With the shape above the image the script runs with no error and masks nothing (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/sports-4).
+- `effect.add` needs `type` twice: in the command's params and inside the `effect` object. Without the second the step is rejected (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/sports-4).
+- Multiply goes on the clipped frame, not on the image: set on the frame that holds the photograph it takes the photograph's white away against the ground behind it, set on the image layer it does nothing (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/tech-2).
+- The radial gradient fill is `fills: [{type: "radialGradient", stops: ["#hex", "#hex"]}]`, set with `node.set`. A last stop equal to the ground makes the edge vanish (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/tech-2).
+- One failed step rolls back the whole script: nothing is saved, so a typo costs a whole run (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/sports-4).
+- `export --scale 2` does not sharpen a small source: it is the same drawing at twice the pixels, so a 400 px photograph is enlarged and soft. `--scale 1` and `--scale 2` both exited 0, to 600 and 1200 px wide (run, figcraft-cli 0.16.0, 2026-11-07, trial-email/sports-4).
+
+Not run: `command.batch` with `as` (it lists `as?` among its parameters, and whether it lets a step refer to an earlier layer is not known).
+
 ## Commands each job uses
 
 | Job | `figcraft-cli` | `vectorcraft-cli` | `pdfcraft-cli` | `solidcraft-cli` | `cadcraft-cli` | Other |
@@ -32,6 +50,7 @@ SolidCraft is an independent app (its package says so) that the owner uses along
 | `design` | none | none | none | none | none | `check.mjs` (Node) |
 | `massing` | none | none | none | `solidcraft-cli run massing.json --results --out x.step --save x.sc --json-out r.json`, `solidcraft-cli eval x.sc --json-out m.json`, `solidcraft-cli snapshot x.sc --out x.png --view iso`, script step `file.export_view_dxf` with a parallel camera (runs 6 to 9, solidcraft-cli 0.30.1, 2026-11-07) | `cadcraft-cli info x.dxf` on the DXF (run 10, cadcraft-cli 0.18.0, 2026-11-07) | none |
 | `plans` | none | none | `pdfcraft-cli check` and `info` on the PDF (run 13, pdfcraft-cli 0.11.0, 2026-11-07) | none | `cadcraft-cli run --metric --cmd … --save x.dxf --export x.pdf`, `cadcraft-cli convert x.dxf x.svg`, `cadcraft-cli convert x.dxf x.png`, `cadcraft-cli info x.dxf` (runs 11, 12 and 14, cadcraft-cli 0.18.0, 2026-11-07) | none |
+| none yet | none | none | none | none | none | `lightcraft-cli --version` and `lightcraft-cli run --demo engine.commands` on the demo library (lightcraft-cli 0.19.0, 2026-11-07): exit 0, one JSON line with `"ok": true`, and no file written. No job uses it yet: a library, a develop and an export of photographs are not run |
 
 ## Verified runs
 
@@ -56,4 +75,4 @@ Each wrote only under a scratch directory, with `timeout 20`, and no window was 
 
 ## Not run, so not relied on
 
-`figcraft-cli export` to PNG with `--scale`; `solidcraft-cli render` (a path-traced render that has not been run or timed), `fuzz` and `bench-*`; any `mcp`; CADCraft `hatch`, layouts and `mview`; whether a hosted runner can install any of these apps. FilmCraft 0.18.0 and EffectCraft 0.22.0 are installed and answer `--version`, and LightCraft 0.19.0 does too; none of the three has a row here yet, because no job uses them.
+`figcraft-cli render` with `--scale`; `solidcraft-cli render` (a path-traced render that has not been run or timed), `fuzz` and `bench-*`; any `mcp`; CADCraft `hatch`, layouts and `mview`; whether a hosted runner can install any of these apps. FilmCraft 0.18.0 and EffectCraft 0.22.0 are installed and answer `--version`; neither has a row here yet, because no job uses them. LightCraft 0.19.0 has the row above and no job behind it.
