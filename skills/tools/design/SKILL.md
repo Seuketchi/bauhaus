@@ -47,7 +47,7 @@ Generated work falls into a small set of looks. Each is a default, not a crime: 
 - **Tinted cards** (T5): the same rounded, shadowed box repeated down the page.
 - **Cream, serif and terracotta** (T18): a warm paper background with a high-contrast serif and one earthy accent.
 - **Near-black with one acid accent** (T18): a dark page with a single saturated colour doing all the work.
-- **Broadsheet hairlines** (T6, T21): hairline rules and zero radius everywhere, with dense columns. No row finds this one by script; the nearest rows are T6 and T21, and the critique pass looks for the rest.
+- **Broadsheet hairlines** (T29): hairline rules and zero radius everywhere, with dense columns.
 - **Identical rounded cards** (T5, T6): one radius and one soft shadow on every surface.
 - **Template chrome** (T14, T19): WORD, dash, fragment labels, and a tinted near-black standing in for black.
 

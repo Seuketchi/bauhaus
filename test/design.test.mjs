@@ -488,12 +488,17 @@ test("design: a change log entry with no date is rejected", () => {
 
 const TRENDS_IN_USE = (line) => ({ "Trends in use": `${line}\n` });
 const USE = "- Frosted panels | reviewed 2026-11-01 | brief: A frosted panel behind the navigation.";
-const withTrends = (line, entry = trendEntry(), asOf) =>
+const withTrends = (line, entry = trendEntry("Frosted panels", { Status: "Trial" }), asOf) =>
   [design({ bodies: TRENDS_IN_USE(line) }, { trendsText: trendsFile(entry) }), ["design", "DESIGN.md", "--trends", "TRENDS.md", ...(asOf ? ["--as-of", asOf] : [])]];
 
-test("design: a Trends in use entry that points at a live entry with a brief line passes", () => {
-  const [d, args] = withTrends(USE, trendEntry(), "2026-11-07");
+test("design: a Trends in use entry that points at a Trial entry with a brief line passes", () => {
+  const [d, args] = withTrends(USE, trendEntry("Frosted panels", { Status: "Trial" }), "2026-11-07");
   ok(args, d);
+});
+
+test("design: a Trends in use entry that points at a Watch entry is rejected, because only Trial may be applied", () => {
+  const [d, args] = withTrends(USE, trendEntry("Frosted panels", { Status: "Watch" }), "2026-11-07");
+  bad(args, 'Trends in use: "Frosted panels" is Watch; only a Trial entry may be applied', d);
 });
 
 test("design: a Trends in use entry that points at a Retired entry is rejected", () => {
@@ -502,37 +507,37 @@ test("design: a Trends in use entry that points at a Retired entry is rejected",
 });
 
 test("design: a Trends in use entry that points at an overdue entry is rejected", () => {
-  const [d, args] = withTrends(USE, trendEntry("Frosted panels", { "Review by": "2027-05-07" }), "2027-05-08");
+  const [d, args] = withTrends(USE, trendEntry("Frosted panels", { Status: "Trial", "Review by": "2027-05-07" }), "2027-05-08");
   bad(args, 'Trends in use: "Frosted panels" is past its review-by date 2027-05-07', d);
 });
 
 test("design: a Trends in use entry that points at no entry is rejected", () => {
-  const [d, args] = withTrends(USE.replace("Frosted panels", "Nowhere"), trendEntry(), "2026-11-07");
+  const [d, args] = withTrends(USE.replace("Frosted panels", "Nowhere"), undefined, "2026-11-07");
   bad(args, 'Trends in use: "Nowhere" is not an entry in TRENDS.md', d);
 });
 
 test("design: a Trends in use entry with no brief line is rejected", () => {
-  const [d, args] = withTrends("- Frosted panels | reviewed 2026-11-01 | brief:", trendEntry(), "2026-11-07");
+  const [d, args] = withTrends("- Frosted panels | reviewed 2026-11-01 | brief:", undefined, "2026-11-07");
   bad(args, 'Trends in use: "Frosted panels" has no brief line', d);
 });
 
 test("design: a Trends in use entry with no reviewed date is rejected", () => {
-  const [d, args] = withTrends("- Frosted panels | reviewed soon | brief: Yes.", trendEntry(), "2026-11-07");
+  const [d, args] = withTrends("- Frosted panels | reviewed soon | brief: Yes.", undefined, "2026-11-07");
   bad(args, '"soon" is not a date', d);
 });
 
 test("design: a Trends in use bullet with no pipes is an error, not skipped", () => {
-  const [d, args] = withTrends("- Imaginary trend that does not exist", trendEntry(), "2026-11-07");
+  const [d, args] = withTrends("- Imaginary trend that does not exist", undefined, "2026-11-07");
   bad(args, 'Trends in use: "Imaginary trend that does not exist" is not "<name> | reviewed <date> | brief: <sentence>"', d);
 });
 
 test("design: a Trends in use bullet with a pipe in the wrong shape is an error", () => {
-  const [d, args] = withTrends("- Frosted panels | brief: Yes.", trendEntry(), "2026-11-07");
+  const [d, args] = withTrends("- Frosted panels | brief: Yes.", undefined, "2026-11-07");
   bad(args, "is not \"<name> | reviewed <date> | brief: <sentence>\"", d);
 });
 
 test("design: without --as-of the overdue check is skipped and says so", () => {
-  const [d, args] = withTrends(USE, trendEntry("Frosted panels", { "Review by": "2000-01-01" }));
+  const [d, args] = withTrends(USE, trendEntry("Frosted panels", { Status: "Trial", "Review by": "2000-01-01" }));
   assert.match(ok(args, d).all, /no --as-of: review-by dates were not checked/);
 });
 
@@ -668,6 +673,10 @@ const ROWS = {
   T25: { flag: page("", "<p>Lorem ipsum dolor sit amet.</p>"), pass: page("", "<p>Your balance is $40.</p>") },
   T26: { flag: page("", "<p>Unlock seamless growth today.</p>"), pass: page("", "<p>Your balance is $40.</p>") },
   T28: { flag: page(".bg{background:repeating-linear-gradient(45deg,#eee,#ddd 10px)}", "<p>Hi</p>"), pass: page(".bg{background:#eee}", "<p>Hi</p>") },
+  T29: {
+    flag: page(".a{border-top:1px solid #000}.b{border-bottom:1px solid #000}.c{border-top:.5px solid #000}.cols{display:grid;grid-template-columns:repeat(4,1fr)}", "<p>Hi</p>"),
+    pass: page(".a{border-top:1px solid #000}.b{border-bottom:1px solid #000}.c{border-top:.5px solid #000;border-radius:8px}.cols{display:grid;grid-template-columns:repeat(4,1fr)}", "<p>Hi</p>"),
+  },
 };
 for (const [row, { flag, pass }] of Object.entries(ROWS)) {
   test(`tells ${row}: a piece that carries it is flagged and named`, () => {
@@ -864,6 +873,19 @@ test("tells T20: a piece centred in a wider render is measured against its own c
   flagged(renderRun(offItsGrid, { only: "T20", w: 640, h: 300 }), "T20");
 });
 
+test("tells T20: a symmetric page whose container is under 40 px narrower than the canvas is measured against the canvas and flagged", () => {
+  // 580 px of content in a 600 px render, 10 px each side: not a container of its own. Every block sits on the grid
+  // that would be laid across the content (a 24 px margin from x = 10), and none on the canvas grid (24, 71.3, ...).
+  const symmetric = [{ x: 10, y: 10, w: 580, h: 60, color: INK }, { x: 34, y: 90, w: 300, h: 12, color: INK }, { x: 34, y: 120, w: 200, h: 12, color: INK }, { x: 80, y: 150, w: 100, h: 12, color: INK }];
+  flagged(renderRun(symmetric, { only: "T20", w: 600, h: 300 }), "T20");
+});
+
+test("tells T20: a container exactly 40 px narrower than the canvas, the row's stated minimum, is measured on its own grid", () => {
+  // 560 px of content in a 600 px render: columns of 28 px start at 44 and 88.
+  const container = [{ x: 20, y: 10, w: 560, h: 60, color: INK }, { x: 44, y: 90, w: 300, h: 12, color: INK }, { x: 44, y: 120, w: 200, h: 12, color: INK }, { x: 88, y: 150, w: 100, h: 12, color: INK }];
+  clean(renderRun(container, { only: "T20", w: 600, h: 300 }));
+});
+
 test("tells T20: content that is not centred is still measured against the canvas", () => {
   const leftHeavy = [{ x: 20, y: 10, w: 300, h: 60, color: INK }, { x: 44, y: 90, w: 200, h: 12, color: INK }, { x: 44, y: 120, w: 200, h: 12, color: INK }, { x: 91, y: 150, w: 100, h: 12, color: INK }];
   flagged(renderRun(leftHeavy, { only: "T20", w: 640, h: 300 }), "T20");
@@ -974,6 +996,20 @@ test("email on the shipped LIMITS.md: background-image url( fails, background-co
   assert.equal(lint(withShipped("", ['style="width:600px', 'style="background-color:#f3f4f6;width:600px'])).status, 0);
 });
 
+test("email on the shipped LIMITS.md: background-image: none passes and the background shorthand with url( fails", () => {
+  const withStyle = (css) => lint(withShipped("", ['style="width:600px', `style="${css};width:600px`])); 
+  for (const css of ["background-image:none", "background-image: none", "background-image:\nnone", "background-image: none !important"]) {
+    const r = withStyle(css);
+    assert.equal(r.status, 0, `${css}: ${r.all}`);
+  }
+  for (const css of ["background:url(https://example.com/bg.png)", "background: #f3f4f6 url(https://example.com/bg.png) no-repeat", "background :url('https://example.com/bg.png')", "background-image: linear-gradient(#fff, #eee)"]) {
+    const r = withStyle(css);
+    assert.equal(r.status, 1, `${css}: ${r.all}`);
+    assert.match(r.all, /background-image \(Outlook for Windows 2007 to 2019\): none support/);
+  }
+  assert.equal(withStyle("background:#f3f4f6").status, 0, "a plain background colour is not a background image");
+});
+
 test("email on the shipped LIMITS.md: display:grid, display: grid and display :grid all fail", () => {
   for (const v of ["display:grid", "display: grid", "display :grid", "display : grid"]) {
     const r = lint(withShipped(`<div style="${v}"></div>`));
@@ -1007,6 +1043,15 @@ test("email: a row with an invalid regex is a problem on its row, not a crash", 
   assert.doesNotMatch(r.all, /SyntaxError|at .*node:/);
 });
 
+test("email: a failing run prints its note: lines as well as its problems", () => {
+  const html = GOOD_EMAIL.replace("<body>", "<head><style>@media (prefers-color-scheme: dark){td{background:#111827}}</style></head><body>").replace("<table", '<div style="display:grid"></div><table');
+  const r = lint(dir({ "e.html": html }));
+  assert.equal(r.status, 1, r.all);
+  assert.match(r.err, /display:grid/);
+  assert.match(r.out, /note: @media \(prefers-color-scheme\) \(Gmail[^)]*\): ignored/);
+  assert.match(r.out, /limits read: .*LIMITS\.md \(3 rows\)/);
+});
+
 test("email: a pattern with a | inside backticks is one cell", () => {
   const limits = LIMITS.replace("`display:\\s*grid`", "`display:\\s*(?:grid|inline-grid)`");
   const d = dir({ "e.html": GOOD_EMAIL.replace("<table", '<div style="display:inline-grid"></div><table'), "LIMITS.md": limits });
@@ -1021,9 +1066,9 @@ const root = join(here, "..");
 const shipped = (...parts) => readFileSync(join(root, ...parts), "utf8");
 const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "TELLS.md", "TRENDS.md"];
 
-test("TELLS.md has 28 complete rows T1 to T28 and each one has a check that runs", () => {
+test("TELLS.md has 29 complete rows T1 to T29 and each one has a check that runs", () => {
   const rows = shipped("skills", "tools", "design", "TELLS.md").split("\n").filter((l) => /^\| T\d+ /.test(l)).map((l) => l.split("|").slice(1, -1).map((c) => c.trim()));
-  assert.equal(rows.length, 28);
+  assert.equal(rows.length, 29);
   rows.forEach((cells, i) => {
     assert.equal(cells.length, 6);
     assert.equal(cells[0], `T${i + 1}`);
@@ -1033,8 +1078,10 @@ test("TELLS.md has 28 complete rows T1 to T28 and each one has a check that runs
   });
   const status = (id) => rows.find((r) => r[0] === id)[5];
   assert.ok(rows.filter((r) => r[5].startsWith("ran on ")).length >= 15, "the rows that ran on real files say so");
-  for (const id of ["T2", "T3", "T5", "T6", "T7", "T8", "T9", "T10", "T22", "T28"]) assert.equal(status(id), "proposed, not run", `${id}: no real piece held its subject`);
+  for (const id of ["T2", "T3", "T5", "T6", "T7", "T8", "T9", "T10", "T22", "T28", "T29"]) assert.equal(status(id), "proposed, not run", `${id}: no real piece held its subject`);
   assert.match(status("T20"), /false positives?.*fixed/, "T20 had a false positive on a real file");
+  assert.match(rows.find((r) => r[0] === "T20")[2], /40 px/, "T20 states the container minimum");
+  assert.match(rows.find((r) => r[0] === "T29")[1], /broadsheet hairlines/i);
   assert.match(status("T26"), /inferred/);
   assert.match(status("T27"), /warning/);
   const text = shipped("skills", "tools", "design", "TELLS.md");
@@ -1095,11 +1142,12 @@ test("SKILL.md is the design tool: frontmatter, precedence, token plan, colour r
   assert.match(skill, /`check\.mjs contrast/);
 });
 
-test("SKILL.md names ten bans, each with a TELLS.md row, and does not restate the 28", () => {
+test("SKILL.md names ten bans, each with a TELLS.md row, and does not restate the 29", () => {
   const skill = shipped("skills", "tools", "design", "SKILL.md");
   const ids = shipped("skills", "tools", "design", "TELLS.md").match(/^\| (T\d+) /gm).map((l) => l.slice(2).trim());
   const bans = skill.split("\n").filter((l) => /^- \*\*.+\*\* \(T\d+/.test(l));
   assert.equal(bans.length, 10);
+  assert.match(bans.find((l) => /Broadsheet hairlines/.test(l)), /\(T29\)/);
   for (const line of bans) for (const id of line.match(/T\d+/g)) assert.ok(ids.includes(id), `${id} in "${line}"`);
   assert.equal(skill.split("\n").filter((l) => /^\| T\d/.test(l)).length, 0);
   assert.match(skill, /TELLS\.md/);
@@ -1123,6 +1171,19 @@ test("the screens row of ARTCRAFT.md records that frame.presets was run, with th
   assert.match(row, /export[^|]*--node[^|]*--format png/);
 });
 
+test("the email row of ARTCRAFT.md records the PNG export as run, and the not-run list keeps --scale and drops the preset names", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  const row = text.split("\n").find((l) => l.startsWith("| `email` |"));
+  assert.ok(row, "no email row");
+  assert.match(row, /`export -o assets\/ --format png` \(run 2026-11-07\b/);
+  assert.doesNotMatch(row, /--format png`[^)]*not run/);
+  assert.match(row, /`--scale`, from `--help`, not run/, "render with --scale stays not run");
+  assert.match(text, /^5\. `figcraft-cli export[^\n]*--format png[^\n]*assets\/hero\.png/m, "a run record behind it");
+  const notRun = text.split(/^## Not run, so not relied on/m)[1];
+  assert.match(notRun, /`figcraft-cli export` to PNG with `--scale`/);
+  assert.doesNotMatch(notRun, /frame\.presets/);
+});
+
 test("DESIGN-MD.md describes the front matter and the 11 sections in order", () => {
   const text = shipped("skills", "tools", "design", "DESIGN-MD.md");
   for (const key of ["project", "design-md", "tokens", "tokens-format", "rules-win"]) assert.ok(text.includes(`${key}:`), key);
@@ -1143,4 +1204,39 @@ test("package.json adds test:artcraft and the plugin lists the design tool", () 
   assert.equal(pkg.dependencies, undefined);
   assert.equal(pkg.devDependencies, undefined);
   assert.ok(JSON.parse(shipped(".claude-plugin", "plugin.json")).skills.includes("./skills/tools/design"));
+});
+
+// ---- the spec and its counts ----
+
+test("the spec counts 29 tells, lists T5, T6 and T21 as file checks and keeps T4 and T20 as render checks", () => {
+  const spec = shipped("specs", "design-package.md");
+  assert.doesNotMatch(spec, /\b28 (?:checkable )?tells|\b28 checks|\b28 rows|\b28 tell fixtures|\bthe 28\b|none of the 28|each of the 28/, "a count of 28 is left");
+  assert.match(spec, /`TELLS\.md` holds the 29 checkable tells/);
+  const table = spec.split("\n").filter((l) => /^\| T\d/.test(l)).map((l) => l.split("|").slice(1, -1).map((c) => c.trim()));
+  const covers = (cell, id) => {
+    const n = Number(id.slice(1));
+    return cell.split(/,\s*/).some((part) => {
+      const [lo, hi = lo] = part.match(/\d+/g).map(Number);
+      return n >= lo && n <= hi;
+    });
+  };
+  const typeOf = (id) => table.find((r) => covers(r[0], id))?.[2];
+  for (const id of ["T5", "T6", "T21"]) assert.match(typeOf(id), /^file\b/, `${id} is a file check`);
+  for (const id of ["T4", "T20"]) assert.match(typeOf(id), /^render\b/, `${id} is a render check`);
+  assert.match(typeOf("T29"), /^file\b/);
+});
+
+test("the spec says there are 9 seed trends, the same as TRENDS.md, and why one was dropped", () => {
+  const spec = shipped("specs", "design-package.md");
+  const trends = shipped("skills", "tools", "design", "TRENDS.md").split(/^## /m).length - 1;
+  assert.equal(trends, 9);
+  const section11 = spec.split(/^### 11\. Trends/m)[1].split(/^## Testing Decisions/m)[0];
+  const rows = section11.split("\n").filter((l) => /^\| /.test(l) && !/^\| (?:Entry|---)/.test(l));
+  assert.equal(rows.length, 9, "the seed table has one row per entry of TRENDS.md");
+  assert.doesNotMatch(section11, /Email shaped for automated inbox summaries \|/);
+  assert.match(section11, /nine seed (?:entries|trends)/i);
+  assert.match(section11, /Email shaped for automated inbox summaries[^.]*(?:one vendor blog|no opened source|never opened)/i);
+  const section9 = spec.split(/^### 9\./m)[1].split(/^## /m)[0];
+  assert.match(section9, /9 seed (?:entries|trends)/);
+  assert.match(spec, /moves PR 2 to 9 files/, "the file count of PR 2 is untouched");
 });

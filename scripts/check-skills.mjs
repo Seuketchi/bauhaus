@@ -131,7 +131,9 @@ for (const file of [...rootMarkdown, ...markdownFiles(join(repo, "skills")), ...
     // Cross-folder links: the skill folder a file sits in, against the one its link lands in.
     const from = skillFolderOf(relative(repo, file));
     if (path && from) {
-      const into = skillFolderOf(relative(repo, resolve(dirname(file), path)));
+      // A link to a bare folder (../brand) lands in the folder as much as one to a file inside it.
+      const landing = resolve(dirname(file), path);
+      const into = skillFolderOf(`${relative(repo, landing)}${existsSync(landing) && statSync(landing).isDirectory() ? "/" : ""}`);
       if (into && into !== from) problems.push(`${relative(repo, file)}: link ${target} leaves its skill folder, into ${into}`);
     }
   }
