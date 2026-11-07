@@ -15,6 +15,7 @@ import { inflateSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { canvas as groundCanvas, pngBytes as groundPng } from "../skills/tools/ground/raster.mjs";
 import {
   animaticLines, baseLines, boardProblems, boardSteps, clipFrames, edlLocs, expectedFrames, jsonl, markerPlan, motionProblems, parseShots,
   setProblems, shotLines, shotMarkers, shotProblems, totalSeconds,
@@ -645,6 +646,27 @@ hand("the email skill's headless Chrome render shows an email 3,000 px tall to i
     assert.deepEqual(pixel(png, 10, 2999), [255, 0, 0], `${width}: the last row of the email is in the render`);
     assert.deepEqual(pixel(png, 10, 3100), [255, 255, 255], `${width}: the page ground follows it`);
   }
+});
+
+// ground: the ASCII tile is SVG text drawn to a PNG by headless Chrome under `timeout 60`, as the email skill does for HTML.
+hand("the ground tool draws an ASCII tile to a PNG of the field's size, in the two colours, and a second run gives the same bytes", ["google-chrome"], () => {
+  const tool = join(here, "..", "skills", "tools", "ground", "ground.mjs"), dir = join(out, "ground");
+  mkdirSync(dir);
+  const colour = (h, c) => ({ $value: { colorSpace: "srgb", components: c, hex: h } });
+  writeFileSync(join(dir, "t.tokens"), JSON.stringify({ semantic: { color: { ink: colour("#0b2a44", [0.043, 0.165, 0.267]), paper: colour("#f4e8d0", [0.957, 0.91, 0.816]) } } }));
+  const field = groundCanvas(240, 160);
+  for (let y = 0; y < 160; y++) for (let x = 0; x < 240; x++) field.rgba.set([(x * 255) / 239, (x * 255) / 239, (x * 255) / 239, 255], (y * 240 + x) * 4);
+  writeFileSync(join(dir, "field.png"), groundPng(240, 160, field.rgba));
+  const make = (name) => spawnSync(process.execPath, [tool, "ascii", "--tokens", "t.tokens", "--in", "field.png", "--bg", "semantic.color.ink", "--fg", "semantic.color.paper", "--cell", "12", "--out", name], { cwd: dir, encoding: "utf8", timeout: 70000 });
+  const a = make("a.png"), b = make("b.png");
+  assert.equal(a.status, 0, a.stderr);
+  assert.equal(b.status, 0, b.stderr);
+  assert.deepEqual(pngSize(join(dir, "a.png")), { width: 240, height: 160 });
+  assert.deepEqual(pixel(join(dir, "a.png"), 1, 1), [11, 42, 68], "the corner is the ground colour");
+  let light = 0;
+  for (let y = 8; y < 32; y++) for (let x = 0; x < 240; x++) if (pixel(join(dir, "a.png"), x, y)[0] > 150) light++;
+  assert.ok(light > 30, `the first row of text is drawn in the second colour (${light} light pixels)`);
+  assert.ok(readFileSync(join(dir, "a.png")).equals(readFileSync(join(dir, "b.png"))), "same input, same bytes");
 });
 
 hand("the run leaves nothing outside the temporary directory: the settings directory is the output directory's (PLN8)", ["cadcraft-cli"], () => {

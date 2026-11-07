@@ -172,7 +172,23 @@ function resolveToken(tokens, path) {
   }
 }
 
-// A colour token's value as #rrggbb. Needs a hex or srgb components; never guesses.
+// Oklab and OKLCH to sRGB. The constants are the matrices of the Oklab definition (Bjorn Ottosson's post, matrices
+// updated 2021-01-25, public domain or MIT; CSS Color Module Level 4 gives the same through XYZ), opened 2026-11-07.
+// They are numbers, not text. The ground tool's raster.mjs holds the same constants: a tool may not import from
+// another tool's folder, so each carries them with the same anchor and round-trip tests.
+// A colour outside the sRGB gamut is refused, not clipped: a clipped colour is not the colour the token names, so a
+// ratio computed from it would be a guess. The slack is the rounding of the conversion, 0.05% of a channel.
+const GAMUT_SLACK = 0.0005 * 255;
+function oklabToRgb255([L, a, b]) {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const linear = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+  return linear.map((v) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.max(v, 0) ** (1 / 2.4) - 0.055));
+}
+
+// A colour token's value as #rrggbb. Needs a hex, srgb components, or oklab or oklch components inside the sRGB
+// gamut; never guesses. A hex beside the components wins.
 function colourHex(tokens, path) {
   const token = resolveToken(tokens, path);
   const v = token.value;
@@ -184,6 +200,14 @@ function colourHex(tokens, path) {
   }
   if (v.colorSpace === "srgb" && Array.isArray(v.components) && v.components.length === 3 && v.components.every((c) => typeof c === "number")) {
     return `#${v.components.map((c) => Math.round(Math.min(1, Math.max(0, c)) * 255).toString(16).padStart(2, "0")).join("")}`;
+  }
+  if ((v.colorSpace === "oklab" || v.colorSpace === "oklch") && Array.isArray(v.components) && v.components.length === 3) {
+    const c = v.components.map((x) => (x === "none" ? 0 : x)); // a missing component is 0 when converting
+    if (!c.every((x) => typeof x === "number" && Number.isFinite(x))) fail(`cannot compute: ${token.path} has ${v.colorSpace} components that are not numbers`);
+    const lab = v.colorSpace === "oklch" ? [c[0], c[1] * Math.cos((c[2] * Math.PI) / 180), c[1] * Math.sin((c[2] * Math.PI) / 180)] : c;
+    const rgb = oklabToRgb255(lab);
+    if (rgb.some((x) => x < -GAMUT_SLACK || x > 255 + GAMUT_SLACK)) fail(`cannot compute: ${token.path} is ${v.colorSpace} outside the sRGB gamut; give a hex, or a colour inside the gamut`);
+    return `#${rgb.map((x) => Math.round(Math.min(255, Math.max(0, x))).toString(16).padStart(2, "0")).join("")}`;
   }
   fail(`cannot compute: ${token.path} is ${v.colorSpace ?? "a colour"} with no hex`);
 }

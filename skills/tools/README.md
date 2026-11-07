@@ -14,6 +14,7 @@ None yet.
 - **[design](./design/SKILL.md)**: The design method: the banned defaults, a plan checked against the brief, the project's rules first, and the checks for colour, tokens, trends and briefs.
 - **[develop](./develop/SKILL.md)**: A photograph developed or prepared in LightCraft: exposure, colour and straightening set as stated values, a JPG, a PNG preview and the command that made them, with the source left untouched.
 - **[email](./email/SKILL.md)**: HTML email layout and look, built on live text and tables and linted against the client limits.
+- **[ground](./ground/SKILL.md)**: Grounds and dither as files: a picture reduced to a few token colours, and a gradient, mesh, blur, grain, halftone or text-picture ground, made by a script with no dependency.
 - **[massing](./massing/SKILL.md)**: The form and volume of a building or space as a SolidCraft model: a saved script, a closed-body check, an isometric image and the figures, handed on as a design study.
 - **[motion](./motion/SKILL.md)**: An animated title, graphic or effect as an EffectCraft project: a saved command list, keyframes read back, a poster frame that is the reduced-motion version, and a GIF render.
 - **[plans](./plans/SKILL.md)**: A floor plan, a section or a sheet as a CADCraft drawing in metric units, with layers, overall dimensions, a PDF, an SVG and a PNG, and a short structure note.

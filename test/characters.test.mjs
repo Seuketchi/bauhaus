@@ -122,7 +122,7 @@ describe("registration", () => {
   test("plugin.json lists the characters and the tools, and has no version", () => {
     const wanted = ["skills/characters/bayer", "skills/characters/gropius", "skills/tools/design", "skills/tools/brand", "skills/tools/email", "skills/tools/critique"];
     assert.deepEqual(registered.slice(0, wanted.length), wanted);
-    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans", "skills/characters/ogilvy", "skills/tools/concept", "skills/characters/moholy-nagy", "skills/tools/shots", "skills/tools/storyboard", "skills/tools/motion", "skills/characters/peterhans", "skills/tools/develop"]);
+    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans", "skills/characters/ogilvy", "skills/tools/concept", "skills/characters/moholy-nagy", "skills/tools/shots", "skills/tools/storyboard", "skills/tools/motion", "skills/characters/peterhans", "skills/tools/develop", "skills/tools/ground"]);
     assert.ok(!registered.some((d) => /ui-ux-pro-max/.test(d)), "the optional lookup is not a skill of this package");
     assert.equal("version" in plugin, false);
     for (const dir of registered) assert.ok(exists(dir, "SKILL.md"), `${dir} has no SKILL.md`);
@@ -135,7 +135,7 @@ describe("registration", () => {
       for (const name of names) assert.match(model, new RegExp(`\\]\\(\\./${name}/SKILL\\.md\\)`), `${name} is not under Model-invoked in skills/${bucket}/README.md`);
     };
     listed("characters", ["bayer", "breuer", "gropius", "mies", "moholy-nagy", "ogilvy", "peterhans"]);
-    listed("tools", ["brand", "concept", "critique", "design", "develop", "email", "massing", "motion", "plans", "screens", "shots", "storyboard"]);
+    listed("tools", ["brand", "concept", "critique", "design", "develop", "email", "ground", "massing", "motion", "plans", "screens", "shots", "storyboard"]);
     const BUCKET_OF = { breuer: "characters", mies: "characters", ogilvy: "characters", "moholy-nagy": "characters", peterhans: "characters", develop: "tools", screens: "tools", massing: "tools", plans: "tools", concept: "tools", shots: "tools", storyboard: "tools", motion: "tools" };
     for (const [name, bucket] of Object.entries(BUCKET_OF)) {
       assert.doesNotMatch(read("skills", bucket, name, "SKILL.md"), /^disable-model-invocation:/m);
@@ -172,7 +172,7 @@ describe("registration", () => {
 const CALLS = {
   ogilvy: ["concept"],
   gropius: ["design", "critique"],
-  bayer: ["design", "brand", "email", "critique"],
+  bayer: ["design", "brand", "email", "ground", "critique"],
   breuer: ["design", "screens", "critique"],
   mies: ["design", "massing", "plans", "critique"],
   "moholy-nagy": ["design", "shots", "storyboard", "motion", "critique"],
@@ -182,6 +182,7 @@ const TRIGGERS = {
   design: /no brief file exists/i,
   brand: /brief asks for an identity|no `DESIGN\.md` exists/i,
   email: /piece is an HTML email/i,
+  ground: /brief names a ground or a dither/i,
   critique: /finished piece exists that this session did not make/i,
   screens: /task is an app or web screen/i,
   massing: /task is the form or volume of a building or space/i,
