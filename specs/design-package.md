@@ -187,7 +187,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - E4 [T] Every colour pair in the email passes D6.
 - E5 [T] The hand-over says "not tested in Outlook for Windows" until a real test exists. Which rendering engine Outlook for Windows uses today has no primary source (rachel), so the skill says so and cites caniemail.
 - E6 [J] Dark mode: the skill states that Gmail recolours on its own and the sender's `prefers-color-scheme` does not reach it (inferred by rachel from caniemail), so legibility must not depend on it; images carry no background that fails on a dark client.
-- E7 [R] The HTML renders headless in Chrome (`google-chrome --headless=new --screenshot` under `timeout 20`) to a PNG at both widths. A real Outlook for Windows test is not available here.
+- E7 [R] The HTML renders headless in Chrome (`google-chrome --headless=new --screenshot` under `timeout 60`, because Chrome is not an ArtCraft app) to a PNG at both widths. A real Outlook for Windows test is not available here.
 
 **`screens` (tool). App and web screens.**
 

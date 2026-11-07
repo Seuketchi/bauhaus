@@ -72,11 +72,11 @@ The rules for driving the command-line apps are in the `design` tool's `ARTCRAFT
 
 ## Render
 
-Render the HTML in headless Chrome at both widths, under `timeout 20`. The call is `google-chrome --headless=new --screenshot`. The shot is cut at the window height, not at the end of the email, so the window is 10000 px tall: an email under that shows whole, with the blank page ground below its last row.
+Render the HTML in headless Chrome at both widths, under `timeout 60`. The call is `google-chrome --headless=new --screenshot`. The shot is cut at the window height, not at the end of the email, so the window is 10000 px tall: an email under that shows whole, with the blank page ground below its last row.
 
 ```
-timeout 20 google-chrome --headless=new --no-sandbox --disable-gpu --user-data-dir=/tmp/email-chrome --screenshot=/project/email/render-640.png --window-size=640,10000 file:///project/email/email.html
-timeout 20 google-chrome --headless=new --no-sandbox --disable-gpu --user-data-dir=/tmp/email-chrome --screenshot=/project/email/render-375.png --window-size=375,10000 file:///project/email/email.html
+timeout 60 google-chrome --headless=new --no-sandbox --disable-gpu --user-data-dir=/tmp/email-chrome --screenshot=/project/email/render-640.png --window-size=640,10000 file:///project/email/email.html
+timeout 60 google-chrome --headless=new --no-sandbox --disable-gpu --user-data-dir=/tmp/email-chrome --screenshot=/project/email/render-375.png --window-size=375,10000 file:///project/email/email.html
 ```
 
 Look at the bottom of each image. If the footer is not followed by blank ground, the email is taller than the window: raise the height and render again.
