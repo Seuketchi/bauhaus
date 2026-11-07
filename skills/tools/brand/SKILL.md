@@ -5,7 +5,7 @@ description: Brand identity: colour, type and a mark, written as a DESIGN.md and
 
 # Brand
 
-Identity work: the colours, the type roles and the mark of one project, written down once so every later piece starts from the same decisions. Follow the `design` method first: its precedence list, its bans and its checks. The references for this craft are in `REFERENCES.md` in this folder.
+Identity work: the colours, the type roles and the mark of one project, written down once so every later piece starts from the same decisions. Follow the `design` method first: its precedence list, its bans and its checks. The references for this craft are in `REFERENCES.md` in this folder, and the register of an identity sheet, read from real brand manuals, is in `REGISTERS.md`.
 
 Only `brand` creates a `DESIGN.md`. Every other job reads it.
 
@@ -13,6 +13,7 @@ Only `brand` creates a `DESIGN.md`. Every other job reads it.
 
 - Read the `DESIGN.md` of the project if there is one, and the project's own rules. They outrank the brief.
 - Write the brief file for the piece with the format in `design`, and cite at least three rows of `REFERENCES.md` in it, with the rule taken from each. Cite only rows marked `opened`.
+- Start from the register in `REGISTERS.md` and add what the piece's own research shows. The register is a starting point and not a template: the brief names the register used and what the identity departs from.
 - Write the token plan the `design` method asks for, and revise it against the brief before anything is built.
 
 ## What to make
@@ -65,7 +66,7 @@ Change only the entries the brief names. A changed entry gets a new **Decided** 
 
 ## Words
 
-Write names and taglines only where the brief supplies the words. All other text belongs to whoever writes the words (donna, for documents and email copy).
+Names and taglines come from the writer's `words.md`. Write none of its own. Long documents belong to donna.
 
 ## Hand over
 

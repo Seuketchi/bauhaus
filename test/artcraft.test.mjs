@@ -370,7 +370,7 @@ hand("the tells that read a render run for real on the FigCraft render", ["figcr
   );
   writeFileSync(
     join(work, "brief.md"),
-    "## Audience\n\nCustomers.\n\n## Job\n\nSay hello.\n\n## Tone\n\nPlain.\n\n## Must not look like\n\nA template.\n\n## Surface\n\nWeb page\n\n## References\n\n- V1: Grid.\n- W2: Contrast.\n- C3: Support tables.\n",
+    "## Audience\n\nCustomers.\n\n## Job\n\nSay hello.\n\n## Tone\n\nPlain.\n\n## Must not look like\n\nA template.\n\n## Surface\n\nWeb page\n\n## Intake\n\nnot answered\n\n## Idea\n\nHello.\n\nTwo words: say hello\n\n## Insight\n\nPeople want to know the account is ready.\n\n## Story\n\nStory: none. Reason: a one-line page has one beat.\n\n## Research\n\nnone for this check\n\n## References\n\n- V1: Grid.\n- W2: Contrast.\n- C3: Support tables.\n",
   );
   writeFileSync(join(work, "piece.html"), "<!doctype html><html><head><style>p{font-size:16px;color:#111827;background:#ffffff}</style></head><body><h1>Hello</h1><p>Your account is ready.</p></body></html>");
   const args = [process.execPath, CHECK, "tells", "piece.html", "--brief", "brief.md", "--brand", "brand.tokens", "--render", heroPng];

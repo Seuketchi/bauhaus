@@ -1,0 +1,11 @@
+# Concept references
+
+What the work of the idea, the story and the words rests on. A brief cites a row by its id and says which rule it took. A rule in `SKILL.md` rests only on a row marked `opened`. A row marked `not opened` is listed and never cited. Each rule here is a paraphrase, and nothing is quoted.
+
+| Id | Work | Edition | Pointer | Rule | Read | Access |
+| --- | --- | --- | --- | --- | --- | --- |
+| WR1 | How to Write, a memo on plain writing | Open Culture reprint of a memo from 1982 | tips 2, 3, 4, 7 and 9 | Write the way people speak, in short words, short sentences and short paragraphs; use no jargon; read it aloud the next morning and then edit; make it clear what the reader should do. | opened | free (https://www.openculture.com/2015/04/david-ogilvys-1982-memo-how-to-write-offers-10-pieces-of-timeless-advice.html) |
+| WR2 | Letter of 15 May 1947 to the owners of an agency | Letters of Note reprint | the whole letter | Persuasion is an art and not a science; do not put technique ahead of substance; build your own philosophy; good taste, good art and good writing can be good selling. | opened | free (https://news.lettersofnote.com/p/let-us-blaze-new-trails) |
+| WR3 | D&AD, how to break down a brief | web page on dandad.org, found again by search on 2026-11-07 | the exercise that cuts a brief to 16, 8, 4 and then 2 words | Cut the brief to 16 words, then 8, then 4, then 2, and keep the two words as the test for every later choice. | opened | free (https://www.dandad.org/insights/learning/how-to-break-down-a-brief-new-blood-advice) |
+| WR4 | Collins, 101 design rules | web page on wearecollins.com | the two questions put to clients, and the passage on research before craft | Ask who you are and where you are going; do the research and the understanding, and find the insight, before you start to craft the solution. | opened | free (https://www.wearecollins.com/story/101-design-rules) |
+| WR5 | Koto, the Seasoned guide | web guide on seasoned.koto.studio | the part on understanding the business | Ask who the work is for, what makes it special and how it should make people feel; immerse in the category first, then collect references. | opened | free (https://seasoned.koto.studio/) |

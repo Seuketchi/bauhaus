@@ -25,6 +25,7 @@ Run only on a piece this session did not make. "This session" is this conversati
    - A PDF: `pdfcraft-cli check` and `pdfcraft-cli audit`.
 3. **Render the piece.**
 4. **Read the image**, then set it beside one chosen row of the craft's `REFERENCES.md`: a side-by-side, which only a reviewer can do.
+5. **Judge the piece against the brief's `Idea` and `Story`.** Does the piece keep the idea's two words as its test, and does each story beat show up, carried by what the beat says carries it? This is judged by looking, listed as judged, and has no new exit code. Read a built email against its comp, and report a move that was lost between them.
 
 ```
 timeout 20 figcraft-cli render /project/out/piece.figcraft -o /project/out/piece.png --no-system-fonts --automation-read-root /project --automation-write-root /project/out
@@ -47,7 +48,7 @@ The rules for driving the command-line apps are in the `design` tool's `ARTCRAFT
 - **A recorded exception** is a dated entry in the `DESIGN.md` under **Not to do**. A tell with one is reported as earned.
 - **At most 12 findings**, ranked, each with its location, the brief line or rule it breaks, the row of the craft's `REFERENCES.md` it rests on, and a fix. Rank them `fix` or `consider`.
 - A brief that cites no reference row, or fewer than it needs, is exit 2: the piece fails.
-- **Copy tells** T25 to T27 are donna's to fix, because the words are donna's. T25 and T26 still count toward the exit code. T27 is a warning.
+- **Copy tells** T25 to T27 are the writer's to fix, because the words are the writer's. T25 and T26 still count toward the exit code. T27 is a warning.
 - **A trend** is named as the reason for a finding only when its entry exists in `TRENDS.md`. Report an applied trend that is missing from section 8 of the `DESIGN.md`.
 
 ## Hard rules

@@ -23,8 +23,27 @@ A brief that contradicts a project rule is not obeyed silently: stop, name the r
 
 - Read `DESIGN.md` first. If the project has none, say in one line that there is no `DESIGN.md` yet and go on from the brief. Only `brand` creates one.
 - Find the project's own rules (a `CLAUDE.md` or `AGENTS.md`, files on UI idioms or themes, a design gate). They rank first.
-- Write a brief file for the piece before any work: audience, job, tone, what it must not look like, surface, the references it cites, and the tells it earns, each with a reason. The format is in `DESIGN-MD.md`. Check it with `check.mjs brief`.
+- Run the intake (below) when no complete brief file exists, and keep the owner's answers word for word.
+- Write a brief file for the piece before any work: audience, job, tone, what it must not look like, surface, Intake, Idea, Insight, Story and Research, the references it cites, and the tells it earns, each with a reason. Intake and Research are filled before the writer; Idea, Insight and Story are the writer's. The format is in `DESIGN-MD.md`. Check it with `check.mjs brief`.
+- Run the research step in `RESEARCH.md` before the brief is final (the job's facts) and again before craft (the piece's visual research), and write `research.md` beside the brief. Check it with `check.mjs research`.
 - Cite at least three reference rows and say which rule you took from each, so a ban never stands alone. A brief may state a lower minimum with a reason; the floor is one. A rule rests only on a reference that was opened.
+
+## The intake
+
+The questions live here, once. The lead gets them by calling `design`, and a character never copies them. They come from the questions studios put to a client: who are you and where are you going, and who it is for, what is special and how it should feel.
+
+1. Who are you? (the brand, the product, the person behind it)
+2. Where are you going? (what this piece is for, and what should happen after someone sees it)
+3. Who is it for?
+4. How should it feel?
+5. What is special? (if you had one sentence, what would it be)
+
+- **Ask once.** Put every open question in one message. Do not ask a question the request, `DESIGN.md` or an earlier brief already answers; write where the answer came from, for example `from DESIGN.md section 1`.
+- **Keep the owner's words.** The brief's `Intake` section holds each answer as given, not tidied.
+- **An unanswered question is written down as unanswered.** The brief says `not answered`, the research step treats it as open, and nobody fills it by guess.
+- **The writer does not ask again.** The writer reads `Intake` and works from it. If something is still missing, the writer lists it as open and the lead asks, once more, in one message.
+- **Skip the intake** when the owner has named the designer and a complete brief file already exists. A complete brief has all eleven sections, or an `Intake` that says which file it comes from.
+- **A conflict with a project rule still stops and asks,** as the precedence section says.
 
 ## The token plan
 
@@ -69,7 +88,8 @@ Run them from this folder with `node check.mjs <command>`.
 | `tokens <file.tokens> [mode files]` | The token file and, for modes, that the paths match. |
 | `document-css <file.tokens>` | Writes the six document properties as CSS custom properties. |
 | `trends <TRENDS.md> --as-of <date>` | Every entry has its fields, a valid status and a review-by date not past. |
-| `brief <brief.md>` | The brief has its sections, its tells have reasons, and its reference minimum is allowed. |
+| `brief <brief.md>` | The brief has all eleven sections, a two-word idea, a story of 3 to 5 beats (or none, with a reason), its tells have reasons, and its reference minimum is allowed. |
+| `research <research.md>` | The research file has its date and client line, the seven parts in order, every source marked opened or summary only, the eight fields in every source note, and the not-that table. |
 | `email <file.html> [--limits <LIMITS.md>]` | Alt text, a real button, live text, a container of at most 640 px, the tells a script can see, and the limits table when one is given. |
 | `tells <piece> --brief <brief.md> [--brand <tokens>] [--render <png>]` | The rows of `TELLS.md`. Exit 0 no tell, 1 a tell, 2 too few reference rows, 3 a check could not run. The first line is `PASS: no tells` or `FAIL: ...`. |
 
@@ -78,6 +98,10 @@ A pass is never approval. The checks prove numbers and written rules; the critiq
 ## Trends
 
 `TRENDS.md` is the one dated file of trends. A trend is applied only when the brief asks for it and its status is `Trial`; the accessibility floor outranks it. `DESIGN.md` records only the entry's name, the date reviewed and the brief line.
+
+## Research
+
+`RESEARCH.md` holds the research step: ten rules for reading sources, the seven parts of a piece's visual research and the shape of `research.md`. The registers it starts from are in each job's `REGISTERS.md`. Research ranks as an optional reference.
 
 ## ArtCraft
 

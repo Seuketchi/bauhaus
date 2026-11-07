@@ -25,7 +25,9 @@ A separate plugin, `bauhaus`, in its own repo beside suits. It holds one method,
 - **The jobs:** `brand` (identity: colour, type, mark, writes `DESIGN.md`), `email` (HTML email with client limits), `screens` (app and web screens), `critique` (the craft pass on a finished piece).
 - **The characters:** three ordinary skills that call the jobs by name. **Walter Gropius** is the lead: he frames the brief, hands work to the others, and runs the craft pass on pieces he did not make. **Herbert Bayer** is the graphic designer (brand, logos, email, critique). **Marcel Breuer** is the UI/UX designer (screens, critique); whether it is Breuer or Josef Albers is open question 19. The colour science (contrast, how a colour reads beside another) is part of the method and is credited to **Josef Albers** in the README cast table and the ADR only, unless he takes UI/UX.
 
-The owner talks to a character, the character reads `DESIGN.md` and the project's own rules, drives the installed command-line apps by file path, and hands back files. Suits is unchanged. Donna keeps the words and the PDF build, the designer owns layout and look, and louis reviews against the rules and the numbers.
+A piece follows one flow: grill, research, concept and story, craft, critique. The lead asks the owner the intake questions once, in one message, and keeps the answers word for word in the brief. A research step then reads finished work of the same kind and the facts of the job, and ends in `research.md`. **David Ogilvy** is the writer: he owns the one idea, the insight, the story and the words of the pieces made here, through his own tool, `concept`. The designers then take the words from the writer's `words.md` and lay the piece out; an email starts as a whole-page comp the owner sees before any HTML is built. The brief grows five required sections for this: Intake, Idea, Insight, Story and Research.
+
+The owner talks to a character, the character reads `DESIGN.md` and the project's own rules, drives the installed command-line apps by file path, and hands back files. Suits is unchanged. The writer owns the words of the pieces made here; donna keeps long documents and the PDF build. The designer owns layout and look, and louis reviews against the rules and the numbers.
 
 The architect is specified in section 3 (MIE, MAS and PLN): **Ludwig Mies van der Rohe** is the space designer, with two jobs, `massing` in SolidCraft (3D) and `plans` in CADCraft (2D). Later, after a one-day source check: the director (**László Moholy-Nagy**, held). Until FilmCraft is installed and shown to have a command-line, the director makes shot lists and storyboards, not video. The director is named here as later work and is not specified.
 
@@ -56,13 +58,17 @@ The architect is specified in section 3 (MIE, MAS and PLN): **Ludwig Mies van de
 23. As the owner, I want each designer described by craft and written in a plain professional register, so that no skill imitates a real person's voice, quotes them, or leaks a persona into documents, emails or pull requests.
 24. As the owner, I want suits untouched, so that nothing that works today changes.
 25. As donna, I want the document tokens I already read (`--accent`, `--ink`, `--muted`, `--line`, `--tint`, `--font`) in `DESIGN.md`, so that a brand restyles my PDFs without moving files.
-26. As donna, I want the designer to leave the words (document text, email copy, plain-text email) to me, so that the split stays clean.
+26. As the writer, I want the designer to take the words from my file (`words.md`) and write none, so that the idea and the words stay in one hand. Donna keeps long documents and the PDF build.
 27. As louis, I want the banned tells, contrast numbers and email limits as checkable lines, so that I can review a piece against them.
 28. As a builder, I want a screen spec with states, strings, targets and rules applied, so that I can build it test-first.
 29. As a maintainer, I want one command that checks every skill is listed, documented and calls only what exists, so that the package cannot rot quietly.
 30. As a maintainer, I want the ArtCraft rules in one place (never start the GUI, never call the launcher, pass the roots), so that no session blocks the machine or updates an app.
 31. As a maintainer, I want the headless fixture test to skip cleanly where ArtCraft is not installed, so that CI is green on a plain runner and the local gate still proves the hand-off.
 32. As the owner, I want the architect built from the source passes already done, and the director named as later work with a source pass first, so that no skill text is written from titles I could not open.
+33. As the owner, I want the intake to ask my open questions once, in one message, and have my answers kept in my own words in the brief, so that nobody asks me twice or tidies what I said.
+34. As the owner, I want every piece to have one idea that can be said in two words, found in a fact from the research, so that the piece is not a pile of rules followed.
+35. As the owner, I want the story of a piece in three to five beats, each saying what carries it, so that it reads from the pictures, crops and order before it reads from the copy.
+36. As the owner, I want an email shown to me as a whole-page comp before any HTML is built, so that I can change the look while it is cheap to change.
 
 ## Implementation Decisions
 
@@ -104,8 +110,63 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - D12 [T] `check.mjs trends <TRENDS.md> --as-of <date>` fails an entry that lacks one of its eight fields, has a status other than `Watch`, `Trial` or `Retired`, or is past its review-by date on that date (section 11).
 - D8 [T] `check.mjs email <file.html>`: see E2.
 - D9 [T] D1's bans are the 29 tells of `TELLS.md` (section 10), not a separate list; the method points at that one file. A tell passes only when the piece's brief or the brand data names the choice.
-- D13 [T] `check.mjs brief <brief.md>` accepts a valid brief and rejects one missing audience, job, tone, must-not-look-like, surface or references, or one that names a tell id not in `TELLS.md` (section 10).
+- D13 [T] Replaced by BRF1, which keeps everything D13 rejected: a brief missing audience, job, tone, must-not-look-like, surface or references, or one that names a tell id not in `TELLS.md` (section 10).
 - D14 [T] The colour rules of `design` cite WCAG 2.2 (opened) and say a colour's reading depends on its neighbours, so pairs are checked in place as well as by ratio. They cite no lending-only book (section 10).
+
+- D16 [T] `check.mjs research <research.md>` accepts a valid file and rejects each of: the head lines `Date:` and `Client:` missing, a section of P1 to P7 missing or out of order, a P1 source row with no `opened` or `summary only`, fewer than 6 sources or fewer than 2 makers, a P2 entry with an empty field of its eight, a P4 that is neither the not-that table nor `no earlier piece`, a P7 that cites no source, and a missing `Not checked` or `Open` section. It cannot judge whether a look was read correctly; the reviewer does that.
+
+**Intake, in `design` and `gropius`.**
+
+- I1 [T] All open questions go in one message, and a question the request, `DESIGN.md` or an earlier brief already answers is not asked; the brief says where the answer came from.
+- I2 [T] The brief's `Intake` holds each answer as given, not tidied.
+- I3 [T] An unanswered question is written down as `not answered`, the research step treats it as open, and nobody fills it by guess.
+- I4 [T] The writer does not ask again: the writer reads `Intake` and lists what is still missing, and `gropius` asks once more, in one message.
+- I5 [T] The grill is skipped when the owner has named the designer and a complete brief file already exists.
+- I6 [T] A conflict with a project rule still stops and asks (section 2).
+
+**The brief and the research step, in `design`.**
+
+- BRF1 [T] `check.mjs brief` accepts a valid brief with the eleven sections (Audience, Job, Tone, Must not look like, Surface, Intake, Idea, Insight, Story, Research, References) and rejects one missing any of them, a `Two words:` line that does not have exactly two words, a `Story` with fewer than 3 or more than 5 beats, a beat with no `carried by`, and an `Idea` or `Insight` left empty. It names the missing sections. Everything D13 rejected it still rejects.
+- BRF2 [T] A piece that needs no story (a logo mark) may write `Story: none. Reason: <why>` and no beats. Idea, Insight and the two words stay required.
+- BRF3 [T] A brief written to the old six-section shape fails until it is brought up to date; `tells` exits 3 on it. No brief file is kept in the repo, so nothing in the repo breaks.
+- RES1 [T] `check.mjs research` as D16.
+- RES2 [T] `RESEARCH.md` states the rules R1 to R10, the template P1 to P7 and the ranking line (a register is level 5, an optional reference below the brief and `DESIGN.md`), and names no other package.
+- RES3 [T] No file under `skills/` contains `/suits:` or the name of the researcher of the other package; the second check is new in `check-skills`.
+- RES4 [T] Each `REGISTERS.md` has, for every register, a date, a review-by date, the Layout, Type, Colour, Story and CTA headings and at least one source URL. `check-skills` takes `--as-of <date>` (default today, the only clock read) and warns on an overdue register; the warning never fails the check.
+- RES5 [T] Each job's `SKILL.md` (`email`, `screens`, `brand`) names its own `REGISTERS.md`, the same test the repo runs for `REFERENCES.md`.
+- RES6 [J] The acceptance run (section 9, step 12) shows the step reads a picture before writing a rule from it.
+
+**`concept` (tool, the writer's). Owns `REFERENCES.md`.** Its rows WR1 to WR5 are opened sources only, and no cast name appears in them.
+
+- W1 [T] The writer owns the idea, insight, story and words of the pieces made in this package.
+- W2 [T] The idea comes from a fact found in the research, never from the writer's taste alone.
+- W3 [T] The idea passes the two-words test: if it cannot be cut to two words, it is not yet one idea.
+- W4 [T] The story is 3 to 5 beats and each says what carries it; it reads from the pictures, crops and order before it reads from the copy.
+- W5 [T] A formula does not replace an idea: a line defended only because it follows the rules fails.
+- W6 [T][J] Plain words: the way people speak, short words, short sentences, no jargon, read aloud and then edited.
+- W7 [T] The words say plainly what the reader should do.
+- W8 [T] No spec, date, figure or performance claim in the words unless a research row backs it.
+- W9 [T] The designer may send a line back when it does not fit the picture; the writer changes the line and does not argue the layout.
+- W10 [T] The words are a file, not slots: `words.md` has the columns Slot, Words and Research row, with the slot ids the designer's layout uses; the designer places the words and writes none.
+
+**`ogilvy` (character). The writer.**
+
+- WRT1 [T] Same section, register and attribution tests as GRO1 and the CAST1 scan. The character file describes the craft only: no biography, no year, no words put in his mouth.
+- WRT2 [T] Calls only `/bauhaus:concept`. Trigger, stated as a fact about the task: the piece has no idea, insight, story or words yet.
+- WRT3 [T] States the boundary: the writer owns the words of the pieces made here; donna keeps long documents and the PDF build. Routing: `gropius` hands the brief to the writer (`handed to ogilvy`), and the writer hands `words.md` to the designer.
+
+**Comp-first email, in `email`.**
+
+- CMP1 [T] An email starts as a whole-page comp in FigCraft, 600 px wide, and is built as HTML with live text only after the owner has seen it.
+- CMP2 [T] The owner sees the comp before the HTML is built. This is a gate.
+- CMP3 [T] The comp's type, sizes and button are the spec for the HTML. The built HTML uses a 600 px container (it passes E2's 640 limit), live text and a real button, and its render is set beside the comp at the same width.
+- CMP4 [T] The lint (E2) and the tells check run on the HTML, never on the comp. A comp is looked at by eye, with contrast pairs checked one by one; there is no comp mode in `check.mjs`.
+- CMP5 [T] A tells run that exits 3 on a comp is reported as `not run`, never as a pass (the rule of C7).
+- CMP6 [T] The email's output set is `comp.figcraft`, `comp.png`, `research.md`, then `email.html`, its assets and the two renders; `words.md` takes the place of blank slots.
+- CMP7 [T] A picture is used at the size it was supplied, and not enlarged past the ceiling the research recorded for it.
+- CMP-A [R] A comp exports at 600 px wide and the built HTML's container is 600 px; both render.
+- CMP-B [T] `email/SKILL.md` states CMP1 to CMP7 and still says "not tested in Outlook for Windows" (E5, unchanged).
+- CMP-C [J] The critique reads the built email against the comp and reports a move that was lost.
 
 **`brand` (tool). Identity: colour, type, mark. Writes `DESIGN.md`.**
 
@@ -115,11 +176,11 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - B4 [T] Every text-on-background pair listed in `DESIGN.md` section 6 resolves in the token file and has a ratio computed by `check.mjs`, at least 4.5:1 for text and 3:1 for UI parts and large text.
 - B5 [R] A specimen sheet (palette, type roles, the mark at three sizes) is built with `figcraft-cli run` and rendered with `render` to a PNG.
 - B6 [J] When a `DESIGN.md` already exists, `brand` changes only the entries the brief names, and a changed entry gets a new `Decided` date and replaces the old entry (git keeps the old one).
-- B7 [T] It writes names and taglines only where the brief supplies the words. Other text is donna's.
+- B7 [T] Names and taglines come from the writer's file (`words.md`). `brand` writes none itself, and a brief that supplies the words is passed on unchanged.
 
 **`email` (tool). HTML email layout and look.**
 
-- E1 [R][J] Output set: `email.html`, its image assets as PNGs, and a render of the HTML at 640 and 375 pixel widths. Copy and the plain-text part come from donna; `email` leaves labelled slots.
+- E1 [R][J] Output set: `comp.figcraft`, `comp.png`, `research.md`, then `email.html`, its image assets as PNGs, and a render of the HTML at 640 and 375 pixel widths. The words come from `words.md`, the writer's file, and the output set gains the comp (CMP6); the designer places each line in its slot and writes none.
 - E2 [T] `check.mjs email` fails on: an `<img>` with no `alt`; a call to action that is only an image (an `<a>` whose only child is an `<img>`); no live text in the body; a layout container wider than 640 px; any pattern in `LIMITS.md`'s blocking rows (for example `display:grid`); any banned tell from D1 that is machine-detectable.
 - E3 [T] `LIMITS.md` is a table of: feature, a regex the lint applies, client, support, test date, source URL. A row without a date or a URL fails the repo check. The skill says rows move and must be re-read from caniemail at write time, with the date of that reading in the hand-over. Rachel's rows (Outlook for Windows: no `background-image`, no `display:grid`; Gmail: no `prefers-color-scheme`) are the seed, with the 2023 test dates she named. I did not re-read caniemail today.
 - E4 [T] Every colour pair in the email passes D6.
@@ -135,7 +196,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - S4 [T] The checklist carries WCAG 2.2 targets: pointer targets at least 24 by 24 CSS pixels (SC 2.5.8, Level AA, new in 2.2; text read at w3.org today), contrast per D6, reflow at 320 CSS pixels (SC 1.4.10, rachel's read). Where a project rule is stricter (a 44 point target), the project rule wins. The other 2.2 criteria it lists (focus not obscured, dragging movements, accessible authentication) are to be quoted from w3.org at write time; I did not read them.
 - S5 [J] If a project rule says states keep the same dimensions (the asenso idiom "State Consistency Across Async States"), the spec names the reserved dimension once and every state uses it. This is the example the acceptance run uses.
 - S6 [T] Optional lookup: when ui-ux-pro-max is installed, the skill may name `/ui-ux-pro-max:ui-ux-pro-max` once, as a lookup for style, palette or type ideas, never required, never above project rules, and says its output is a suggestion. It copies none of that package's data.
-- S7 [T] UI strings on a screen are specified in the project's own shape (its l10n rules win). Long-form documents and email text stay donna's. See open question 5.
+- S7 [T] UI strings on a screen are specified in the project's own shape (its l10n rules win). Document-length text stays donna's; the words of a piece made here come from the writer's file, and a screen's strings follow the project's l10n shape. See open question 5.
 
 **`critique` (tool). The craft pass on a finished piece.**
 
@@ -147,7 +208,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - C6 [J] On a piece with a seeded defect (a failing contrast pair, an image-only button, a tracked-caps kicker), it reports each seeded defect.
 - C7 [T][R] `check.mjs tells <piece> --brief <brief> [--brand <tokens>]` runs the file checks, then the render checks, and exits non-zero on any tell in `design/TELLS.md` (section 10) that the brief or the brand data does not name. Exit codes: 0 no tell; 1 at least one tell; 2 the piece cites fewer than three reference rows; 3 a check could not run (for example no brand grid, so T20 cannot be computed, which counts as a failure, never a pass). T27 is a warning and never changes the exit code. The report's first line is `FAIL: <n> tells` or `PASS: no tells`. A pass is never read as approval (C5).
 - C8 [T][J] It fails a piece that cites no reference row (exit 2), reads the craft's `REFERENCES.md` before judging taste, cites the row a finding rests on, and runs a side-by-side of the render against one chosen reference row (a reviewer step the script cannot do).
-- C9 [T] Copy tells (T25 to T27) are reported as findings for donna to fix, because the words are hers; T25 and T26 still count toward the exit code.
+- C9 [T] Copy tells (T25 to T27) are reported as findings for the writer to fix, because the words are the writer's; T25 and T26 still count toward the exit code and T27 stays a warning. Critique also judges the piece against the brief's `Idea` and `Story` and reports a lost move of the comp (CMP-C).
 
 **`gropius` (character). The lead.**
 
@@ -160,7 +221,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 
 - BAY1 [T] Same section, register and attribution tests as GRO1.
 - BAY2 [T] Calls only `/bauhaus:design`, `/bauhaus:brand`, `/bauhaus:email`, `/bauhaus:critique`. Triggers: `design` when no brief file exists for the piece; `brand` when the brief asks for an identity or no `DESIGN.md` exists; `email` when the piece is an HTML email; `critique` when a finished piece exists that this session did not make.
-- BAY3 [T] States the split: donna keeps words and the PDF build; this character owns layout and look; louis reviews. App screens go to `breuer`.
+- BAY3 [T] States the split: the writer owns the words of the pieces made here and donna keeps long documents and the PDF build; this character owns layout and look; louis reviews. App screens go to `breuer`.
 - BAY4 [T] Names no build process, no tool of it and no team size.
 
 **`breuer` (character). The UI/UX designer: app and web screens.** (Or `albers`, open question 19; the criteria do not change.)
@@ -215,7 +276,9 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 | Josef Albers, 1888 to 1976 | The colour science inside `design`; or UI/UX (open question 19) | Taught the preliminary course; wrote *Interaction of Color* (1963), colour studied by experiment | Strong for colour. As UI/UX, inferred |
 | László Moholy-Nagy, 1895 to 1946 | Director, later | Photograms; light-based work; films including a silent black-and-white short of about 5 to 6.5 minutes | Strong on light, weaker on "director": few, short films |
 | Ludwig Mies van der Rohe, 1886 to 1969 | Space designer: form, plans and structure | Architect: space, form and structure | Strong |
+| David Ogilvy, 1911 to 1999 | Writer: the idea, insight, story and words of the pieces made here | Found in the research notes (`creative-group-research.md`, part 1b) and the owner's pick; his method rows are in `concept/REFERENCES.md`, each from an opened source | Good. The craft is a written method for words; he is not a person of the school (see the theme change below) |
 
+- **Theme change (ADR 0002).** The writer is the one cast member who is not a person of the school: the cast stops being only people of the Bauhaus. `docs/adr/0002-the-writer-and-the-cast.md` records the theme change and the reason, and the README cast table gains the row. The statement that the cast are dead stays true, and the rule for him is the rule for every character: craft only, no biography, no year and no words put in his mouth.
 - **Paraphrase, never quote.** Gropius gave a lecture at the 1923 Weimar exhibition on art and technology as a new unity (secondary: seen in search results, English wording varies, full text not opened). No file in the package quotes it or puts words in his mouth; where it is mentioned, it is mentioned as a paraphrase only. The same holds for every cast member.
 - **Skills are described by craft** (grid, light, colour, structure, the brief, the screen), not by biography. No skill text, docs page or test asserts a biographical fact; this table is the rationale for the casting, and sits only in this spec and the ADR.
 - **The voice rule.** The register is plain and professional everywhere. A voice would be an imitation of a real person, so none is attempted: suits's **Voice** section is kept for its safe part (a plain sample line, the register rule, speaks only to the owner) and drops the persona. **No character file, docs page or sample line mentions** the closing of the school under political pressure, anyone's exile or emigration, the 1937 exhibition of "Degenerate Art", Bayer's 1936 brochure, any illness (including Moholy-Nagy's) or any death date. A test scans for the words (CAST1).
@@ -257,7 +320,7 @@ rules-win:                   # project rules that outrank this file
 | 2 | Foundations as roles | Colour, type, spacing, shape, motion and elevation or material, each named by role, each an entry with its reason. The mark (file, clear space, minimum size in px) is a foundations entry. |
 | 3 | Token source | Path to the token file; the tier names (primitive, semantic, component); naming rules; the modes and their files. References the file and copies none of its values. A note for email, which needs its own inline values because clients invert colours unpredictably. The mapping of donna's six document properties to token paths. |
 | 4 | Components and patterns in use | Each with a status (`Trial`, `Stable`, `Deprecated`) and what replaced anything deprecated. Email, screens and print surfaces are patterns listed here. |
-| 5 | Content and voice | The voice rules, or a pointer to the project's own style guide. Carbon and GOV.UK both defer to an outside guide. The words themselves stay donna's. |
+| 5 | Content and voice | The voice rules, or a pointer to the project's own style guide. Carbon and GOV.UK both defer to an outside guide. The words themselves are the writer's for the pieces made here, and donna's for documents. |
 | 6 | Accessibility floor | The standard in force (WCAG 2.2), the contrast ratios, the tap-target size, reduced motion and reduced transparency, and the colour pairs to check, written as role paths, never as values. |
 | 7 | Platform conformance | iOS, Android or web, and which platform material applies. A platform's own material is conformance here, not a trend. |
 | 8 | Trends in use | The entry name from the trends file (section 11), the date it was reviewed, and the sentence in the brief that asked for it. Nothing else. |
@@ -344,7 +407,7 @@ Not verified, and so not relied on: `figcraft-cli export` to PNG with `--scale`;
 
 **Harvey's budget of at most 14 files does not hold, and it did not hold before UI/UX.** His tally (manifests 2, README and CLAUDE.md 2, check script and test 2, method 1, character 1, commands 3, template 1, spare 2) leaves out what the suits layout requires of every skill: a docs page with four sections, and the bucket READMEs that list each skill. Counting those, the first release without UI/UX is already about 31 files, and with UI/UX, its character, the references and tells files and the trends file the owner has since asked for, 41. Recommendation: keep the cap at 14 per pull request and split the release into four pull requests, one ticket each. If the owner prefers harvey's original shape, the alternative is to cut the suits conventions (one `docs/skills.md` for all pages, one skills list in the README), which makes the package unlike suits; I do not recommend it. Open question 1.
 
-The full tree (49 files, with the space designer):
+The full tree (59 files, with the space designer and the writer):
 
 ```
 bauhaus/
@@ -358,25 +421,33 @@ bauhaus/
   package.json
   scripts/check-skills.mjs
   docs/adr/0001-bauhaus-is-a-separate-package.md
+  docs/adr/0002-the-writer-and-the-cast.md
   skills/characters/README.md
   skills/characters/gropius/SKILL.md
   skills/characters/bayer/SKILL.md
   skills/characters/breuer/SKILL.md
   skills/characters/mies/SKILL.md
+  skills/characters/ogilvy/SKILL.md
   skills/tools/README.md
   skills/tools/design/SKILL.md
   skills/tools/design/ARTCRAFT.md
   skills/tools/design/DESIGN-MD.md
   skills/tools/design/TELLS.md
   skills/tools/design/TRENDS.md
+  skills/tools/design/RESEARCH.md
   skills/tools/design/check.mjs
   skills/tools/brand/SKILL.md
   skills/tools/brand/REFERENCES.md
+  skills/tools/brand/REGISTERS.md
   skills/tools/email/SKILL.md
   skills/tools/email/LIMITS.md
   skills/tools/email/REFERENCES.md
+  skills/tools/email/REGISTERS.md
   skills/tools/screens/SKILL.md
   skills/tools/screens/REFERENCES.md
+  skills/tools/screens/REGISTERS.md
+  skills/tools/concept/SKILL.md
+  skills/tools/concept/REFERENCES.md
   skills/tools/massing/SKILL.md
   skills/tools/massing/REFERENCES.md
   skills/tools/plans/SKILL.md
@@ -390,8 +461,10 @@ bauhaus/
   docs/tools/email.md
   docs/tools/screens.md
   docs/characters/mies.md
+  docs/characters/ogilvy.md
   docs/tools/massing.md
   docs/tools/plans.md
+  docs/tools/concept.md
   docs/tools/critique.md
   test/check-skills.test.mjs
   test/characters.test.mjs
@@ -408,6 +481,7 @@ Split (each at most 14 files; a later PR also edits files from an earlier one, w
 | 3. The graphic designer and the lead | `brand` and its REFERENCES, `email` with LIMITS and REFERENCES, `critique`, `bayer`, `gropius`, the docs pages of `brand`, `email`, `critique`, `bayer` and `gropius`, `test/characters.test.mjs` | 14 |
 | 4. UI/UX | `screens` and its REFERENCES, `breuer`, their two docs pages | 5 |
 | 5. The space designer | `mies`, `massing` and `plans` with their REFERENCES, and their three docs pages | 8 |
+| 6. The writer and the flow | `ogilvy`, `concept` with its REFERENCES, `RESEARCH.md`, the three `REGISTERS.md`, ADR 0002, and the docs pages of `ogilvy` and `concept` | 10 |
 
 PR 1 has no skill. Whether `claude plugin validate` accepts `"skills": []` is UNVERIFIED (the check runs it). If it refuses, `design/SKILL.md` and its docs page move into PR 1, which makes 15 and trips the cap, so the fallback is to ship PR 1 with `design` and drop the ADR to PR 2.
 
@@ -426,6 +500,7 @@ Given one real small brief from one of the owner's projects (the asenso app has 
 9. The 29 checks of `TELLS.md` have been run on three real ArtCraft-built files, and every false positive is either fixed or listed in the file (the research proposed the checks and did not run them).
 10. `design/TRENDS.md` holds the 9 seed entries of section 11 and `check.mjs trends` passes on it. A tenth, "Email shaped for automated inbox summaries", was dropped because it had no opened source.
 11. `mies` produces, with no hand-written asset: for one real small brief, a `massing.json` run into a STEP file whose bodies are all closed with the volume stated as the sum of the bodies, and a plan whose PDF passes `pdfcraft-cli check`, whose dimension text is legible on the PNG and whose hand-over carries the design-study line. Each is run by a session that did not build it.
+12. The flow, on one small brief with no `DESIGN.md`, in a category that has a register and a second that has none: `gropius` asks the five questions in one message, once, and the answers appear unedited in the brief's `Intake`; `research.md` exists, passes `check.mjs research` and cites a picture opened as an image for every register rule it uses (for the category with no register it writes one first and says so); the brief passes `check.mjs brief` with all eleven sections; the writer produces `Idea`, `Insight`, `Story` and `words.md` without asking anything `Intake` already answered, and `words.md` holds no claim without a research row; the email starts as a 600 px comp that the owner sees first, and the built HTML passes `check.mjs email` and renders beside it; `critique`, run by a session that did not make the piece, reports a seeded lost move and a seeded copy tell as the writer's.
 
 ### 10. References and the machine-made look
 
@@ -522,9 +597,9 @@ The file count rises by one (`design/TRENDS.md`), which moves PR 2 to 9 files. T
 
 - A good test checks behaviour a person can see: a script's output for known input, a file that must exist, a command's exit status. It does not check how the code is written.
 - **Seam 1 (highest): `npm run check-skills`.** The same shape as suits's script: every skill has a `SKILL.md` whose name is its folder, a description, an entry in `plugin.json`, a line in its bucket README, a docs page with the four sections (What it does, When to reach for it, Common questions, It's working if), characters have Voice and When to call, relative links resolve, and `claude plugin validate` passes. bauhaus adds: every `/pkg:skill` call is `/bauhaus:` except the one S6 allows; no `/suits:` call; no ui-ux-pro-max data. `test/check-skills.test.mjs` builds good and bad skill trees in a temporary directory and asserts the script names each problem, so there are no fixture files in the repo.
-- **Seam 2: `check.mjs`.** `test/design.test.mjs` runs it on known inputs: the contrast pairs of D6, valid and invalid `DESIGN.md`, token-file, trends and `document-css` cases of D7, D10, D11 and D12, good and bad email fragments of E2, a `LIMITS.md` row with no date or URL, valid and invalid briefs (D13), the 29 tell fixtures and the exit codes 0 to 3 of `check.mjs tells` (C7).
+- **Seam 2: `check.mjs`.** `test/design.test.mjs` runs it on known inputs: the contrast pairs of D6, valid and invalid `DESIGN.md`, token-file, trends and `document-css` cases of D7, D10, D11 and D12, good and bad email fragments of E2, a `LIMITS.md` row with no date or URL, valid and invalid briefs (BRF1, which replaces D13), valid and invalid research files (D16), the 29 tell fixtures and the exit codes 0 to 3 of `check.mjs tells` (C7).
 - **Seam 3: the headless ArtCraft run.** `test/artcraft.test.mjs` runs the verified commands of section 7 against a temporary directory and asserts a PNG (dimensions), an SVG (`viewBox`) and a PDF (`pdfcraft-cli check` status `ok`). It skips with a printed reason when a CLI is not on `PATH`, because a plain CI runner does not have ArtCraft (whether it can is UNVERIFIED). `npm run test:artcraft` fails instead of skipping, and is the local gate before a PR is marked ready. Every call is under `timeout 20`. A test never starts a GUI binary or the launcher.
-- **Seam 4: character contracts.** `test/characters.test.mjs` ports the suits character tests (sections present, "default is not to call", calls resolve and are in `plugin.json`, no build-process words, a sample line of 30 words or fewer, a plain register for anything written for others), and adds the GRO, BAY, BRE, MIE and CAST1 criteria as phrase assertions, including the scan for a cast name followed by a speech verb and for the avoided topics of section 4.
+- **Seam 4: character contracts.** `test/characters.test.mjs` ports the suits character tests (sections present, "default is not to call", calls resolve and are in `plugin.json`, no build-process words, a sample line of 30 words or fewer, a plain register for anything written for others), and adds the GRO, BAY, BRE, MIE and CAST1 criteria as phrase assertions, including the scan for a cast name followed by a speech verb and for the avoided topics of section 4, and the writer's scans: the writer calls only `concept`, no skill file names the other package's researcher, and `words.md` has the columns the designer's slots use. `scripts/check-skills.mjs` also reads every `REGISTERS.md` (RES4, RES5).
 - **What the tests do not prove:** that the generating tool obeys a written rule. Phrase tests prove the rule is written. Behaviour is shown by the acceptance run (section 9), the critique pass and the louis review.
 - Prior art: suits's `scripts/check-skills.mjs`, `test/characters/characters.test.mjs`, and `test/donna/check.test.mjs` (a script tested on temporary input); `node --test` with no dependencies.
 - Order: test first. Each PR's tests are written before its files and fail for the right reason first.
@@ -550,7 +625,7 @@ Each carries my recommendation.
 2. **owner.** Done: the theme and the cast are chosen (Bauhaus; Gropius, Bayer, Breuer, with Albers inside the method, Mies van der Rohe as the space designer and Moholy-Nagy later). Nothing is asked here; see questions 19 and 20 for the two choices left.
 3. **harvey.** `vectorcraft-cli run` accepts no root flags, so the confinement harvey asked for holds only for `figcraft-cli`. Recommend: accept it, give every vectorcraft step an absolute output path under the output directory, and add a test that scans the saved command for any other path. The alternative is `vectorcraft-cli mcp --headless` with roots, which brings MCP into scope.
 4. **harvey.** The headless fixture cannot run in CI unless a GitHub runner can install the three ArtCraft packages (UNVERIFIED). Recommend: skip cleanly in CI, fail locally through `npm run test:artcraft`, and make that command a condition for marking a PR ready.
-5. **harvey.** Who owns the strings on an app screen. Recommend: the UI/UX designer specifies them in the project's l10n shape, because a screen cannot be judged without them and the project's l10n rules win; donna keeps document text and email copy. Harvey's split said "donna keeps the words", written for documents.
+5. **harvey.** Who owns the strings on an app screen. Recommend: the UI/UX designer specifies them in the project's l10n shape, because a screen cannot be judged without them and the project's l10n rules win; donna keeps document text and email copy. Harvey's split said "donna keeps the words", written for documents. Closed: The writer owns the words of the pieces made here; donna keeps long documents and the PDF build. Screen strings stay in the project's own l10n shape (S7).
 6. **harvey.** No `/suits:` calls in the first scope, and later a one-way link (a designer calling `/suits:code-review`) only by a new decision. Recommend: keep it closed now; louis reviews from outside.
 7. **harvey.** The Outlook for Windows rendering engine has no primary source. Recommend: ship with the "not tested in Outlook for Windows" line in every email hand-over and re-read caniemail at write time; revisit when the owner has a real Outlook client to test.
 8. **harvey.** Whether `claude plugin validate` accepts an empty `skills` list (PR 1) and a plugin that has no `version`. Recommend: the first ticket checks both before anything else, with the fallback of section 8. Whether one `DESIGN.md` may be read from a project that uses `plating` is answered above (it fits, with the preserved extra sections).
@@ -564,9 +639,10 @@ Each carries my recommendation.
 15. **owner.** The architecture and film canon is lending-only apart from Vitruvius. Recommend: the owner supplies the books or a library account (Ching, Alexander, Mascelli, Katz, and Müller-Brockmann for grids) when the later crafts are wanted; the architect no longer waits for them, and the director stays unspecified until then.
 16. **harvey.** Own the 29 checks, or reuse Impeccable's detector (62 rules, Apache-2.0). Recommend: own, reading its rule list for ideas only, since the detector and our files are unread against each other. Also run the 29 checks on three real files before PR 3 is marked ready, since none has been run (acceptance step 9).
 17. **harvey.** A piece that cites fewer than three reference rows fails (exit 2). Recommend: keep, because bans alone move the look; allow a brief to name a smaller number with a reason (a logo mark needs fewer rows than a brand).
-18. **harvey.** Copy tells (T25 to T27) concern donna's words but fail a designer's piece. Recommend: critique reports them as donna's to fix and still counts T25 and T26 in the exit code; T27 stays a warning.
+18. **harvey.** Copy tells (T25 to T27) concern the words but fail a designer's piece. Recommend: critique reports them as the writer's to fix and still counts T25 and T26 in the exit code; T27 stays a warning.
 19. **harvey.** UI/UX: Breuer (an analogy only: objects built for the body) or Albers (rachel's pick: a direct craft, with colour then living inside the method)? Recommend Breuer for UI/UX and Albers inside `design`. Reason: colour contrast serves every job (brand, email, screens), so it belongs in the shared method; making Albers the UI/UX character would tie it to one job and leave the shared check with no home. Breuer was the owner's assignment, and the fit is an analogy, so no skill text relies on the biography. The file count is the same either way.
 20. **harvey.** The name `bauhaus`: keep or rename? It has no exact plugin clash (one web search), two near-name plugins, an unrelated npm package, and a German hardware retailer's trademark (weakly sourced; the DPMA, EUIPO and USPTO registers were not searched). Recommend: keep it, because the repo is private with no releases and the goods differ; keep the name in only the manifests and the ADR so a rename is one change; run a register search before any public release. Fallback names (`dessau`, `weimar`) were not checked.
+21. **owner.** The picks on the writer and the flow, Q1 to Q9 and O10 of the creative-group amendment. Closed: Q1 the writer is Ogilvy, with ADR 0002 for the theme change; Q2 he has his own tool, `concept`, with a `REFERENCES.md`; Q3 three `REGISTERS.md` files ship as text, with no pictures and the studio kept for reference left out; Q4 the five new brief sections are required and old-shape briefs fail; Q5 the stance is a later PR; Q6 comps are checked by eye, with no comp mode in `check.mjs`; Q7 the words boundary of open question 5; Q8 the Voice tests are unchanged; Q9 one PR; O10 critique also judges the piece against the brief's `Idea` and `Story`.
 
 ### Risks
 

@@ -10,7 +10,7 @@ The job is space, not page layout. Page grids, type and screens stay with `desig
 
 Every hand-over says: this is a design study, not an engineered design. It has no structural calculation and no code check. It also says what the study does not have: floors, stairs, openings or structure, unless the script made them.
 
-The split is fixed. Donna keeps the words and the PDF build, `bayer` takes brand, logos and email, `breuer` takes app and web screens, and louis reviews.
+The split is fixed. The writer owns the words of the pieces made here, donna keeps long documents and the PDF build, `bayer` takes brand, logos and email, `breuer` takes app and web screens, and louis reviews.
 
 ## When to reach for it
 

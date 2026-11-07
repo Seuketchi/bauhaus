@@ -18,20 +18,29 @@
 //   docs page is allowed. A tool's shared reference lives in the tool that owns it.
 // Then, if `claude` is on PATH, runs `claude plugin validate`, failing on any
 // error or on any warning not listed in ACCEPTED_WARNINGS.
+// - every register in a skill's REGISTERS.md has a date, a review-by date, the
+//   Layout, Type, Colour, Story and CTA headings, and a source URL; a register
+//   past its review-by date is a warning on stderr and never a failure;
+// - no file under skills/ names the researcher of another package: the research
+//   step is this package's own.
 // Exits 1 with one line per problem.
 //
-//   node scripts/check-skills.mjs [root]
+//   node scripts/check-skills.mjs [root] [--as-of <YYYY-MM-DD>]
 //
 // `root` is the tree to check and defaults to this repo. A tree other than this
 // repo must be a git repository with its files added, as the script lists the
-// tracked ones.
+// tracked ones. `--as-of` is the date registers are held against and defaults
+// to today; it is the one place this script reads the clock.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const repo = process.argv[2] ? resolve(process.argv[2]) : join(dirname(fileURLToPath(import.meta.url)), "..");
+const args = process.argv.slice(2);
+const asOfAt = args.indexOf("--as-of");
+const asOfArg = asOfAt >= 0 ? args.splice(asOfAt, 2)[1] : undefined;
+const repo = args[0] ? resolve(args[0]) : join(dirname(fileURLToPath(import.meta.url)), "..");
 const BUCKETS = ["characters", "tools"];
 const DOC_SECTIONS = ["What it does", "When to reach for it", "Common questions", "It's working if"];
 
@@ -44,6 +53,17 @@ const ACCEPTED_WARNINGS = [
 ];
 
 const problems = [];
+const warnings = [];
+const isDate = (text) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text ?? "");
+  const d = m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return Boolean(m) && d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+};
+if (asOfArg !== undefined && !isDate(asOfArg)) {
+  console.error(`--as-of: "${asOfArg}" is not a date (YYYY-MM-DD)`);
+  process.exit(1);
+}
+const asOf = asOfArg ?? new Date().toISOString().slice(0, 10);
 const read = (...parts) => readFileSync(join(repo, ...parts), "utf8");
 const tracked = (path) => execFileSync("git", ["ls-files", "--", path], { cwd: repo, encoding: "utf8" }).trim() !== "";
 
@@ -165,6 +185,35 @@ for (const file of trackedFiles("skills")) {
   else if (read(file).includes("Next Level Builder")) problems.push(`${file}: Next Level Builder; no ui-ux-pro-max text under skills/`);
 }
 
+// Registers: each `## ` section of a REGISTERS.md is one register.
+const REGISTER_HEADINGS = ["Layout", "Type", "Colour", "Story", "CTA"];
+for (const file of trackedFiles("skills").filter((f) => f.endsWith("/REGISTERS.md"))) {
+  for (const part of read(file).split(/^## /m).slice(1)) {
+    const [head, ...rest] = part.split("\n");
+    const name = head.trim();
+    const body = rest.join("\n");
+    const say = (message) => problems.push(`${file}: ${name}: ${message}`);
+    const date = /^Date:[ \t]*(.*)$/m.exec(body)?.[1]?.trim();
+    if (date === undefined) say("no Date: line");
+    else if (!isDate(date)) say(`Date: ${date} is not a date`);
+    const review = /^Review by:[ \t]*(.*)$/m.exec(body)?.[1]?.trim();
+    if (review === undefined) say("no Review by: line");
+    else if (!isDate(review)) say(`Review by: ${review} is not a date`);
+    else if (review < asOf) warnings.push(`warning: ${file}: ${name}: review by ${review} is past on ${asOf}`);
+    for (const title of REGISTER_HEADINGS) {
+      const section = body.split(new RegExp(`^### ${title}\\s*$`, "m"))[1];
+      if (section === undefined) say(`no "${title}" heading`);
+      else if (!section.split(/^### /m)[0].trim()) say(`"${title}" is empty`);
+    }
+    if (!/https?:\/\/\S+/.test(body)) say("no source URL");
+  }
+}
+
+// The research step is this package's own: no skill file names another package's researcher.
+for (const file of trackedFiles("skills")) {
+  if (/\brachel\b/i.test(read(file))) problems.push(`${file}: names another package's researcher; the research step is this package's own`);
+}
+
 let validated = "skipped (no `claude` on PATH)";
 try {
   execFileSync("claude", ["--version"], { stdio: "ignore" });
@@ -187,6 +236,7 @@ try {
   if (error.code !== "ENOENT") throw error;
 }
 
+if (warnings.length > 0) console.error(warnings.join("\n"));
 if (problems.length > 0) {
   console.error(problems.join("\n"));
   console.error(`\n${problems.length} problem(s). plugin validate: ${validated}.`);

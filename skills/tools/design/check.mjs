@@ -7,6 +7,7 @@
 //   check.mjs design <DESIGN.md> [--trends <TRENDS.md>] [--as-of <date>]
 //   check.mjs trends <TRENDS.md> [--as-of <date>]
 //   check.mjs brief <brief.md> [--tells <TELLS.md>]
+//   check.mjs research <research.md>
 //   check.mjs email <file.html> [--limits <LIMITS.md>]
 //   check.mjs tells <piece.html> --brief <brief.md> [--brand <file.tokens>] [--render <file.png>]
 //                    [--references <REFERENCES.md>] [--only T1,T2] [--tells <TELLS.md>]
@@ -478,16 +479,48 @@ commands.design = designCommand;
 // ---- brief ----
 
 const BRIEF_SECTIONS = ["Audience", "Job", "Tone", "Must not look like", "Surface", "References"];
+// The five sections the creative flow adds; a brief written to the old six fails until they are there.
+const NEW_BRIEF_SECTIONS = ["Intake", "Idea", "Insight", "Story", "Research"];
 const DEFAULT_MINIMUM = 3;
+const MIN_BEATS = 3;
+const MAX_BEATS = 5;
+
+// The Idea ends in a "Two words:" line, the idea cut to exactly two words.
+function twoWordsProblems(idea) {
+  const line = idea.split("\n").map((l) => /^\s*Two words:(.*)$/.exec(l)).find(Boolean);
+  if (!line) return ['section "Idea" has no "Two words:" line'];
+  const count = line[1].trim().split(/\s+/).filter(Boolean).length;
+  return count === 2 ? [] : [`Two words: needs exactly two words, found ${count}`];
+}
+
+// The Story is "Story: none. Reason: <why>" or 3 to 5 beats, each "- Beat n: <shown> | carried by: <what>".
+function storyProblems(story) {
+  const none = /^\s*Story:\s*none\b\.?\s*(?:Reason:\s*(.*))?$/im.exec(story);
+  const beats = story.split("\n").map((l) => /^\s*[-*]\s+(Beat\s+\d+)\s*:\s*(.*)$/i.exec(l)).filter(Boolean);
+  if (none) {
+    if (!(none[1] ?? "").trim()) return ["Story: none needs a Reason:"];
+    return beats.length ? ["Story: none and beats together"] : [];
+  }
+  const problems = [];
+  if (beats.length < MIN_BEATS || beats.length > MAX_BEATS) problems.push(`Story: ${beats.length} beats, needs ${MIN_BEATS} to ${MAX_BEATS}`);
+  for (const [, name, text] of beats) {
+    if (!/\|\s*carried by:\s*\S/i.test(text)) problems.push(`Story: ${name} has no carried by`);
+  }
+  return problems;
+}
 
 function parseBrief(text, tellIds) {
   const sections = sectionsOf(text);
   const problems = [];
   const body = (name) => sections.find((s) => s.name === name)?.body ?? "";
-  for (const name of BRIEF_SECTIONS) {
+  const lacking = NEW_BRIEF_SECTIONS.filter((name) => !sections.some((s) => s.name === name));
+  if (lacking.length) problems.push(`the brief needs the creative sections: missing ${lacking.join(", ")}`);
+  for (const name of [...BRIEF_SECTIONS, ...NEW_BRIEF_SECTIONS]) {
     if (!sections.some((s) => s.name === name)) problems.push(`missing section "${name}"`);
     else if (!body(name).trim()) problems.push(`section "${name}" is empty`);
   }
+  if (body("Idea").trim()) problems.push(...twoWordsProblems(body("Idea")));
+  if (body("Story").trim()) problems.push(...storyProblems(body("Story")));
   const references = [];
   let minimum = DEFAULT_MINIMUM;
   for (const item of bullets(body("References"))) {
@@ -520,6 +553,100 @@ function briefCommand({ positional, flags }) {
   return { out: [`ok: ${positional[0]}`] };
 }
 commands.brief = briefCommand;
+
+// ---- research ----
+
+// The seven parts of a piece's visual research, then the closing lists, in this order (RESEARCH.md).
+const RESEARCH_PARTS = [
+  "P1. Sources",
+  "P2. Source notes",
+  "P3. Register",
+  "P4. Not that",
+  "P5. Gaps and substitutes",
+  "P6. What the supplied pictures can carry",
+  "P7. Output to craft",
+];
+const RESEARCH_OPENING = ["Job facts"];
+const RESEARCH_CLOSING = ["Not checked", "Open"];
+const P2_FIELDS = ["Alignment", "Type", "Colour and rhythm", "Subject", "Button", "Spacing", "Reads as", "How it tells"];
+const P1_READ = ["opened", "summary only"];
+const P1_FLOOR = 6;
+const P1_MAKERS = 2;
+
+// The rows of the first Markdown table in a body, as cell lists. The header and the divider are dropped.
+const tableRows = (body) =>
+  body
+    .split("\n")
+    .filter((l) => l.trim().startsWith("|"))
+    .map((l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim()))
+    .filter((cells, i) => i > 1 && cells.some((c) => c));
+
+function researchProblems(text) {
+  const problems = [];
+  const sections = sectionsOf(text);
+  const body = (name) => sections.find((s) => s.name === name)?.body ?? "";
+  const head = text.split(/^## /m)[0];
+
+  const date = /^Date:[ \t]*(.*)$/m.exec(head)?.[1]?.trim();
+  if (date === undefined) problems.push("no Date: line");
+  else if (!isDate(date)) problems.push(`Date: ${date} is not a date (YYYY-MM-DD)`);
+  if (!/^Client:[ \t]*\S/m.test(head)) problems.push("no Client: line (write none when nothing was fetched)");
+
+  const names = [...RESEARCH_OPENING, ...RESEARCH_PARTS, ...RESEARCH_CLOSING];
+  for (const name of names) {
+    if (!sections.some((s) => s.name === name)) problems.push(`missing section "${name}"`);
+    else if (!body(name).trim()) problems.push(`section "${name}" is empty`);
+  }
+  const at = RESEARCH_PARTS.map((name) => sections.findIndex((s) => s.name === name));
+  if (at.every((i) => i >= 0) && at.some((i, k) => k > 0 && i < at[k - 1])) problems.push("P1 to P7 are not in order");
+
+  // P1: the sources.
+  const p1 = body("P1. Sources");
+  const rows = tableRows(p1);
+  if (p1.trim()) {
+    const makers = new Set();
+    rows.forEach(([, maker, url, , read], i) => {
+      if (!maker) problems.push(`P1 row ${i + 1}: no Maker`);
+      else makers.add(maker);
+      if (!url) problems.push(`P1 row ${i + 1}: no URL`);
+      if (!P1_READ.includes(read)) problems.push(`P1 row ${i + 1}: Read "${read ?? ""}" is not opened or summary only`);
+    });
+    if (rows.length < P1_FLOOR) problems.push(`P1: ${rows.length} sources, needs ${P1_FLOOR}`);
+    if (rows.length >= P1_FLOOR && makers.size < P1_MAKERS) problems.push(`P1: ${makers.size} maker, needs ${P1_MAKERS}`);
+  }
+
+  // P2: one entry for each source, every field filled.
+  const p2 = entriesOf(body("P2. Source notes"));
+  if (body("P2. Source notes").trim() && p2.length !== rows.length) problems.push(`P2 has ${p2.length} entries for ${rows.length} P1 sources`);
+  for (const entry of p2) {
+    for (const field of P2_FIELDS) {
+      const value = boldField(entry.text, field);
+      if (value === undefined) problems.push(`P2 source ${entry.name}: no "${field}" field`);
+      else if (!value) problems.push(`P2 source ${entry.name}: "${field}" is empty`);
+    }
+  }
+
+  // P4: a table of moves, or "no earlier piece".
+  const p4 = body("P4. Not that");
+  if (p4.trim() && !/no earlier piece/i.test(p4) && tableRows(p4).length === 0) problems.push('P4: no table of moves and no "no earlier piece" line');
+
+  // P7: names the sources it takes from.
+  const p7 = body("P7. Output to craft");
+  if (p7.trim()) {
+    const cited = [...p7.matchAll(/\bsources?\s+(\d+)(?:(?:\s*(?:,|and|&)\s*)(\d+))*/gi)].flatMap((m) => [...m[0].matchAll(/\d+/g)].map((n) => Number(n[0])));
+    if (!cited.length) problems.push("P7 cites no source");
+    for (const n of cited) if (n < 1 || n > rows.length) problems.push(`P7 cites source ${n}, which is not a P1 source`);
+  }
+  return problems;
+}
+
+function researchCommand({ positional }) {
+  if (positional.length !== 1) fail("usage: research <research.md>");
+  const problems = researchProblems(readText(positional[0]));
+  if (problems.length) return { code: 1, err: problems.map((p) => `${positional[0]}: ${p}`) };
+  return { out: [`ok: ${positional[0]}`] };
+}
+commands.research = researchCommand;
 
 // ---- reading a piece (HTML or SVG) ----
 

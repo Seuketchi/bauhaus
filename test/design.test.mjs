@@ -548,12 +548,23 @@ test("design: a missing token file is rejected when pairs need it", () => {
 
 // ---- brief ----
 
+const STORY = [
+  "Who it is about: a customer opening the account for the first time.",
+  "- Beat 1: the account is ready | carried by: a large headline over the first picture",
+  "- Beat 2: what to do first | carried by: one button, set apart by colour",
+  "- Beat 3: where help is | carried by: the last row, in plain words",
+].join("\n");
 const BRIEF_PARTS = {
   Audience: "New customers.",
   Job: "Say the account is ready.",
   Tone: "Plain and warm.",
   "Must not look like": "A newsletter template.",
   Surface: "HTML email",
+  Intake: "1. Who are you? A small bank.\n2. Where are you going? New customers sign in once.\n3. Who is it for? New customers.\n4. How should it feel? not answered\n5. What is special? Nothing to wait for.",
+  Idea: "The account is ready now.\n\nTwo words: ready now",
+  Insight: "New customers leave when the first screen asks for more (research.md, job facts, row 2).",
+  Story: STORY,
+  Research: "research.md, register: finance-and-fintech",
   References: "- V1: Discipline in the grid.\n- W2: Contrast of 4.5:1 for text.\n- C3: Client support tables.",
   "Tells earned": "None.",
 };
@@ -566,11 +577,53 @@ test("brief: a valid brief passes", () => {
   ok(["brief", "brief.md"], brief());
 });
 
-for (const section of ["Audience", "Job", "Tone", "Must not look like", "Surface", "References"]) {
+for (const section of ["Audience", "Job", "Tone", "Must not look like", "Surface", "References", "Intake", "Idea", "Insight", "Story", "Research"]) {
   test(`brief: a brief missing "${section}" is rejected`, () => {
     bad(["brief", "brief.md"], `missing section "${section}"`, brief({ [section]: null }));
   });
 }
+
+// BRF1: the five sections the creative flow adds.
+for (const section of ["Intake", "Idea", "Insight", "Story", "Research"]) {
+  test(`brief: an empty "${section}" is rejected`, () => {
+    bad(["brief", "brief.md"], `section "${section}" is empty`, brief({ [section]: "" }));
+  });
+}
+
+test("brief: an old six-section brief fails, and the message names every section it lacks", () => {
+  const r = bad(["brief", "brief.md"], "missing Intake, Idea, Insight, Story, Research", brief({ Intake: null, Idea: null, Insight: null, Story: null, Research: null }));
+  for (const name of ["Intake", "Idea", "Insight", "Story", "Research"]) assert.ok(r.err.includes(`missing section "${name}"`), name);
+});
+
+test("brief: a brief that lacks one new section names only that one", () => {
+  const r = bad(["brief", "brief.md"], "missing Insight", brief({ Insight: null }));
+  assert.ok(!r.err.includes("missing Intake"), r.err);
+});
+
+test("brief: the Two words line must have exactly two words, and must be there", () => {
+  ok(["brief", "brief.md"], brief({ Idea: "Open and ready.\n\nTwo words: open ready" }));
+  bad(["brief", "brief.md"], "Two words: needs exactly two words, found 1", brief({ Idea: "One thing.\n\nTwo words: ready" }));
+  bad(["brief", "brief.md"], "Two words: needs exactly two words, found 3", brief({ Idea: "One thing.\n\nTwo words: ready now please" }));
+  bad(["brief", "brief.md"], "Two words: needs exactly two words, found 0", brief({ Idea: "One thing.\n\nTwo words:" }));
+  bad(["brief", "brief.md"], 'section "Idea" has no "Two words:" line', brief({ Idea: "One thing, and no cut." }));
+});
+
+test("brief: the Story has 3 to 5 beats, each with carried by", () => {
+  const beats = (n) => ["Who it is about: a customer."].concat(Array.from({ length: n }, (_, i) => `- Beat ${i + 1}: shown ${i + 1} | carried by: crop ${i + 1}`)).join("\n");
+  for (const n of [3, 4, 5]) ok(["brief", "brief.md"], brief({ Story: beats(n) }));
+  bad(["brief", "brief.md"], "Story: 2 beats, needs 3 to 5", brief({ Story: beats(2) }));
+  bad(["brief", "brief.md"], "Story: 6 beats, needs 3 to 5", brief({ Story: beats(6) }));
+  bad(["brief", "brief.md"], "Story: Beat 2 has no carried by", brief({ Story: beats(3).replace("Beat 2: shown 2 | carried by: crop 2", "Beat 2: shown 2") }));
+  bad(["brief", "brief.md"], "Story: Beat 3 has no carried by", brief({ Story: beats(3).replace("| carried by: crop 3", "| carried by:") }));
+});
+
+test("brief: a piece that needs no story writes Story: none with a reason (BRF2)", () => {
+  ok(["brief", "brief.md"], brief({ Story: "Story: none. Reason: a logo mark has one beat at most." }));
+  bad(["brief", "brief.md"], "Story: none needs a Reason:", brief({ Story: "Story: none." }));
+  bad(["brief", "brief.md"], "Story: none needs a Reason:", brief({ Story: "Story: none. Reason:" }));
+  bad(["brief", "brief.md"], "Story: none and beats together", brief({ Story: `Story: none. Reason: a mark.\n${STORY}` }));
+  bad(["brief", "brief.md"], 'section "Idea" has no "Two words:" line', brief({ Story: "Story: none. Reason: a mark.", Idea: "An idea." }));
+});
 
 test("brief: an empty section is rejected", () => {
   bad(["brief", "brief.md"], 'section "Tone" is empty', brief({ Tone: "" }));
@@ -589,6 +642,109 @@ test("brief: a lower minimum of references needs a reason, and the floor is one"
   ok(["brief", "brief.md"], brief({ References: "- V1: One row.\n\nMinimum: 1. Reason: a logo mark needs fewer rows." }));
   bad(["brief", "brief.md"], "Minimum: 1 is below 3 and needs a Reason:", brief({ References: "- V1: One row.\n\nMinimum: 1" }));
   bad(["brief", "brief.md"], "Minimum: 0 is below the floor of one reference row", brief({ References: "Minimum: 0. Reason: none needed." }));
+});
+
+// ---- research (RES1) ----
+
+const FIELDS = ["Alignment", "Type", "Colour and rhythm", "Subject", "Button", "Spacing", "Reads as", "How it tells"];
+const RESEARCH_N = 6;
+const sourceRows = (n = RESEARCH_N, { makers = 3, read = "opened" } = {}) =>
+  Array.from({ length: n }, (_, i) => `| ${i + 1} | Maker ${(i % makers) + 1} | https://example.com/mail/${i + 1} | 2026-11-07 | ${Array.isArray(read) ? read[i] : read} |`).join("\n");
+const entries = (n = RESEARCH_N, change = () => {}) =>
+  Array.from({ length: n }, (_, i) => {
+    const fields = Object.fromEntries(FIELDS.map((f) => [f, `${f.toLowerCase()} of source ${i + 1}`]));
+    change(fields, i);
+    return `### ${i + 1}\n\n${FIELDS.filter((f) => fields[f] !== undefined).map((f) => `**${f}:** ${fields[f]}`).join("\n")}\n`;
+  }).join("\n");
+const RESEARCH_PARTS = {
+  "Job facts": "- Buyers read on a phone | source: row 2",
+  "P1. Sources": `| # | Maker | URL | Fetched | Read |\n| --- | --- | --- | --- | --- |\n${sourceRows()}\n`,
+  "P2. Source notes": entries(),
+  "P3. Register": "Tech: a dark field, one product, a short line.",
+  "P4. Not that": "| Earlier move | Rejected by |\n| --- | --- |\n| A cream ground | source 2, source 4 |\n",
+  "P5. Gaps and substitutes": "None.",
+  "P6. What the supplied pictures can carry": "Hero.png is 800 by 600 and can be shown at 800 wide. Better pictures change this.",
+  "P7. Output to craft": "This piece will look like source 1 and source 3: a dark field with one product.",
+  "Not checked": "- The brand's own site: its robots.txt keeps readers out.",
+  Open: "None.",
+};
+const researchText = (parts = {}, { head = "Date: 2026-11-07\nClient: design-research/1.0 (read-only)\n" } = {}) =>
+  `# Research: welcome email\n\n${head}\n${Object.entries({ ...RESEARCH_PARTS, ...parts }).filter(([, v]) => v !== null).map(([k, v]) => `## ${k}\n\n${v}\n`).join("\n")}`;
+const research = (parts, options) => dir({ "research.md": researchText(parts, options) });
+const R = ["research", "research.md"];
+
+test("research: a valid research file passes (RES1)", () => {
+  ok(R, research());
+});
+
+for (const part of ["Job facts", "P1. Sources", "P2. Source notes", "P3. Register", "P4. Not that", "P5. Gaps and substitutes", "P6. What the supplied pictures can carry", "P7. Output to craft", "Not checked", "Open"]) {
+  test(`research: a file missing "${part}" is rejected`, () => {
+    bad(R, `missing section "${part}"`, research({ [part]: null }));
+  });
+}
+
+test("research: P1 to P7 must come in order", () => {
+  // P3 moved to the end of the numbered parts.
+  const text = researchText().replace(/## P3\. Register[\s\S]*?(?=## P4)/, "").replace("## Not checked", "## P3. Register\n\nLate.\n\n## Not checked");
+  bad(R, "P1 to P7 are not in order", dir({ "research.md": text }));
+});
+
+test("research: a section left empty is rejected", () => {
+  bad(R, 'section "P3. Register" is empty', research({ "P3. Register": "" }));
+  bad(R, 'section "Not checked" is empty', research({ "Not checked": "" }));
+});
+
+test("research: the date and the client name sent with a fetch are required (R10)", () => {
+  bad(R, "no Date: line", research({}, { head: "Client: design-research/1.0\n" }));
+  bad(R, "Date: 2026-13-45 is not a date", research({}, { head: "Date: 2026-13-45\nClient: x\n" }));
+  bad(R, "no Client: line", research({}, { head: "Date: 2026-11-07\n" }));
+  ok(R, research({}, { head: "Date: 2026-11-07\nClient: none (nothing was fetched)\n" }));
+});
+
+test("research: every P1 row is opened or summary only (R2)", () => {
+  ok(R, research({ "P1. Sources": `| # | Maker | URL | Fetched | Read |\n| --- | --- | --- | --- | --- |\n${sourceRows(6, { read: ["opened", "summary only", "opened", "opened", "summary only", "opened"] })}\n` }));
+  bad(R, 'P1 row 3: Read "maybe" is not opened or summary only', research({ "P1. Sources": `| # | Maker | URL | Fetched | Read |\n| --- | --- | --- | --- | --- |\n${sourceRows(6, { read: ["opened", "opened", "maybe", "opened", "opened", "opened"] })}\n` }));
+});
+
+test("research: P1 has at least 6 sources from at least 2 makers, and no line lowers it", () => {
+  const p1 = (rows, extra = "") => ({ "P1. Sources": `| # | Maker | URL | Fetched | Read |\n| --- | --- | --- | --- | --- |\n${rows}\n${extra}`, "P2. Source notes": entries(rows.split("\n").length) });
+  bad(R, "P1: 5 sources, needs 6", research(p1(sourceRows(5))));
+  bad(R, "P1: 1 maker, needs 2", research(p1(sourceRows(6, { makers: 1 }))));
+  bad(R, "P1: 4 sources, needs 6", research(p1(sourceRows(4), "\nMinimum: 4. Reason: two makers blocked automated readers.")));
+  bad(R, "P1: 1 sources, needs 6", research(p1(sourceRows(1), "\nMinimum: 1. Reason: one source.")));
+});
+
+test("research: a P1 row with no maker or no URL is rejected", () => {
+  const rows = sourceRows().replace("| Maker 1 | https://example.com/mail/1 |", "|  | https://example.com/mail/1 |");
+  bad(R, "P1 row 1: no Maker", research({ "P1. Sources": `| # | Maker | URL | Fetched | Read |\n| --- | --- | --- | --- | --- |\n${rows}\n` }));
+  const rows2 = sourceRows().replace("https://example.com/mail/2", "");
+  bad(R, "P1 row 2: no URL", research({ "P1. Sources": `| # | Maker | URL | Fetched | Read |\n| --- | --- | --- | --- | --- |\n${rows2}\n` }));
+});
+
+for (const field of FIELDS) {
+  test(`research: a P2 entry with an empty "${field}" is rejected`, () => {
+    bad(R, `P2 source 2: "${field}" is empty`, research({ "P2. Source notes": entries(RESEARCH_N, (f, i) => i === 1 && (f[field] = "")) }));
+    bad(R, `P2 source 2: no "${field}" field`, research({ "P2. Source notes": entries(RESEARCH_N, (f, i) => i === 1 && delete f[field]) }));
+  });
+}
+
+test("research: P2 has one entry for each P1 source", () => {
+  bad(R, "P2 has 5 entries for 6 P1 sources", research({ "P2. Source notes": entries(5) }));
+});
+
+test("research: P4 holds a not-that table or says no earlier piece", () => {
+  ok(R, research({ "P4. Not that": "no earlier piece" }));
+  bad(R, "P4: no table of moves and no \"no earlier piece\" line", research({ "P4. Not that": "Some words." }));
+  bad(R, "P4: no table of moves and no \"no earlier piece\" line", research({ "P4. Not that": "| Earlier move | Rejected by |\n| --- | --- |\n" }));
+});
+
+test("research: P7 cites the sources it takes from", () => {
+  bad(R, "P7 cites no source", research({ "P7. Output to craft": "This piece will look good." }));
+  bad(R, "P7 cites source 9, which is not a P1 source", research({ "P7. Output to craft": "Like source 9." }));
+});
+
+test("research: a missing file is refused", () => {
+  bad(["research", "nope.md"], "nope.md: no such file", dir());
 });
 
 // ---- tells: file and text rows ----
@@ -1064,7 +1220,7 @@ test("email: a pattern with a | inside backticks is one cell", () => {
 
 const root = join(here, "..");
 const shipped = (...parts) => readFileSync(join(root, ...parts), "utf8");
-const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "TELLS.md", "TRENDS.md"];
+const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "RESEARCH.md", "TELLS.md", "TRENDS.md"];
 
 test("TELLS.md has 29 complete rows T1 to T29 and each one has a check that runs", () => {
   const rows = shipped("skills", "tools", "design", "TELLS.md").split("\n").filter((l) => /^\| T\d+ /.test(l)).map((l) => l.split("|").slice(1, -1).map((c) => c.trim()));
@@ -1116,7 +1272,7 @@ test("the shipped TRENDS.md holds only Watch entries, each reviewed within six m
 });
 
 const BANNED_WORDS = /\b(ai|assistants?|agents?|cooks?|kitchens?|stations?|workflows?|head chef|claude|prompts?)\b/i;
-const CAST = /albers|gropius|bayer|breuer|moholy|mies/i;
+const CAST = /albers|gropius|bayer|breuer|moholy|mies|ogilvy/i;
 test("the method's files name no cast member, no banned word and no lending-only book", () => {
   for (const [name, text] of [...designFiles.map((f) => [f, shipped("skills", "tools", "design", f)]), ["docs/tools/design.md", shipped("docs", "tools", "design.md")]]) {
     const prose = text.replace(/https?:\/\/\S+/g, "").replace(/CLAUDE\.md|AGENTS\.md/g, "");
@@ -1323,6 +1479,82 @@ test("where contrast is shown, the design tool and its page say it exits 0 on a 
   for (const file of [["skills", "tools", "email", "SKILL.md"], ["skills", "tools", "brand", "SKILL.md"], ["skills", "tools", "screens", "SKILL.md"], ["skills", "tools", "critique", "SKILL.md"]]) {
     assert.match(shipped(...file), /`--min`/, file.join("/"));
   }
+});
+
+// ---- the creative flow in the method (intake, research, the longer brief) ----
+
+const designText = (file) => shipped("skills", "tools", "design", file);
+
+test("DESIGN-MD.md: the brief has eleven sections, the five new ones are described, and a complete brief means all eleven (BRF1, I5)", () => {
+  const text = designText("DESIGN-MD.md").split(/^## The brief$/m)[1] ?? "";
+  for (const name of ["Audience", "Job", "Tone", "Must not look like", "Surface", "Intake", "Idea", "Insight", "Story", "Research", "References"]) assert.ok(text.includes(`## ${name}`), name);
+  assert.match(text, /Two words: <word> <word>/);
+  assert.match(text, /- Beat n: <what is shown> \| carried by: <picture, crop, order or copy>/);
+  assert.match(text, /Story: none\. Reason: <why>/);
+  assert.match(text, /not answered/);
+  assert.match(text, /3 to 5 beats/);
+  assert.match(text, /six-section brief[^.\n]*fails/i);
+  assert.match(text, /complete brief[^.\n]*all eleven sections|all eleven sections[^.\n]*complete brief/i);
+});
+
+test("SKILL.md: Before you draw holds the intake and the research step, the brief line lists the new sections, and the file list names RESEARCH.md", () => {
+  const skill = designText("SKILL.md");
+  const before = skill.split(/^## Before you draw$/m)[1].split(/^## /m)[0];
+  assert.match(before, /intake/i);
+  assert.match(before, /research/i);
+  assert.match(before, /RESEARCH\.md/);
+  assert.match(before, /Intake, Idea, Insight, Story and Research/);
+  assert.match(skill, /RESEARCH\.md/);
+  assert.match(skill, /\| `research <research\.md>` \|/);
+  assert.match(skill, /\| `brief <brief\.md>` \|[^\n]*eleven sections/);
+});
+
+test("SKILL.md: the intake is five questions asked once, in this order, and the rules I1 to I6 are stated", () => {
+  const skill = designText("SKILL.md");
+  const intake = skill.split(/^## The intake$/m)[1]?.split(/^## /m)[0] ?? "";
+  assert.ok(intake, "no The intake section");
+  const questions = ["Who are you?", "Where are you going?", "Who is it for?", "How should it feel?", "What is special?"].map((q) => intake.indexOf(q));
+  assert.ok(questions.every((i) => i >= 0) && questions.every((i, k) => k === 0 || i > questions[k - 1]), `the five questions in order: ${questions}`);
+  assert.match(intake, /one message/i);
+  assert.match(intake, /do not ask a question the request, `DESIGN\.md` or an earlier brief already answers/i);
+  assert.match(intake, /from DESIGN\.md section 1/);
+  assert.match(intake, /word for word|exact words|as given/i);
+  assert.match(intake, /`not answered`/);
+  assert.match(intake, /nobody fills it by guess/i);
+  assert.match(intake, /writer does not ask again/i);
+  assert.match(intake, /skip the intake[^.\n]*(?:named|names)[^.\n]*designer[^.\n]*complete brief|complete brief[^.\n]*designer/i);
+  assert.match(intake, /all eleven sections/i);
+  assert.match(intake, /project rule[^.\n]*stops and asks|stops and asks/i);
+});
+
+test("RESEARCH.md states R1 to R10 and P1 to P7, the ranking line, the fetch rule, and names no other package (RES2)", () => {
+  const text = designText("RESEARCH.md");
+  for (let n = 1; n <= 10; n++) assert.ok(text.includes(`**R${n}.`), `R${n}`);
+  for (let n = 1; n <= 7; n++) assert.ok(text.includes(`**P${n}.`), `P${n}`);
+  assert.match(text, /register[^.\n]*level 5[^.\n]*precedence list/i);
+  assert.match(text, /brief[^.\n]*`DESIGN\.md`[^.\n]*project'?s (?:own )?rules[^.\n]*outrank/i);
+  assert.match(text, /robots\.txt/);
+  assert.match(text, /opened/);
+  assert.match(text, /summary only/);
+  assert.match(text, /could not verify/);
+  assert.match(text, /check\.mjs research/);
+  assert.match(text, /whatever fetch you have/i);
+  assert.doesNotMatch(text, /Minimum/, "P1 has no escape line");
+  assert.doesNotMatch(text, /\/suits:|ui-ux-pro-max|rachel/i);
+});
+
+test("RESEARCH.md describes the file the checker reads: the head lines, the parts in order and the closing lists", () => {
+  const text = designText("RESEARCH.md");
+  for (const phrase of ["Date:", "Client:", "## Job facts", "## P1. Sources", "## P2. Source notes", "## P3. Register", "## P4. Not that", "## P5. Gaps and substitutes", "## P6. What the supplied pictures can carry", "## P7. Output to craft", "## Not checked", "## Open", "Better pictures change this", "no earlier piece"]) assert.ok(text.includes(phrase), phrase);
+  for (const field of FIELDS) assert.ok(text.includes(`**${field}:**`), field);
+});
+
+test("the design page counts the commands by name, lists research and describes the eleven-section brief", () => {
+  const page = shipped("docs", "tools", "design.md");
+  assert.match(page, /`research`/);
+  assert.match(page, /RESEARCH\.md/);
+  assert.match(page, /intake/i);
+  assert.match(page, /eleven sections/i);
 });
 
 test("DESIGN-MD.md describes the front matter and the 11 sections in order", () => {

@@ -59,7 +59,7 @@ const GOOD = {
 
 let trees = 0;
 // Builds GOOD with `changes` applied (a null value removes the file), tracks it in git, runs the script on it.
-function check(changes = {}, { path = gitOnly } = {}) {
+function check(changes = {}, { path = gitOnly, asOf } = {}) {
   const root = join(scratch, `tree-${trees++}`);
   const files = { ...GOOD, ...changes };
   for (const [name, content] of Object.entries(files)) {
@@ -69,8 +69,9 @@ function check(changes = {}, { path = gitOnly } = {}) {
   }
   execFileSync("git", ["init", "-q"], { cwd: root });
   execFileSync("git", ["add", "-A"], { cwd: root });
-  const run = spawnSync(process.execPath, [script, root], { encoding: "utf8", env: { PATH: path, HOME: scratch } });
-  return { status: run.status, out: run.stdout, err: run.stderr, problems: run.stderr.split("\n").filter((l) => l && !/problem\(s\)/.test(l)) };
+  const run = spawnSync(process.execPath, [script, root, ...(asOf ? ["--as-of", asOf] : [])], { encoding: "utf8", env: { PATH: path, HOME: scratch } });
+  const lines = run.stderr.split("\n").filter((l) => l && !/problem\(s\)/.test(l));
+  return { status: run.status, out: run.stdout, err: run.stderr, problems: lines.filter((l) => !l.startsWith("warning: ")), warnings: lines.filter((l) => l.startsWith("warning: ")) };
 }
 
 // The tree differs from the good one by one defect: the script exits 1 with exactly one problem line, which says `message`.
@@ -317,4 +318,85 @@ test("a validator error is a problem, even when the validator exits 1", () => {
   const error = { path: "skills", message: "Bad entry" };
   const report = { manifest: ok({ file: ".claude-plugin/plugin.json", warnings: accepted }), contents: [ok({ file: "skills/a", errors: [error] })] };
   fails({}, "plugin validate: skills/a: skills: Bad entry", { path: pathWithClaude(report, 1) });
+});
+
+// Registers (RES4): each register in a REGISTERS.md has a date, a review-by date, its headings and a source URL.
+
+const REGISTER = (change = (t) => t) =>
+  change(
+    [
+      "# Registers",
+      "",
+      "## Tech",
+      "Date: 2026-11-07",
+      "Review by: 2027-05-07",
+      "",
+      "### Layout",
+      "- One column.",
+      "### Type",
+      "- One grotesque.",
+      "### Colour",
+      "- Near-black.",
+      "### Story",
+      "- A one-line claim.",
+      "### CTA",
+      "- One pill.",
+      "### Sources",
+      "1. Maker, a page: https://example.com/a",
+      "",
+    ].join("\n"),
+  );
+const REGISTERS_PATH = "skills/tools/beta/REGISTERS.md";
+const withRegisters = (text) => ({ [REGISTERS_PATH]: text });
+
+test("a register with every part passes, and a REGISTERS.md in no skill is not looked for", () => {
+  passes(withRegisters(REGISTER()), { asOf: "2026-11-08" });
+  passes({}, { asOf: "2026-11-08" });
+});
+
+test("a register with no Date or a date that is not a date is a problem", () => {
+  fails(withRegisters(REGISTER((t) => t.replace("Date: 2026-11-07\n", ""))), `${REGISTERS_PATH}: Tech: no Date: line`);
+  fails(withRegisters(REGISTER((t) => t.replace("Date: 2026-11-07", "Date: 2026-13-45"))), `${REGISTERS_PATH}: Tech: Date: 2026-13-45 is not a date`);
+});
+
+test("a register with no review-by date or a date that is not a date is a problem", () => {
+  fails(withRegisters(REGISTER((t) => t.replace("Review by: 2027-05-07\n", ""))), `${REGISTERS_PATH}: Tech: no Review by: line`);
+  fails(withRegisters(REGISTER((t) => t.replace("Review by: 2027-05-07", "Review by: soon"))), `${REGISTERS_PATH}: Tech: Review by: soon is not a date`);
+});
+
+for (const heading of ["Layout", "Type", "Colour", "Story", "CTA"]) {
+  test(`a register with no ${heading} heading, or an empty one, is a problem`, () => {
+    fails(withRegisters(REGISTER((t) => t.replace(`### ${heading}\n`, "### Other\n"))), `${REGISTERS_PATH}: Tech: no "${heading}" heading`);
+    fails(withRegisters(REGISTER((t) => t.replace(new RegExp(`### ${heading}\\n- [^\\n]*\\n`), `### ${heading}\n`))), `${REGISTERS_PATH}: Tech: "${heading}" is empty`);
+  });
+}
+
+test("a register with no source URL is a problem", () => {
+  fails(withRegisters(REGISTER((t) => t.replace("https://example.com/a", "a page nobody can open"))), `${REGISTERS_PATH}: Tech: no source URL`);
+});
+
+test("every register in a file is checked, and the message names the one at fault", () => {
+  const two = `${REGISTER()}\n## Food\nDate: 2026-11-07\n\n### Layout\n- A.\n### Type\n- B.\n### Colour\n- C.\n### Story\n- D.\n### CTA\n- E.\n### Sources\n1. https://example.com/b\n`;
+  fails(withRegisters(two), `${REGISTERS_PATH}: Food: no Review by: line`);
+});
+
+test("an overdue register is a warning and not a failure, and a register not yet due is not warned about", () => {
+  const late = passes(withRegisters(REGISTER()), { asOf: "2027-05-08" });
+  assert.deepEqual(late.warnings, [`warning: ${REGISTERS_PATH}: Tech: review by 2027-05-07 is past on 2027-05-08`]);
+  assert.equal(late.out.trim(), "Skills check passed. plugin validate: skipped (no `claude` on PATH).");
+  assert.deepEqual(passes(withRegisters(REGISTER()), { asOf: "2027-05-07" }).warnings, []);
+});
+
+test("--as-of must be a date", () => {
+  const r = check(withRegisters(REGISTER()), { asOf: "tomorrow" });
+  assert.equal(r.status, 1);
+  assert.match(r.err, /--as-of: "tomorrow" is not a date/);
+});
+
+// RES3: no skill file names the researcher of another package.
+
+test("the name of the researcher in another package, in any skill file, is a problem", () => {
+  fails(withText("Ask Rachel for the sources."), "skills/tools/beta/SKILL.md: names another package's researcher; the research step is this package's own");
+  fails(withText("Ask rachel."), "skills/tools/beta/SKILL.md: names another package's researcher");
+  passes(withText("Rachelle is a name that only starts the same way."));
 });

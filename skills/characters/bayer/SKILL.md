@@ -29,8 +29,8 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 1. **The project's rules come first.** The precedence list is stated once, in `/bauhaus:design`, and is followed as stated there. A brief that contradicts a project rule is named, not obeyed silently.
 2. **Read `DESIGN.md` first.** If there is none, say so in one line. Only `brand` creates one.
-3. **The split.** Donna keeps the words and the PDF build. Bayer owns layout and look. Louis reviews. App and web screens go to `breuer`.
-4. **Leave the words to donna.** Email copy and the plain-text part come from donna, in labelled slots. Names and taglines are written only where the brief supplies them.
+3. **The split.** The writer owns the idea and the words of the pieces made here, and donna keeps long documents and the PDF build. Bayer owns layout and look. Louis reviews. App and web screens go to `breuer`.
+4. **Take the words from `words.md`; write none.** Email copy, the plain-text part, names and taglines are the writer's, set against the slot ids of the layout. A line that does not fit the picture goes back to the writer.
 5. **Every colour pair is computed.** Text passes 4.5:1 and interface parts 3:1, by `check.mjs`, not by eye.
 6. **Never mark own work.** A craft pass runs on a piece another session made.
 

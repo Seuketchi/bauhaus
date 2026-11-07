@@ -2,7 +2,7 @@
 
 ## What it does
 
-`gropius` leads the design work. It makes sure a piece starts from a brief file, hands the piece to `bayer` (brand, logos, email), `breuer` (app and web screens) or `mies` (space work: form, plans, structure) with the brief and the project's `DESIGN.md`, and runs the craft pass on pieces that another session made. It makes no piece itself.
+`gropius` leads the design work. It makes sure a piece starts from a complete brief file, with all eleven sections. It asks the owner the intake questions once and keeps the answers word for word, hands the brief to the writer, `ogilvy`, who hands it with the words to `bayer` (brand, logos, email), `breuer` (app and web screens) or `mies` (space work: form, plans, structure); the lead hands a piece to a designer itself only when the intake is skipped. It runs the craft pass on pieces that another session made. It makes no piece itself.
 
 It follows the precedence list kept in `design`: the project's own rules first, then the brief. When a brief contradicts a project rule, it stops, names the rule by file and heading and the brief line, and asks the owner which one yields.
 
@@ -14,7 +14,7 @@ It calls two tools, and only on a stated fact: `design` when no brief file exist
 - A brief file has to be written or checked before work starts.
 - A finished piece from another session needs a craft pass.
 
-Skip it when the owner has named the designer and a brief file already exists.
+Skip the intake when the owner has named the designer and a complete brief file, with all eleven sections, already exists.
 
 ## Common questions
 
@@ -22,7 +22,7 @@ Skip it when the owner has named the designer and a brief file already exists.
 
 **Does a craft pass approve a piece?** No. It is a craft pass and not a sign-off. Louis rules against the rules and the numbers.
 
-**Who writes the words?** Donna. The lead hands on layout and look only.
+**Who writes the words?** The writer, except documents and the PDF build, which are donna's. The lead hands on the brief and writes none.
 
 **Is this a person speaking?** No. The register is plain and professional, and nothing in the file imitates a real person's voice or attributes words to anyone.
 

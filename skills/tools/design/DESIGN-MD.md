@@ -74,7 +74,7 @@ A project file beside `DESIGN.md`, with the extension `.tokens`. The format is t
 
 ## The brief
 
-One file per piece, written before any work. Sections, each non-empty:
+One file per piece, written before any work. Eleven sections, each non-empty:
 
 ```
 ## Audience
@@ -82,10 +82,22 @@ One file per piece, written before any work. Sections, each non-empty:
 ## Tone
 ## Must not look like
 ## Surface
+## Intake
+## Idea
+## Insight
+## Story
+## Research
 ## References
 ## Tells earned          (optional)
 ```
 
+- **Intake** holds the owner's answers to the five questions in `SKILL.md`, word for word, or `not answered`. An answer taken from a file says where: `from DESIGN.md section 1`.
+- **Idea** is the one idea in a sentence, then a line `Two words: <word> <word>`: the idea cut to exactly two words, kept as the test for every later choice.
+- **Insight** is the one fact about the audience or the product that the idea comes from, with the research row it rests on.
+- **Story** is who it is about, then 3 to 5 beats. Each beat is `- Beat n: <what is shown> | carried by: <picture, crop, order or copy>`. A piece that needs no story, such as a logo mark, writes `Story: none. Reason: <why>` and no beats. Idea, Insight and the two words stay required.
+- **Research** gives the path of `research.md` and the register used, and what the piece departs from.
 - **References** lists the rows the piece cites: `- <id>: <the rule taken from it>`. A piece cites at least three. A brief may lower the number by adding `Minimum: <n>. Reason: <why>`. The floor is one, and a minimum below three needs a reason.
 - **Tells earned** lists a tell the brief chooses, with the reason: `- T12: The brand uses tracked caps for its logotype.` A tell named with no reason is not earned, and the brief is refused.
 - The brief wins over a default. It does not outrank the project's own rules.
+- A six-section brief written to the old shape fails `check.mjs brief` until it is brought up to date, and the message names the sections it lacks.
+- A complete brief means all eleven sections are there and non-empty.
