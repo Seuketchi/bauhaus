@@ -55,7 +55,7 @@ Generated work falls into a small set of looks. Each is a default, not a crime: 
 
 - Text needs 4.5:1 against its background, and large text and interface parts need 3:1 (WCAG 2.2, SC 1.4.3 and SC 1.4.11).
 - A colour's reading depends on what sits beside it. Check each pair in place, in the render, as well as by ratio: a pair that passes alone can fail beside a stronger neighbour.
-- Never estimate. `check.mjs contrast <fg> <bg>` computes the ratio, never shows a failing pair as passing, and refuses a colour name, a short hex of the wrong length or a colour with alpha. A colour in another colour space is used through its hex.
+- Never estimate. `check.mjs contrast <fg> <bg>` computes the ratio, never shows a failing pair as passing (it prints `fail`), but exits 0 on a failing pair unless `--min` is passed: pass `--min 4.5` for text and `--min 3` for an interface part, and the exit is 1 when the pair is under it. It refuses a colour name, a short hex of the wrong length or a colour with alpha. A colour in another colour space is used through its hex.
 - Colour pairs in `DESIGN.md` are role paths. The ratio is computed from the token file and never written by hand.
 
 ## The checks
@@ -64,7 +64,7 @@ Run them from this folder with `node check.mjs <command>`.
 
 | Command | Checks |
 | --- | --- |
-| `contrast <fg> <bg>` | The WCAG 2.2 ratio, with text, large text and interface verdicts. |
+| `contrast <fg> <bg> --min <ratio>` | The WCAG 2.2 ratio, with text, large text and interface verdicts. Exits 0 on a failing pair unless `--min` is passed. |
 | `design <DESIGN.md>` | The front matter, the 11 sections in order, the entries and dates, the pairs, the trends in use and the change log. |
 | `tokens <file.tokens> [mode files]` | The token file and, for modes, that the paths match. |
 | `document-css <file.tokens>` | Writes the six document properties as CSS custom properties. |

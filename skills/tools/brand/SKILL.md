@@ -27,7 +27,7 @@ Set up the identity so it can be applied the same way from the first piece to th
 ## Colour
 
 - Every pair listed in section 6 of the `DESIGN.md` is a pair of role paths. The ratio is computed by `check.mjs` from the token file and is never written by hand: at least 4.5:1 for text and 3:1 for interface parts and large text (row W1).
-- Check a single pair with `node skills/tools/design/check.mjs contrast <fg> <bg>`. A pair at 4.4999:1 fails and is shown as 4.4999.
+- Check a single pair with `node skills/tools/design/check.mjs contrast <fg> <bg> --min 4.5` (`--min 3` for a mark or other interface part). Without `--min` a failing pair still exits 0. A pair at 4.4999:1 fails and is shown as 4.4999.
 - A colour reads against its neighbours, so look at the pairs in the specimen sheet as well as in the numbers.
 
 ## The mark

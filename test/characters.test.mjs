@@ -661,6 +661,19 @@ describe("email (E1 to E7)", () => {
     has(/google-chrome --headless=new --screenshot/);
     has(/timeout 20/);
   });
+  test("does not say the PNG export with a scale has not been run, which ARTCRAFT.md records as run", () => {
+    assert.doesNotMatch(source, /export[^.\n]*(?:scale|--scale)[^.\n]*has not been run/i);
+    assert.match(source, /`--scale 2` doubles the pixels and does not sharpen a small source/);
+  });
+  test("the render window is taller than one screen, and the skill says the shot is cut at the window height and how to tell", () => {
+    const render = section(source, "Render");
+    const heights = [...render.matchAll(/--window-size=(?:640|375),(\d+)/g)].map((m) => Number(m[1]));
+    assert.equal(heights.length, 2, "one window per width");
+    for (const h of heights) assert.ok(h >= 8000, `a ${h} px window crops a long email`);
+    assert.match(render, /cut at the window height/i);
+    assert.match(render, /blank (?:page )?ground/i);
+    assert.match(render, /raise the height/i);
+  });
   test("colour values are inline hex taken from the token file", () => has(/inline hex/i));
 });
 
@@ -683,6 +696,10 @@ describe("critique (C1 to C9)", () => {
     has(/did not make/);
     has(/first line names the maker/i);
     has(/made here[^.]*stop/i);
+  });
+  test("says in one line what this session is: the conversation the piece was made in", () => {
+    const who = section(source, "Who made it");
+    assert.match(who, /"This session" is this conversation: a piece made in it was made here\./);
   });
   test("at most 12 findings, each with a location, the line or rule it breaks and a fix, ranked fix and consider (C4)", () => {
     has(/at most 12 findings/i);

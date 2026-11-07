@@ -4,14 +4,14 @@
 
 `design` is the method every visual job follows. It holds the stance, the list of generic defaults a piece must not fall into, the plan-then-check pass that catches a default before it is drawn, the rule that the project's own rules win, and a small checker that computes the numbers.
 
-The checker, `check.mjs`, is a dependency-free Node script with eight commands: `contrast` computes the WCAG 2.2 ratio of two colours; `design` checks a project's `DESIGN.md`; `tokens` checks a token file and its modes; `document-css` writes the six document properties from it; `trends` checks the dated trends file; `brief` checks the brief for a piece; `email` lints an HTML email; `tells` runs the 29 rows of `TELLS.md` on a piece.
+The checker, `check.mjs`, is a dependency-free Node script with eight commands: `contrast` computes the WCAG 2.2 ratio of two colours (it exits 0 on a failing pair unless `--min` is passed); `design` checks a project's `DESIGN.md`; `tokens` checks a token file and its modes; `document-css` writes the six document properties from it; `trends` checks the dated trends file; `brief` checks the brief for a piece; `email` lints an HTML email; `tells` runs the 29 rows of `TELLS.md` on a piece.
 
 It also owns the rules for driving the command-line apps (`ARTCRAFT.md`), the formats of `DESIGN.md`, the token file and the brief (`DESIGN-MD.md`), the tells (`TELLS.md`) and the trends (`TRENDS.md`).
 
 ## When to reach for it
 
 - Before any visual piece: a brand, an email, a logo, an app or web screen. Read it, write the brief file and the token plan, and only then build.
-- When a colour pair needs a number, not an opinion: `check.mjs contrast`.
+- When a colour pair needs a number, not an opinion: `check.mjs contrast <fg> <bg> --min 4.5`.
 - When a project needs a `DESIGN.md` or a token file checked, or a brand needs the six document properties for a PDF.
 - When a finished piece must be checked for the banned defaults: `check.mjs tells`.
 - When a trend is proposed: look it up in `TRENDS.md`. A trend is used only when the brief asks, and only when it is on trial.
