@@ -1115,6 +1115,14 @@ test("ARTCRAFT.md carries the rules of the hand-off", () => {
   for (const job of ["`brand`", "`email`", "`screens`", "`critique`", "`design`"]) assert.ok(text.includes(job), `ARTCRAFT.md table lacks ${job}`);
 });
 
+test("the screens row of ARTCRAFT.md records that frame.presets was run, with the date, and still lists the PNG export", () => {
+  const row = shipped("skills", "tools", "design", "ARTCRAFT.md").split("\n").find((l) => l.startsWith("| `screens` |"));
+  assert.ok(row, "no screens row");
+  assert.match(row, /`frame\.presets` run 2026-11-07/);
+  assert.doesNotMatch(row, /frame\.presets`[^)]*not run/);
+  assert.match(row, /export[^|]*--node[^|]*--format png/);
+});
+
 test("DESIGN-MD.md describes the front matter and the 11 sections in order", () => {
   const text = shipped("skills", "tools", "design", "DESIGN-MD.md");
   for (const key of ["project", "design-md", "tokens", "tokens-format", "rules-win"]) assert.ok(text.includes(`${key}:`), key);

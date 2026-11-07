@@ -12,6 +12,8 @@
     "./skills/tools/design",
     "./skills/tools/brand",
     "./skills/tools/email",
-    "./skills/tools/critique"
+    "./skills/tools/critique",
+    "./skills/characters/breuer",
+    "./skills/tools/screens"
   ]
 }

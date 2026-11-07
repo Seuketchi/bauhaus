@@ -20,7 +20,7 @@ The hand-off between a character and ArtCraft is a file path. There is no shared
 | --- | --- | --- | --- | --- |
 | `brand` | `run steps.json --out x.figcraft`, `render x.figcraft -o x.png` | `run --cmd file.new --params J --cmd shape.rectangle --params J --export logo.svg`, `info logo.svg` | none | none |
 | `email` | `run`, `render` (with `--scale`, from `--help`, not run), `export -o assets/ --format png` (from `--help`, not run) | none | none | `google-chrome --headless=new --screenshot` for the HTML |
-| `screens` | `run` with `frame.create {preset}` (`frame.presets` lists them, not run), `render` | none | none | none |
+| `screens` | `run` with `frame.create {preset}` (`frame.presets` run 2026-11-07, to read the preset sizes), `export --node NAME --format png` | none | none | none |
 | `critique` | `render` | none | `info`, `render`, `check`, `audit` | headless Chrome for HTML |
 | `design` | none | none | none | `check.mjs` (Node) |
 
