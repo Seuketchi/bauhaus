@@ -14,6 +14,9 @@
     "./skills/tools/email",
     "./skills/tools/critique",
     "./skills/characters/breuer",
-    "./skills/tools/screens"
+    "./skills/tools/screens",
+    "./skills/characters/mies",
+    "./skills/tools/massing",
+    "./skills/tools/plans"
   ]
 }

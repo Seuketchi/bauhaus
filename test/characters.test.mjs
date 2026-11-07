@@ -48,7 +48,7 @@ const TOPICS = {
   "a death date": /\bdied\b|\bdeath\b|\bdead\b|\bpassed away\b/i,
 };
 const topicHits = (text) => Object.entries(TOPICS).filter(([, re]) => re.test(text)).map(([name]) => name);
-const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+)?(?:gropius|bayer|breuer)\b/i;
+const PERSONA = /\b(?:you are|i am|i'm|as|speaking as|in the voice of)\s+(?:walter\s+|herbert\s+|marcel\s+|ludwig\s+)?(?:gropius|bayer|breuer|mies)\b/i;
 // Breuer is cast by analogy only: no furniture, workshop, steel or "for the body" in any file.
 const BIOGRAPHY = /\b(?:Weimar|Dessau|ARCO|founded|was born|born in|studied|apprentic\w+|furniture|carpentry|workshop|tubular|steel)\b|for the body/i;
 
@@ -107,7 +107,7 @@ describe("CAST1 scan, on fixtures", () => {
     assert.deepEqual([speechHits(text), quoteHits(text), topicHits(text)], [[], [], []]);
   });
   test("a first-person persona is flagged", () => {
-    for (const text of ["You are Walter Gropius.", "I am Bayer.", "As Bayer, review it.", "I'm Gropius."]) assert.match(text, PERSONA);
+    for (const text of ["You are Walter Gropius.", "I am Bayer.", "As Bayer, review it.", "I'm Gropius.", "As Mies, draw it.", "You are Ludwig Mies."]) assert.match(text, PERSONA);
     assert.doesNotMatch("Bayer owns layout.", PERSONA);
   });
 });
@@ -122,7 +122,7 @@ describe("registration", () => {
   test("plugin.json lists the characters and the tools, and has no version", () => {
     const wanted = ["skills/characters/bayer", "skills/characters/gropius", "skills/tools/design", "skills/tools/brand", "skills/tools/email", "skills/tools/critique"];
     assert.deepEqual(registered.slice(0, wanted.length), wanted);
-    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens"]);
+    assert.deepEqual(registered.slice(wanted.length), ["skills/characters/breuer", "skills/tools/screens", "skills/characters/mies", "skills/tools/massing", "skills/tools/plans"]);
     assert.ok(!registered.some((d) => /ui-ux-pro-max/.test(d)), "the optional lookup is not a skill of this package");
     assert.equal("version" in plugin, false);
     for (const dir of registered) assert.ok(exists(dir, "SKILL.md"), `${dir} has no SKILL.md`);
@@ -134,10 +134,10 @@ describe("registration", () => {
       const model = readme.split(/^## /m).find((s) => s.startsWith("Model-invoked")) ?? "";
       for (const name of names) assert.match(model, new RegExp(`\\]\\(\\./${name}/SKILL\\.md\\)`), `${name} is not under Model-invoked in skills/${bucket}/README.md`);
     };
-    listed("characters", ["bayer", "breuer", "gropius"]);
-    listed("tools", ["brand", "critique", "design", "email", "screens"]);
-    for (const name of ["breuer", "screens"]) {
-      const bucket = name === "breuer" ? "characters" : "tools";
+    listed("characters", ["bayer", "breuer", "gropius", "mies"]);
+    listed("tools", ["brand", "critique", "design", "email", "massing", "plans", "screens"]);
+    const BUCKET_OF = { breuer: "characters", mies: "characters", screens: "tools", massing: "tools", plans: "tools" };
+    for (const [name, bucket] of Object.entries(BUCKET_OF)) {
       assert.doesNotMatch(read("skills", bucket, name, "SKILL.md"), /^disable-model-invocation:/m);
       const line = read("skills", bucket, "README.md").split("\n").find((l) => l.includes(`./${name}/SKILL.md`));
       assert.doesNotMatch(line, NUMBER_OF, `${name}: a number of characters or jobs in a description`);
@@ -150,7 +150,13 @@ describe("registration", () => {
     assert.doesNotMatch(readme, /screens job and its character follow/i, "the status line still says UI/UX is to come");
     assert.match(readme, /screens/i);
     assert.equal(readme.split("\n").filter((l) => /^\| Marcel Breuer \|/.test(l)).length, 1, "the cast table keeps its one Breuer row");
-    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Josef Albers) \|/.test(l)).length, 4, "the four rows");
+    assert.equal(readme.split("\n").filter((l) => /^\| (?:Walter Gropius|Herbert Bayer|Marcel Breuer|Ludwig Mies van der Rohe|Josef Albers) \|/.test(l)).length, 5, "the five rows");
+    assert.match(readme, /^\| Ludwig Mies van der Rohe \| Space designer\. Form, plans, structure\. \|$/m, "the Mies row names the role by craft");
+    assert.match(readme, /massing/i);
+    assert.match(readme, /plans/i);
+    const later = readme.split("\n").find((l) => /later work/i.test(l)) ?? "";
+    assert.match(later, /Moholy-Nagy/);
+    assert.doesNotMatch(later, /Mies/, "Mies is no longer later work");
     assert.ok(readme.split(/\s+/).length >= 40);
     for (const [, target] of readme.matchAll(/\]\((\.\/[^)\s#]+)/g)) assert.ok(exists(target.slice(2)), `README links ${target}`);
   });
@@ -163,6 +169,7 @@ const CALLS = {
   gropius: ["design", "critique"],
   bayer: ["design", "brand", "email", "critique"],
   breuer: ["design", "screens", "critique"],
+  mies: ["design", "massing", "plans", "critique"],
 };
 const TRIGGERS = {
   design: /no brief file exists/i,
@@ -170,6 +177,8 @@ const TRIGGERS = {
   email: /piece is an HTML email/i,
   critique: /finished piece exists that this session did not make/i,
   screens: /task is an app or web screen/i,
+  massing: /task is the form or volume of a building or space/i,
+  plans: /task is a floor plan, a section or a sheet/i,
 };
 // BRE2: breuer's critique trigger is a finished screen.
 const TRIGGER_OF = (name, skill) => (name === "breuer" && skill === "critique" ? /finished screen exists that this session did not make/i : TRIGGERS[skill]);
@@ -237,7 +246,7 @@ describe("characters", () => {
       });
 
       test("names donna and louis as roles and never calls them, and links nowhere outside its folder", () => {
-        assert.doesNotMatch(source, /`\/(?:donna|louis|breuer|screens)`|\/bauhaus:breuer|\/suits:|\/ui-ux-pro-max:/);
+        assert.doesNotMatch(source, /`\/(?:donna|louis|breuer|screens|mies)`|\/bauhaus:breuer|\/bauhaus:mies|\/suits:|\/ui-ux-pro-max:/);
         assert.doesNotMatch(source, /\]\(\.\.\/\.\.\/tools\//);
       });
     });
@@ -254,6 +263,7 @@ describe("characters", () => {
     test("work goes to bayer or breuer with the brief and DESIGN.md, and he makes no piece himself", () => {
       assert.match(rules, /`bayer`[^.]*brand[^.]*logos[^.]*email/i);
       assert.match(rules, /`breuer`[^.]*(?:app|screens)/i);
+      assert.match(rules, /`mies`[^.]*(?:space|form|plans|structure)/i);
       assert.match(rules, /brief and `DESIGN\.md`/);
       assert.match(rules, /makes no piece/i);
     });
@@ -313,7 +323,11 @@ describe("CAST1 over every character file and every docs page", () => {
     ...files("docs/tools"),
     ...registered.map((d) => `${d}/SKILL.md`),
   ];
-  test("there are files to scan", () => assert.ok(targets.length >= 12, `${targets.length}`));
+  // Computed, not a literal: every registered skill and every docs page is scanned.
+  test("there are files to scan", () => {
+    const floor = registered.length + files("docs/characters").length + files("docs/tools").length;
+    assert.ok(targets.length >= floor, `${targets.length} < ${floor}`);
+  });
   for (const file of targets) {
     test(`${file}: no cast name with a speech verb, no quoted sentence, no avoided topic`, () => {
       const text = read(file);
@@ -389,7 +403,15 @@ function rowProblems(cells) {
   return out;
 }
 const GOOD_ROW = ["V9", "A work", "2010", "p. 3", "Keep one rule from first to last.", "opened", "free (https://example.com/a)"];
-const REFS = { brand: "skills/tools/brand/REFERENCES.md", email: "skills/tools/email/REFERENCES.md", screens: "skills/tools/screens/REFERENCES.md" };
+const REFS = {
+  brand: "skills/tools/brand/REFERENCES.md",
+  email: "skills/tools/email/REFERENCES.md",
+  screens: "skills/tools/screens/REFERENCES.md",
+  massing: "skills/tools/massing/REFERENCES.md",
+  plans: "skills/tools/plans/REFERENCES.md",
+};
+// The least number of rows each file holds.
+const ROW_FLOOR = { brand: 4, email: 4, screens: 4, massing: 4, plans: 4 };
 
 describe("REFERENCES.md rows", () => {
   test("a complete row has no problem", () => assert.deepEqual(rowProblems(GOOD_ROW), []));
@@ -421,7 +443,7 @@ describe("REFERENCES.md rows", () => {
     describe(file, () => {
       const rows = referenceRows(read(file));
       test("has rows, each complete and valid, with unique ids", () => {
-        assert.ok(rows.length >= 4);
+        assert.ok(rows.length >= ROW_FLOOR[craft], `${rows.length} rows`);
         for (const cells of rows) assert.deepEqual(rowProblems(cells), [], cells[0]);
         assert.equal(new Set(rows.map((r) => r[0])).size, rows.length);
       });
@@ -493,7 +515,7 @@ describe("screens/REFERENCES.md", () => {
 
 // ---- the job skills ----
 
-const JOBS = ["brand", "email", "critique", "screens"];
+const JOBS = ["brand", "email", "critique", "screens", "massing", "plans"];
 const job = (name) => read("skills/tools", name, "SKILL.md");
 const citedRows = (source) =>
   [...source.matchAll(/\brows? ((?:[A-Z]{1,2}\d+)(?:(?:,\s*|\s+and\s+)[A-Z]{1,2}\d+)*)/g)].flatMap((m) => m[1].split(/,\s*|\s+and\s+/));
@@ -522,7 +544,7 @@ describe("job skills: shared rules", () => {
         assert.ok(cited.some((id) => fake.get(id)?.[5] !== "opened"));
       });
       test("every command example follows the ArtCraft rules", () => {
-        const fenced = [...source.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)].flatMap((m) => m[1].split("\n")).filter((l) => l.trim());
+        const fenced = [...source.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)].flatMap((m) => m[1].replace(/\\\n\s*/g, " ").split("\n")).filter((l) => l.trim());
         const commands = fenced.filter((l) => /-cli|google-chrome/.test(l));
         assert.ok(commands.length > 0, "no command example");
         for (const line of commands) {
@@ -536,10 +558,16 @@ describe("job skills: shared rules", () => {
             assert.doesNotMatch(line, /--automation-/, line);
             assert.match(line, /--export \/\S+/, `${line}: needs an absolute output path`);
           }
+          if (/(?:solidcraft|cadcraft)-cli/.test(line)) {
+            assert.doesNotMatch(line, /--automation-|--allow-any-path|--allow-path|\bmcp\b|--connect|--bridge/, line);
+            assert.doesNotMatch(line, /solidcraft-cli (?:render|fuzz|bench)/, `${line}: not run, so not relied on`);
+            for (const m of line.matchAll(/(?:--out|--save|--json-out|--export)\s+(\S+)/g)) assert.match(m[1], /^\//, `${line}: ${m[1]} is not an absolute path`);
+            if (/cadcraft-cli run/.test(line)) assert.ok((line.match(/--export\b/g) ?? []).length <= 1, `${line}: one --export per run`);
+          }
         }
       });
       test("starts no window app and never calls the launcher", () => {
-        const bare = source.split("\n").filter((l) => /(^|[^-\w.])(figcraft|vectorcraft|pdfcraft|artcraft-launcher)([^-\w]|$)/.test(l) && !/\bnever\b/i.test(l));
+        const bare = source.split("\n").filter((l) => /(^|[^-\w.])(figcraft|vectorcraft|pdfcraft|solidcraft|cadcraft|filmcraft|effectcraft|lightcraft|artcraft-launcher)([^-\w]|$)/.test(l) && !/\bnever\b/i.test(l));
         assert.deepEqual(bare, []);
       });
       test("points at the ArtCraft rules in design and does not copy them", () => {
@@ -827,6 +855,264 @@ describe("cleanup wording", () => {
       const text = read(file);
       assert.doesNotMatch(text, /people who build the screen/, file);
       assert.match(text, /the project's own gates and owners/i, file);
+    }
+  });
+});
+
+// ---- the space designer and its two tools (spec MIE1 to MIE5, MAS, PLN) ----
+//
+// These are phrase tests: they prove a rule is written down, not that a model obeys it.
+
+// The name rules of spec section 2, as functions tested on strings.
+const bareMoholy = (text) => [...text.matchAll(/Moholy(?!-Nagy)/g)].map((m) => m[0]);
+const luciaHits = (text) => [...text.matchAll(/Lucia/g)].map((m) => m[0]);
+// The words are scanned over the whole tree that ships text to a reader.
+const shippedText = () => [...registered.flatMap((d) => readdirSync(join(root, d)).filter((f) => f.endsWith(".md")).map((f) => `${d}/${f}`)), ...files("docs/characters"), ...files("docs/tools"), "README.md"];
+
+describe("name rules (spec section 2)", () => {
+  test("a bare Moholy and any Lucia are flagged, and Moholy-Nagy in full is not", () => {
+    assert.deepEqual(bareMoholy("Moholy drew it."), ["Moholy"]);
+    assert.deepEqual(bareMoholy("Moholy-Nagy frames the shot."), []);
+    assert.deepEqual(luciaHits("Lucia took the photograph."), ["Lucia"]);
+    assert.deepEqual(luciaHits("Nothing here."), []);
+  });
+  test("no file under skills, docs or the README has a bare Moholy or a Lucia", () => {
+    for (const file of shippedText()) {
+      const text = read(file);
+      assert.deepEqual(bareMoholy(text), [], file);
+      assert.deepEqual(luciaHits(text), [], file);
+    }
+  });
+  test("nothing outside the spec says last director", () => {
+    const walk = (dir) =>
+      readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) =>
+        e.isDirectory() ? (e.name === "node_modules" || e.name.startsWith(".") ? [] : walk(`${dir}/${e.name}`)) : [`${dir}/${e.name}`],
+      );
+    const all = [...walk("skills"), ...walk("docs"), "README.md"].filter((f) => /\.(md|json|mjs)$/.test(f));
+    for (const file of all) assert.doesNotMatch(read(file), /last director/i, file);
+    assert.doesNotMatch(read("specs/design-package.md"), /last director/i);
+  });
+});
+
+// The design-study line, and the sentences that claim an engineered result.
+const STUDY_LINE = "This is a design study, not an engineered design. It has no structural calculation and no code check.";
+const CLAIM = /\b(?:engineered|load-bearing|proven|code-compliant|complies)\b/i;
+const sentences = (text) => prose(text).split(/(?<=[.!?])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
+// A sentence that says a piece is engineered, proven or compliant, and does not deny it.
+const engineeredClaims = (text) => sentences(text).filter((x) => CLAIM.test(x) && !/\b(?:not|never|no)\b/i.test(x));
+
+describe("the design-study line (MIE4, MAS9, PLN7)", () => {
+  test("a sentence that claims an engineered result is flagged, and the required line is not", () => {
+    assert.deepEqual(engineeredClaims("The wall is load-bearing."), ["The wall is load-bearing."]);
+    assert.deepEqual(engineeredClaims("The frame complies with the code."), ["The frame complies with the code."]);
+    assert.deepEqual(engineeredClaims(STUDY_LINE), []);
+    assert.deepEqual(engineeredClaims("The load path is an analogy for the layout, never a claim that anything is load-bearing."), []);
+  });
+  for (const [kind, file] of [["character", "skills/characters/mies/SKILL.md"], ["tool", "skills/tools/massing/SKILL.md"], ["tool", "skills/tools/plans/SKILL.md"]]) {
+    test(`${file}: the Hand over carries the line and nothing in the file claims an engineered result`, () => {
+      const text = read(file);
+      assert.ok(section(text, "Hand over").includes(STUDY_LINE), `${kind} hand-over lacks the line`);
+      assert.deepEqual(engineeredClaims(text), []);
+    });
+  }
+  test("the docs pages say it too", () => {
+    for (const file of ["docs/characters/mies.md", "docs/tools/massing.md", "docs/tools/plans.md"]) {
+      assert.match(read(file), /not an engineered design/, file);
+      assert.deepEqual(engineeredClaims(read(file)), [], file);
+    }
+  });
+});
+
+describe("mies (MIE1 to MIE5)", () => {
+  const source = read("skills/characters/mies/SKILL.md");
+  test("the job is space, not page layout, and page grids, type and screens stay elsewhere (MIE3)", () => {
+    assert.match(source, /space, not page layout/i);
+    assert.match(source, /page grids, type and screens/i);
+    assert.match(source, /`design`[^.\n]*`brand`[^.\n]*`screens`/);
+    assert.match(source, /no second owner of a grid/i);
+    assert.match(source, /structural grid[^.\n]*(?:not|no)[^.\n]*token file/i);
+  });
+  test("bayer and breuer are named as prose only", () => {
+    assert.doesNotMatch(source, /\/bauhaus:(?:bayer|breuer|gropius)/);
+    assert.doesNotMatch(source, /\]\(\.\.\//);
+  });
+  test("the sample line is about the work and carries no claim of engineering", () => {
+    const [line] = samples(section(source, "Voice"));
+    assert.match(line, /design study/i);
+  });
+  test("the design-study line is the one hand-over claim, and the file says what the study does not have (MAS9)", () => {
+    assert.match(section(source, "Hand over"), /floors?, stairs?, openings? or structure/i);
+  });
+});
+
+describe("gropius routes space work to mies (MIE5)", () => {
+  const source = read("skills/characters/gropius/SKILL.md");
+  const page = read("docs/characters/gropius.md");
+  test("the working table, the rule and the hand-over options name mies", () => {
+    assert.match(source, /\| the lead \| `mies` \|/);
+    assert.match(section(source, "Hand over"), /`handed to mies`/);
+    assert.match(section(source, "Hard rules"), /`mies`/);
+  });
+  test("the docs page says the same, and the lead still calls only design and critique", () => {
+    assert.match(page, /`mies`/);
+    assert.deepEqual([...new Set(named(source))].sort(), ["critique", "design"]);
+  });
+});
+
+// massing and plans: what each says and what each rests on.
+describe("massing and plans: the skills (MAS, PLN)", () => {
+  const massing = read("skills/tools/massing/SKILL.md");
+  const plans = read("skills/tools/plans/SKILL.md");
+
+  test("massing: script is the source of truth, STEP header, closed bodies, sum of bodies (MAS1 to MAS3, MAS9)", () => {
+    assert.match(massing, /`massing\.json`[^.\n]*(?:source of truth|what is saved and handed on)/i);
+    assert.match(massing, /ISO-10303-21;/);
+    assert.match(massing, /`closed: true`|closed: true/);
+    assert.match(massing, /a body that is not closed is a failure, not a note/i);
+    const hand = section(massing, "Hand over");
+    assert.match(hand, /sum of (?:the )?bodies/i);
+    assert.match(hand, /overlaps? count twice/i);
+    assert.match(hand, /millimetres/i);
+    assert.match(hand, /same total/i);
+  });
+  test("massing: bodies are named with body_name, because name names the feature (MAS4)", () => {
+    assert.match(massing, /`body_name`/);
+    assert.match(massing, /`name` names the feature/i);
+  });
+  test("massing: the image is read before the hand-over says it shows the study (MAS5)", () => {
+    assert.match(massing, /read[^.\n]*(?:PNG|image)[^.\n]*before/i);
+  });
+  test("massing: a plan DXF needs a parallel camera with fov 0, and shows the roof outline only (MAS6)", () => {
+    assert.match(massing, /"fov": ?0/);
+    assert.match(massing, /1\.5707963/);
+    assert.match(massing, /roof outline/i);
+    assert.match(massing, /a plan comes from `\/bauhaus:plans`|plan comes from `plans`/i);
+  });
+  test("massing: no render, fuzz, bench or mcp is used (not run, so not relied on)", () => {
+    assert.doesNotMatch(prose(massing).replace(/never[^\n]*/gi, ""), /solidcraft-cli (?:render|fuzz|bench)/);
+    assert.match(massing, /snapshot/);
+  });
+  test("massing: says nothing about floors, stairs, openings or structure that the script did not make (MAS9)", () => {
+    assert.match(massing, /floors?, stairs?, openings? or structure[^.\n]*unless the script made them/i);
+  });
+
+  test("plans: one export per run and convert for the rest, metric units, layers, dimension scale (PLN1 to PLN4)", () => {
+    assert.match(plans, /one `--export` per (?:`cadcraft-cli run`|run)/i);
+    assert.match(plans, /cadcraft-cli convert/);
+    assert.match(plans, /"lunits": ?2/);
+    assert.match(plans, /--metric/);
+    for (const layer of ["WALLS", "DIMS", "NOTES"]) assert.ok(plans.includes(layer), layer);
+    assert.match(plans, /dimstyle/);
+    assert.match(plans, /DIMSCALE|DIMTXT/);
+    assert.match(plans, /CADCRAFT_CONFIG_DIR/);
+    assert.match(plans, /cadcraft-cli info/);
+  });
+  test("plans: legibility is looked at on the PNG, not assumed (PLN4)", () => {
+    assert.match(plans, /read the PNG/i);
+    assert.match(plans, /legible/i);
+  });
+  test("plans: the structure note names a grid or module, spans, a load path and the material, and the load path is an analogy (PLN6)", () => {
+    assert.match(plans, /structure\.md/);
+    for (const re of [/grid or module/i, /spans/i, /load path/i, /material/i]) assert.match(plans, re);
+    assert.match(plans, /load path is an analogy for the layout/i);
+    assert.match(plans, /the skill's own design, not a source claim/i);
+    assert.doesNotMatch(plans, /\bdead (?:load|space|end)\b/i, "dead is a banned word in a character or tool text: say permanent load or self-weight");
+  });
+  test("plans: the sheet carries the design-study line as a text entity (PLN7)", () => {
+    assert.match(plans, /title block/i);
+    assert.ok(plans.includes("not an engineered design"));
+  });
+  test("plans: pdfcraft-cli check, and critique takes the PNG or the PDF only (PLN5, PLN9)", () => {
+    assert.match(plans, /pdfcraft-cli check/);
+    const hand = section(plans, "Hand over");
+    assert.match(hand, /`\/bauhaus:critique` takes the PNG or the PDF/);
+    assert.match(hand, /not the SVG or the DXF/i);
+    for (const f of ["plan.dxf", "plan.pdf", "plan.svg", "plan.png", "plan.sh", "structure.md"]) assert.ok(hand.includes(f), f);
+  });
+  test("plans: a structural grid is not the grid of a token file, and neither tool writes one", () => {
+    assert.match(plans, /structural grid[^.\n]*(?:not|no)[^.\n]*token file/i);
+  });
+});
+
+describe("the two tools name their own references and the ArtCraft rules", () => {
+  for (const name of ["massing", "plans"]) {
+    const source = job(name);
+    test(`${name}: the description, the ArtCraft pointer and the brief minimum`, () => {
+      assert.match(source, /ARTCRAFT\.md/);
+      assert.match(source, /Minimum: 2/);
+      assert.match(source, /two primary works/);
+      assert.doesNotMatch(source, /Ching|Alexander|Pattern Language/, "the pointer books are in REFERENCES.md and are never cited");
+    });
+  }
+  test("no skill, page or README says SolidCraft is an ArtCraft app (the one statement is in ARTCRAFT.md, the decision record and the spec)", () => {
+    const near = /SolidCraft[^.\n]{0,80}ArtCraft|ArtCraft[^.\n]{0,80}SolidCraft/;
+    const holders = ["skills/tools/design/ARTCRAFT.md", "docs/adr/0001-bauhaus-is-a-separate-package.md", "specs/design-package.md"];
+    for (const file of [...shippedText(), ...holders]) {
+      const lines = read(file).split("\n").filter((l) => near.test(l));
+      if (holders.includes(file)) for (const l of lines) assert.match(l, /independent/i, `${file}: ${l}`);
+      else assert.deepEqual(lines, [], file);
+    }
+    for (const file of holders.slice(0, 2)) assert.match(read(file), /SolidCraft is an independent app[^.\n]*not made by ArtCraft/i, file);
+  });
+});
+
+// Row ids are one namespace: allRows() builds one map across files, so a repeat would send a citation to another file's row.
+describe("reference row ids across files", () => {
+  // brand and email both carry W1, and both rows are the same work (WCAG 2.2), so a citation lands on the same row either way.
+  // The ids of the two files here must be new: unique inside the file and across every other file.
+  test("the ids of massing and plans repeat no id of any file, and none repeats inside a file", () => {
+    const own = ["massing", "plans"];
+    const others = Object.entries(REFS).filter(([craft]) => !own.includes(craft)).flatMap(([, f]) => referenceRows(read(f)).map((r) => r[0]));
+    const mine = own.flatMap((craft) => referenceRows(read(REFS[craft])).map((r) => r[0]));
+    assert.equal(new Set(mine).size, mine.length, `repeated: ${mine.filter((id, i) => mine.indexOf(id) !== i)}`);
+    assert.deepEqual(mine.filter((id) => others.includes(id)), []);
+  });
+  test("a repeated id across two files is found", () => {
+    const ids = ["V1", "W1", "V1"];
+    assert.notEqual(new Set(ids).size, ids.length);
+  });
+  for (const craft of ["massing", "plans"]) {
+    describe(`${craft}/REFERENCES.md`, () => {
+      const rows = referenceRows(read(REFS[craft]));
+      const find = (re) => rows.filter((r) => re.test(r[1]));
+      test("the two primary works are opened and free, with the translation and the Gutenberg number", () => {
+        const [v] = find(/Vitruvius/);
+        const [r] = find(/Ruskin/);
+        assert.equal(v[5], "opened");
+        assert.equal(r[5], "opened");
+        assert.equal(v[6], "free (https://www.gutenberg.org/ebooks/20239)");
+        assert.equal(r[6], "free (https://www.gutenberg.org/ebooks/35898)");
+        assert.match(v[2], /Morgan/);
+        assert.match(v[2] + v[3], /20239/);
+        assert.match(r[3], /Lamp of Truth/);
+      });
+      test("the two lending books are pointers: not opened, lending, inferred from the title", () => {
+        for (const re of [/Ching/, /Alexander/]) {
+          const [row] = find(re);
+          assert.equal(row[5], "not opened");
+          assert.equal(row[6], "lending");
+          assert.match(row[4], /^Inferred from the title:/);
+        }
+      });
+      test("a tool row is kept only with a real link and is opened", () => {
+        for (const row of find(/CADCraft|SolidCraft/)) {
+          assert.equal(row[5], "opened");
+          assert.match(row[6], /^free \(https:\/\/\S+\)$/);
+        }
+      });
+    });
+  }
+  test("plans cites its own rows, not massing's, for the same two works", () => {
+    const own = new Set(referenceRows(read(REFS.plans)).map((r) => r[0]));
+    const cited = citedRows(job("plans"));
+    assert.ok(cited.length > 0);
+    for (const id of cited) assert.ok(own.has(id), `${id} is not a row of plans/REFERENCES.md`);
+    const mine = new Set(referenceRows(read(REFS.massing)).map((r) => r[0]));
+    for (const id of citedRows(job("massing"))) assert.ok(mine.has(id), `${id} is not a row of massing/REFERENCES.md`);
+  });
+  test("edition and Edition column: a Wikibooks or Wikipedia row says secondary", () => {
+    for (const file of Object.values(REFS)) {
+      for (const r of referenceRows(read(file)).filter((x) => /Wikibooks|Wikipedia/.test(x[1]))) assert.match(r[2], /secondary/, `${file}: ${r[0]}`);
     }
   });
 });

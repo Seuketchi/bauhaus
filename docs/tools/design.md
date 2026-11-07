@@ -6,7 +6,7 @@
 
 The checker, `check.mjs`, is a dependency-free Node script with eight commands: `contrast` computes the WCAG 2.2 ratio of two colours; `design` checks a project's `DESIGN.md`; `tokens` checks a token file and its modes; `document-css` writes the six document properties from it; `trends` checks the dated trends file; `brief` checks the brief for a piece; `email` lints an HTML email; `tells` runs the 29 rows of `TELLS.md` on a piece.
 
-It also owns the rules for driving the three ArtCraft command-line apps (`ARTCRAFT.md`), the formats of `DESIGN.md`, the token file and the brief (`DESIGN-MD.md`), the tells (`TELLS.md`) and the trends (`TRENDS.md`).
+It also owns the rules for driving the command-line apps (`ARTCRAFT.md`), the formats of `DESIGN.md`, the token file and the brief (`DESIGN-MD.md`), the tells (`TELLS.md`) and the trends (`TRENDS.md`).
 
 ## When to reach for it
 

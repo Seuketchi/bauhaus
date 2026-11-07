@@ -25,9 +25,9 @@ A separate plugin, `bauhaus`, in its own repo beside suits. It holds one method,
 - **The jobs:** `brand` (identity: colour, type, mark, writes `DESIGN.md`), `email` (HTML email with client limits), `screens` (app and web screens), `critique` (the craft pass on a finished piece).
 - **The characters:** three ordinary skills that call the jobs by name. **Walter Gropius** is the lead: he frames the brief, hands work to the others, and runs the craft pass on pieces he did not make. **Herbert Bayer** is the graphic designer (brand, logos, email, critique). **Marcel Breuer** is the UI/UX designer (screens, critique); whether it is Breuer or Josef Albers is open question 19. The colour science (contrast, how a colour reads beside another) is part of the method and is credited to **Josef Albers** in the README cast table and the ADR only, unless he takes UI/UX.
 
-The owner talks to a character, the character reads `DESIGN.md` and the project's own rules, drives the three installed ArtCraft command-line apps by file path, and hands back files. Suits is unchanged. Donna keeps the words and the PDF build, the designer owns layout and look, and louis reviews against the rules and the numbers.
+The owner talks to a character, the character reads `DESIGN.md` and the project's own rules, drives the installed command-line apps by file path, and hands back files. Suits is unchanged. Donna keeps the words and the PDF build, the designer owns layout and look, and louis reviews against the rules and the numbers.
 
-Later, each after a one-day source check: the architect (**Ludwig Mies van der Rohe**, held; a structure lens for grids and hierarchy) and the director (**László Moholy-Nagy**, held). Until FilmCraft is installed and shown to have a command-line, the director makes shot lists and storyboards, not video. Both are named here as later work and are not specified.
+The architect is specified in section 3 (MIE, MAS and PLN): **Ludwig Mies van der Rohe** is the space designer, with two jobs, `massing` in SolidCraft (3D) and `plans` in CADCraft (2D). Later, after a one-day source check: the director (**László Moholy-Nagy**, held). Until FilmCraft is installed and shown to have a command-line, the director makes shot lists and storyboards, not video. The director is named here as later work and is not specified.
 
 ## User Stories
 
@@ -62,7 +62,7 @@ Later, each after a one-day source check: the architect (**Ludwig Mies van der R
 29. As a maintainer, I want one command that checks every skill is listed, documented and calls only what exists, so that the package cannot rot quietly.
 30. As a maintainer, I want the ArtCraft rules in one place (never start the GUI, never call the launcher, pass the roots), so that no session blocks the machine or updates an app.
 31. As a maintainer, I want the headless fixture test to skip cleanly where ArtCraft is not installed, so that CI is green on a plain runner and the local gate still proves the hand-off.
-32. As the owner, I want the architect and the director named as later work with a source pass first, so that no skill text is written from titles I could not open.
+32. As the owner, I want the architect built from the source passes already done, and the director named as later work with a source pass first, so that no skill text is written from titles I could not open.
 
 ## Implementation Decisions
 
@@ -170,6 +170,39 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - BRE3 [T] States that the project's rules and its design gate come first, and that it writes no app code.
 - CAST1 [T] The scan over all character files and docs pages: none contains a cast name followed by a speech verb ("said", "wrote", "believed", "argued", "taught that"); none quotes a sentence; none contains any of the avoided topics (section 4, voice rule).
 
+**`mies` (character). The space designer: form, plans and structure.**
+
+- MIE1 [T] Same section, register and attribution tests as GRO1, and the CAST1 scan.
+- MIE2 [T] Calls only `/bauhaus:design`, `/bauhaus:massing`, `/bauhaus:plans`, `/bauhaus:critique`. Triggers, each a fact about the task: `design` when no brief file exists for the piece; `massing` when the task is the form or volume of a building or space; `plans` when the task is a floor plan, a section or a sheet; `critique` when a finished piece exists that this session did not make.
+- MIE3 [T] States that the job is space, not page layout: page grids, type and screens stay with `design`, `brand` and `screens`, so there is no second owner of a grid. A structural grid on a plan is a layout of columns and spans and is not the `grid` group of a token file.
+- MIE4 [T] The hand-over of every piece carries the line: "This is a design study, not an engineered design. It has no structural calculation and no code check." The test fails a hand-over without it, and fails any sentence that says a piece is engineered, load-bearing, proven or code-compliant without denying it.
+- MIE5 [T] Routing: `gropius` hands space work to `mies`.
+- Sample line: "The study has a 12 by 8 metre plan and three closed bodies. It is a design study, not an engineered design, and no code is checked."
+
+**`massing` (tool, SolidCraft). Form and volume in 3D.** Produces `massing.json` (the script, the source of truth), `massing.sc`, `massing.step`, `massing-iso.png`, `massing.measure.json`, `massing.sh` and, when a plan is wanted, `massing-plan.dxf`.
+
+- MAS1 [R] `solidcraft-cli run massing.json --out massing.step --save massing.sc` exits 0 under `timeout 20`, and the STEP file starts `ISO-10303-21;`.
+- MAS2 [R][T] `eval` reports every body `closed: true`; a body that is not closed is a failure, not a note. The hand-over's footprint, height and volume equal `eval`'s, and the volume is labelled as the sum of the bodies, so overlaps count twice.
+- MAS3 [R] Running `massing.json` again into a fresh directory gives the same `total.volume_mm3`. The script, not the model file, is what is saved and handed on.
+- MAS4 [T] Every `solid.*` step names its body with `body_name`, not `name`. A body named `Body1` fails.
+- MAS5 [R] `snapshot --view iso` writes a PNG at the stated size, and the file is read as an image before the hand-over claims it shows the study.
+- MAS6 [R] The plan DXF is written only with a parallel camera (`"pitch":1.5707963`, `"fov":0`), and `cadcraft-cli info` opens it. A parallel top view shows the roof outline, so a plan comes from `plans`, not from this DXF.
+- MAS7 [T] Confinement: every `--out`, `--save`, `--json-out` and every `path` in the script is absolute and under the output directory; no `--allow-any-path`, no `mcp`.
+- MAS8 [J] Craft rules, each citing an opened row of `REFERENCES.md`: proportions stated as ratios of the plan, and a body named for what it is with the material not disguised. A rule that rests on no opened row is not written.
+- MAS9 [T] The hand-over has the MIE4 line and the unit (millimetres), and says what the study does not have: no floors, stairs, openings or structure unless the script made them.
+
+**`plans` (tool, CADCraft). Plans, sections and sheets in 2D.** Produces `plan.dxf`, `plan.pdf`, `plan.svg`, `plan.png`, `plan.sh` and `structure.md`.
+
+- PLN1 [R] `cadcraft-cli run --metric … --save plan.dxf --export plan.pdf` exits 0 under `timeout 20`; `convert` makes the SVG and the PNG; there is exactly one `--export` per run.
+- PLN2 [R][T] `cadcraft-cli info plan.dxf` lists layers for walls, dimensions and notes, and the hand-over names them.
+- PLN3 [R][T] The drawing declares metric units and the hand-over states the unit. A drawing with no unit fails.
+- PLN4 [R][J] Every overall dimension is present, a `dimstyle` that sets the text height is in the saved command, and the dimension text is legible on the PNG at the sheet size. Legibility is judged by reading the render.
+- PLN5 [R] `pdfcraft-cli check plan.pdf` prints `checked 1 files: {"ok": 1}`.
+- PLN6 [J] The structure note names a grid or module, the spans, a load path and the material, each citing an opened row, and states that the load path is an analogy for the layout, the skill's own design and not a source claim.
+- PLN7 [T] The MIE4 line is in the hand-over and on the sheet as a `text` entity in the title block.
+- PLN8 [T] Confinement as MAS7, plus `CADCRAFT_CONFIG_DIR` set under the output directory.
+- PLN9 [T] `critique` takes the PNG or the PDF; the SVG and the DXF it does not (C1). The hand-over says so, and `critique` is not widened.
+
 ### 4. Characters (theme: Bauhaus)
 
 **From `notes/design-package/theme-options.md` (rachel, 2026-11-07).** The owner chose the theme and approved the cast. The package and repo are `bauhaus`, at `/home/tan/projects/bauhaus`. The cast are real historical people who are dead; their names are used as names only (section 1). Facts below are rachel's, from English Wikipedia pages, which she calls a lead and not a primary source: tag **found (secondary)**, and I did not re-read the pages. Whether any estate or foundation restricts the use of a name was not checked.
@@ -181,7 +214,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 | Marcel Breuer, 1902 to 1981 | UI/UX: app and web screens | Headed the carpentry shop; tubular-steel furniture; later large buildings | An analogy only: objects built for the body. "Design for use" is not on the page, so the fit is inferred |
 | Josef Albers, 1888 to 1976 | The colour science inside `design`; or UI/UX (open question 19) | Taught the preliminary course; wrote *Interaction of Color* (1963), colour studied by experiment | Strong for colour. As UI/UX, inferred |
 | László Moholy-Nagy, 1895 to 1946 | Director, later | Photograms; light-based work; films including a silent black-and-white short of about 5 to 6.5 minutes | Strong on light, weaker on "director": few, short films |
-| Ludwig Mies van der Rohe, 1886 to 1969 | Architect, later | Last director of the school; the Barcelona Pavilion; the phrase "less is more" is the one public phrase rachel found safe | Strong |
+| Ludwig Mies van der Rohe, 1886 to 1969 | Space designer: form, plans and structure | Architect: space, form and structure | Strong |
 
 - **Paraphrase, never quote.** Gropius gave a lecture at the 1923 Weimar exhibition on art and technology as a new unity (secondary: seen in search results, English wording varies, full text not opened). No file in the package quotes it or puts words in his mouth; where it is mentioned, it is mentioned as a paraphrase only. The same holds for every cast member.
 - **Skills are described by craft** (grid, light, colour, structure, the brief, the screen), not by biography. No skill text, docs page or test asserts a biographical fact; this table is the rationale for the casting, and sits only in this spec and the ADR.
@@ -190,7 +223,9 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
   - Gropius: "The brief file is missing. Write it first: audience, job, tone, and what this piece must not look like."
   - Bayer: "The email has live text and a real button, and every pair passes 4.5:1. One tell remains: a tracked-caps label above the headline."
   - Breuer: "The screen has four states with one reserved height. Rules applied: three, listed by file and heading."
-- **Moholy-Nagy and Mies** stay later work for two stated reasons: each needs a source pass first, and the architecture and film canon is lending-only apart from Vitruvius (section 10). They are named here and not specified. The owner may need to supply those books (open question 15).
+  - Mies: "The study has a 12 by 8 metre plan and three closed bodies. It is a design study, not an engineered design, and no code is checked."
+- **Moholy-Nagy** stays later work for two stated reasons: it needs a source pass first, and the film canon is lending-only (section 10). It is named here and not specified. The owner may need to supply those books (open question 15). **Mies** is specified in section 3, on Vitruvius and Ruskin, which are free and were opened; Ching and Alexander stay pointers.
+
 - **Name.** `bauhaus` has no exact plugin clash in the local catalogues or one web search (rachel; one search is not exhaustive). Two near-name plugins exist (`bauhaus-digital`, which designs interfaces and slides with a Bauhaus basic course, and `bauhaus-code`), an unrelated npm package named `bauhaus`, and a German hardware retailer holds the trademark (weakly sourced; the registers were not searched). Goods differ and the plugin is private with no releases, which lowers the risk. Open question 20.
 
 ### 5. The `DESIGN.md` format
@@ -277,6 +312,10 @@ Rules, in `design/ARTCRAFT.md`:
 - Wrap every call in `timeout 20` for checks and a longer bound for a real build.
 - Write only to the project's output directory, `/tmp`, or the scratch directory.
 - Use `--no-system-fonts` on every `figcraft-cli` call that renders, so a render matches on every machine.
+- Run only the `-cli` of each app, and add `solidcraft-cli` and `cadcraft-cli`. The names without `-cli` (`solidcraft`, `cadcraft`, `filmcraft`, `effectcraft`, `lightcraft`) are never started, beside the three above and `artcraft-launcher`.
+- SolidCraft is an independent app (its package says so) that the owner uses alongside the ArtCraft suite; it is not made by ArtCraft.
+- `solidcraft-cli` and `cadcraft-cli` have no root flag outside `mcp`. Confinement is by absolute output paths under the output directory, settings and data directories set inside it (`CADCRAFT_CONFIG_DIR` and the `XDG_*` variables), the saved command beside each artifact, and a scan test of the saved command and of every `path` inside the script's JSON. One `cadcraft-cli run` writes one `--export`; more formats come from `convert`.
+- Each row of the commands table and each verified run carries an app version and the date.
 
 Commands each job uses, and the proof (all runs below were made today from the scratch directory under `timeout 20`; the GUI binaries were never started):
 
@@ -287,6 +326,8 @@ Commands each job uses, and the proof (all runs below were made today from the s
 | `screens` | `run` with `frame.create {preset}` (`frame.presets` lists them, not run), `render` | none | none | none |
 | `critique` | `render` | none | `info`, `render`, `check`, `audit` | headless Chrome for HTML |
 | `design` | none | none | none | `check.mjs` (Node) |
+| `massing` | none | none | none | `solidcraft-cli run massing.json --out x.step --save x.sc`, `eval x.sc --json-out m.json`, `snapshot x.sc --out x.png --view iso`, and the script step `file.export_view_dxf` with a parallel camera (solidcraft-cli 0.30.1, run 2026-11-07) |
+| `plans` | none | none | `check`, `info` on the PDF (pdfcraft-cli 0.11.0, run 2026-11-07) | `cadcraft-cli run --metric --cmd … --save x.dxf --export x.pdf`, `convert x.dxf x.svg`, `convert x.dxf x.png`, `info x.dxf` (cadcraft-cli 0.18.0, run 2026-11-07) |
 
 Verified runs (each wrote only under the scratch directory):
 
@@ -295,13 +336,15 @@ Verified runs (each wrote only under the scratch directory):
 3. `pdfcraft-cli` on the PDF from run 1: `info` printed the JSON summary (1 page, 600 by 300 pt, creator FigCraft, untagged, no PDF/A or PDF/UA); `check ... --json out.json` printed `checked 1 files: {"ok": 1}` (exit 0); `audit` printed `{"count":0,...,"findings":[]}` (exit 0); `render --page 1 --dpi 72` wrote a 600 by 300 PNG. None of these took a root flag. `pdfcraft-cli run` takes `--root` and its tool `doc_open` takes `path` (`file=` was refused), so a `run --script` must use the schemas from `pdfcraft-cli tools`.
 4. Headless Chrome on a one-table HTML fixture: `google-chrome --headless=new --no-sandbox --disable-gpu --user-data-dir=P --screenshot=t.png --window-size=640,200 file://...` wrote a 640 by 200 PNG under `timeout 20`.
 
-Not verified, and so not relied on: `figcraft-cli export` to PNG with `--scale`; the `frame.presets` names; whether FilmCraft, EffectCraft or DesignCraft have a `-cli` (not installed here; the owner installs through the launcher and runs `<app>-cli --help`); whether a GitHub runner can install the three `.deb` packages.
+Runs 6 to 14 are in `ARTCRAFT.md`: the SolidCraft model, `eval`, `snapshot` and the plan view (the DXF needs `"fov":0`, and any other camera is refused as invalid), and the CADCraft plan, its single `--export`, `convert`, the PDF check and the dimension text, which is not legible with the default dimension style at building scale.
+
+Not verified, and so not relied on: `figcraft-cli export` to PNG with `--scale`; the `frame.presets` names; `solidcraft-cli render`, `fuzz` and `bench-*`; any `mcp`; CADCraft `hatch`, layouts and `mview`; whether a GitHub runner can install any of these apps. FilmCraft and EffectCraft are installed here (0.18.0 and 0.22.0) and are not used by a job yet.
 
 ### 8. The file tree and the file budget
 
 **Harvey's budget of at most 14 files does not hold, and it did not hold before UI/UX.** His tally (manifests 2, README and CLAUDE.md 2, check script and test 2, method 1, character 1, commands 3, template 1, spare 2) leaves out what the suits layout requires of every skill: a docs page with four sections, and the bucket READMEs that list each skill. Counting those, the first release without UI/UX is already about 31 files, and with UI/UX, its character, the references and tells files and the trends file the owner has since asked for, 41. Recommendation: keep the cap at 14 per pull request and split the release into four pull requests, one ticket each. If the owner prefers harvey's original shape, the alternative is to cut the suits conventions (one `docs/skills.md` for all pages, one skills list in the README), which makes the package unlike suits; I do not recommend it. Open question 1.
 
-The full tree (41 files):
+The full tree (49 files, with the space designer):
 
 ```
 bauhaus/
@@ -319,6 +362,7 @@ bauhaus/
   skills/characters/gropius/SKILL.md
   skills/characters/bayer/SKILL.md
   skills/characters/breuer/SKILL.md
+  skills/characters/mies/SKILL.md
   skills/tools/README.md
   skills/tools/design/SKILL.md
   skills/tools/design/ARTCRAFT.md
@@ -333,6 +377,10 @@ bauhaus/
   skills/tools/email/REFERENCES.md
   skills/tools/screens/SKILL.md
   skills/tools/screens/REFERENCES.md
+  skills/tools/massing/SKILL.md
+  skills/tools/massing/REFERENCES.md
+  skills/tools/plans/SKILL.md
+  skills/tools/plans/REFERENCES.md
   skills/tools/critique/SKILL.md
   docs/characters/gropius.md
   docs/characters/bayer.md
@@ -341,6 +389,9 @@ bauhaus/
   docs/tools/brand.md
   docs/tools/email.md
   docs/tools/screens.md
+  docs/characters/mies.md
+  docs/tools/massing.md
+  docs/tools/plans.md
   docs/tools/critique.md
   test/check-skills.test.mjs
   test/characters.test.mjs
@@ -356,6 +407,7 @@ Split (each at most 14 files; a later PR also edits files from an earlier one, w
 | 2. The method | `design/` (SKILL, ARTCRAFT, DESIGN-MD, TELLS, TRENDS, check.mjs), `docs/tools/design.md`, `test/design.test.mjs`, `test/artcraft.test.mjs` | 9 |
 | 3. The graphic designer and the lead | `brand` and its REFERENCES, `email` with LIMITS and REFERENCES, `critique`, `bayer`, `gropius`, the docs pages of `brand`, `email`, `critique`, `bayer` and `gropius`, `test/characters.test.mjs` | 14 |
 | 4. UI/UX | `screens` and its REFERENCES, `breuer`, their two docs pages | 5 |
+| 5. The space designer | `mies`, `massing` and `plans` with their REFERENCES, and their three docs pages | 8 |
 
 PR 1 has no skill. Whether `claude plugin validate` accepts `"skills": []` is UNVERIFIED (the check runs it). If it refuses, `design/SKILL.md` and its docs page move into PR 1, which makes 15 and trips the cap, so the fallback is to ship PR 1 with `design` and drop the ADR to PR 2.
 
@@ -364,7 +416,7 @@ PR 1 has no skill. Whether `claude plugin validate` accepts `"skills": []` is UN
 Given one real small brief from one of the owner's projects (the asenso app has rules to test against; its files are read, never edited):
 
 1. `npm run check-skills` and `npm test` pass in CI; `claude plugin validate` passes.
-2. `npm run test:artcraft` passes locally with the three CLIs installed (the fixture run asserts a PNG, an SVG and a PDF come out).
+2. `npm run test:artcraft` passes locally with the command-line apps installed that its tests call (the fixture run asserts a PNG, an SVG and a PDF come out, a STEP file and its closed bodies, a plan DXF and a plan PDF that `pdfcraft-cli check` reads as ok).
 3. `bayer` produces, with the roots set and no hand-written asset: a `DESIGN.md` that passes D7 with its token file passing D10, one HTML email with its image assets and both renders, and one logo SVG whose saved command regenerates it.
 4. The email passes `check.mjs email`, contrast at 4.5:1 for text and 3:1 for UI parts, live text for the message and the call to action, alt text on every image.
 5. `breuer` produces a screen spec and one PNG per state for one asenso screen, starting with `Rules applied:` listing `file:heading` entries that exist, and honouring the async-state sizing idiom (S5).
@@ -373,6 +425,7 @@ Given one real small brief from one of the owner's projects (the asenso app has 
 8. Each piece in steps 3 and 5 started from a brief file that passes D13 and cites at least three reference rows. `critique` exits 0 and reports `PASS: no tells` on each, exits 1 on a seeded piece that carries one tell of each kind the checklist lists, and exits 2 on a seeded piece that cites no reference.
 9. The 29 checks of `TELLS.md` have been run on three real ArtCraft-built files, and every false positive is either fixed or listed in the file (the research proposed the checks and did not run them).
 10. `design/TRENDS.md` holds the 9 seed entries of section 11 and `check.mjs trends` passes on it. A tenth, "Email shaped for automated inbox summaries", was dropped because it had no opened source.
+11. `mies` produces, with no hand-written asset: for one real small brief, a `massing.json` run into a STEP file whose bodies are all closed with the volume stated as the sum of the bodies, and a plan whose PDF passes `pdfcraft-cli check`, whose dimension text is legible on the PNG and whose hand-over carries the design-study line. Each is run by a session that did not build it.
 
 ### 10. References and the machine-made look
 
@@ -423,7 +476,7 @@ Two cautions from the sources, both kept: a tell is a default, not a crime, and 
 
 **How studios avoid the look, as the research found it.** The documented process is in two skills: frontend-design (write a token plan, review it against the brief, change anything that is a default, build, critique) and canvas-design (name a visual philosophy before drawing); Impeccable keeps `PRODUCT.md` and `DESIGN.md` that every command reads first. No primary account of a studio's own practice (moodboard, side-by-side) was found; the Vignelli Canon's headings on discipline and appropriateness are the nearest primary text. So the plan-then-critique pass (D2) and the side-by-side (C8) are documented in skills, and the claim about studios stays inferred.
 
-**What the canon means for scope.** Only Vitruvius is openable for architecture and film; Ching, Alexander, Mascelli and Katz are lending-only, and so is Müller-Brockmann for grids. That confirms the architect and the director stay later work, and that the owner may need to supply those books or a library account (open question 15). `brand`'s grid rules rest on opened rows only until a book is opened.
+**What the canon means for scope.** Only Vitruvius is openable for architecture and film; Ching, Alexander, Mascelli and Katz are lending-only, and so is Müller-Brockmann for grids. The architect ships on Vitruvius and Ruskin, which are free and were opened; Ching and Alexander stay pointers. The director stays later work, and the owner may need to supply the film books or a library account (open question 15). `brand`'s grid rules rest on opened rows only until a book is opened.
 
 ### 11. Trends
 
@@ -471,15 +524,15 @@ The file count rises by one (`design/TRENDS.md`), which moves PR 2 to 9 files. T
 - **Seam 1 (highest): `npm run check-skills`.** The same shape as suits's script: every skill has a `SKILL.md` whose name is its folder, a description, an entry in `plugin.json`, a line in its bucket README, a docs page with the four sections (What it does, When to reach for it, Common questions, It's working if), characters have Voice and When to call, relative links resolve, and `claude plugin validate` passes. bauhaus adds: every `/pkg:skill` call is `/bauhaus:` except the one S6 allows; no `/suits:` call; no ui-ux-pro-max data. `test/check-skills.test.mjs` builds good and bad skill trees in a temporary directory and asserts the script names each problem, so there are no fixture files in the repo.
 - **Seam 2: `check.mjs`.** `test/design.test.mjs` runs it on known inputs: the contrast pairs of D6, valid and invalid `DESIGN.md`, token-file, trends and `document-css` cases of D7, D10, D11 and D12, good and bad email fragments of E2, a `LIMITS.md` row with no date or URL, valid and invalid briefs (D13), the 29 tell fixtures and the exit codes 0 to 3 of `check.mjs tells` (C7).
 - **Seam 3: the headless ArtCraft run.** `test/artcraft.test.mjs` runs the verified commands of section 7 against a temporary directory and asserts a PNG (dimensions), an SVG (`viewBox`) and a PDF (`pdfcraft-cli check` status `ok`). It skips with a printed reason when a CLI is not on `PATH`, because a plain CI runner does not have ArtCraft (whether it can is UNVERIFIED). `npm run test:artcraft` fails instead of skipping, and is the local gate before a PR is marked ready. Every call is under `timeout 20`. A test never starts a GUI binary or the launcher.
-- **Seam 4: character contracts.** `test/characters.test.mjs` ports the suits character tests (sections present, "default is not to call", calls resolve and are in `plugin.json`, no build-process words, a sample line of 30 words or fewer, a plain register for anything written for others), and adds the GRO, BAY, BRE and CAST1 criteria as phrase assertions, including the scan for a cast name followed by a speech verb and for the avoided topics of section 4.
+- **Seam 4: character contracts.** `test/characters.test.mjs` ports the suits character tests (sections present, "default is not to call", calls resolve and are in `plugin.json`, no build-process words, a sample line of 30 words or fewer, a plain register for anything written for others), and adds the GRO, BAY, BRE, MIE and CAST1 criteria as phrase assertions, including the scan for a cast name followed by a speech verb and for the avoided topics of section 4.
 - **What the tests do not prove:** that the generating tool obeys a written rule. Phrase tests prove the rule is written. Behaviour is shown by the acceptance run (section 9), the critique pass and the louis review.
 - Prior art: suits's `scripts/check-skills.mjs`, `test/characters/characters.test.mjs`, and `test/donna/check.test.mjs` (a script tested on temporary input); `node --test` with no dependencies.
 - Order: test first. Each PR's tests are written before its files and fail for the right reason first.
 
 ## Out of Scope
 
-- The architect (Mies van der Rohe) and the director (Moholy-Nagy). Each needs a one-day source pass first (primary text opened and quoted). No skill text is written for them before that. The research found only Vitruvius openable; Ching and Alexander (architecture) and Mascelli and Katz (film) are lending-only. If a book cannot be opened, that craft does not ship, and the owner is asked for the book or a library account.
-- Video, 3D and any ArtCraft app beyond FigCraft, VectorCraft and PdfCraft. FilmCraft, EffectCraft, DesignCraft: not installed; whether they have a command-line, and whether they cost money, is UNVERIFIED.
+- The director (Moholy-Nagy). It needs a one-day source pass first (primary text opened and quoted). No skill text is written for it before that. Mascelli and Katz (film) are lending-only. If a book cannot be opened, that craft does not ship, and the owner is asked for the book or a library account.
+- Video, and any command-line app beyond FigCraft, VectorCraft, PdfCraft, SolidCraft and CADCraft. FilmCraft and EffectCraft are installed (0.18.0 and 0.22.0) and wait for the director's pull request; whether DesignCraft has a command-line is UNVERIFIED.
 - A `print` command. Donna's PDF build stays hers; the lead designer's output reaches it through the token file's `document` group.
 - The DTCG Resolver module, any token build tool (Style Dictionary, Terrazzo), a Figma token export, and any claim of interchange with another tool.
 - Any change to suits, to donna's files, or to the asenso app. No file moves between repos.
@@ -494,7 +547,7 @@ The file count rises by one (`design/TRENDS.md`), which moves PR 2 to 9 files. T
 Each carries my recommendation.
 
 1. **harvey.** The 14-file budget cannot hold (section 8). Recommend: 14 files per pull request, four pull requests, four tickets, each built test-first, the spec confirmed first. The alternative is to drop suits's docs-page and bucket-README rules for bauhaus.
-2. **owner.** Done: the theme and the cast are chosen (Bauhaus; Gropius, Bayer, Breuer, with Albers inside the method and Moholy-Nagy and Mies later). Nothing is asked here; see questions 19 and 20 for the two choices left.
+2. **owner.** Done: the theme and the cast are chosen (Bauhaus; Gropius, Bayer, Breuer, with Albers inside the method, Mies van der Rohe as the space designer and Moholy-Nagy later). Nothing is asked here; see questions 19 and 20 for the two choices left.
 3. **harvey.** `vectorcraft-cli run` accepts no root flags, so the confinement harvey asked for holds only for `figcraft-cli`. Recommend: accept it, give every vectorcraft step an absolute output path under the output directory, and add a test that scans the saved command for any other path. The alternative is `vectorcraft-cli mcp --headless` with roots, which brings MCP into scope.
 4. **harvey.** The headless fixture cannot run in CI unless a GitHub runner can install the three ArtCraft packages (UNVERIFIED). Recommend: skip cleanly in CI, fail locally through `npm run test:artcraft`, and make that command a condition for marking a PR ready.
 5. **harvey.** Who owns the strings on an app screen. Recommend: the UI/UX designer specifies them in the project's l10n shape, because a screen cannot be judged without them and the project's l10n rules win; donna keeps document text and email copy. Harvey's split said "donna keeps the words", written for documents.
@@ -508,7 +561,7 @@ Each carries my recommendation.
 12. **harvey.** `check.mjs document-css` (D11) is new work the research did not ask for: it is how a token file reaches donna's six CSS properties without a build tool or a file moving. Recommend: build it (about one function), since otherwise the brand-to-PDF link is by hand. Alternative: leave the six properties as a table in `DESIGN.md` for donna to copy, which breaks the "no hand-written asset" bar.
 13. **harvey.** The DTCG format is a Community Group Report, not a W3C Standard, and its status text contradicts itself. Recommend: adopt 2025.10 pinned in the front matter, and treat a version change as a decision. Alternative: a simpler own JSON shape, which gives up the format Carbon has moved to (release v11.119.0, 2026-10-21, per the researcher).
 14. **owner.** Whether a trend is ever applied without the brief asking. Recommend: never; `Trial` status plus a brief line is the only way in. Alternative: allow a project to list a standing trend in `DESIGN.md`, which this spec treats as following a trend by default.
-15. **owner.** The architecture and film canon is lending-only apart from Vitruvius. Recommend: the owner supplies the books or a library account (Ching, Alexander, Mascelli, Katz, and Müller-Brockmann for grids) when the later crafts are wanted; until then the architect and the director stay unspecified.
+15. **owner.** The architecture and film canon is lending-only apart from Vitruvius. Recommend: the owner supplies the books or a library account (Ching, Alexander, Mascelli, Katz, and Müller-Brockmann for grids) when the later crafts are wanted; the architect no longer waits for them, and the director stays unspecified until then.
 16. **harvey.** Own the 29 checks, or reuse Impeccable's detector (62 rules, Apache-2.0). Recommend: own, reading its rule list for ideas only, since the detector and our files are unread against each other. Also run the 29 checks on three real files before PR 3 is marked ready, since none has been run (acceptance step 9).
 17. **harvey.** A piece that cites fewer than three reference rows fails (exit 2). Recommend: keep, because bans alone move the look; allow a brief to name a smaller number with a reason (a logo mark needs fewer rows than a brand).
 18. **harvey.** Copy tells (T25 to T27) concern donna's words but fail a designer's piece. Recommend: critique reports them as donna's to fix and still counts T25 and T26 in the exit code; T27 stays a warning.
@@ -526,7 +579,7 @@ Each carries my recommendation.
 
 ### Cost
 
-Effort is one builder's work per pull request, plus one source pass each later for the architect and director. No money is spent, and nothing leaves the machine until the owner publishes.
+Effort is one builder's work per pull request, plus one source pass later for the director. No money is spent, and nothing leaves the machine until the owner publishes.
 
 ### Requirement sources
 
