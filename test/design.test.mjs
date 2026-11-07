@@ -1160,7 +1160,75 @@ test("ARTCRAFT.md carries the rules of the hand-off", () => {
     "--automation-read-root", "--automation-write-root", "timeout 20", "--no-system-fonts",
     "`vectorcraft-cli run` takes no root flags", "absolute output path", "`pdfcraft-cli`", "not run",
   ]) assert.ok(text.includes(phrase), `ARTCRAFT.md lacks ${phrase}`);
-  for (const job of ["`brand`", "`email`", "`screens`", "`critique`", "`design`"]) assert.ok(text.includes(job), `ARTCRAFT.md table lacks ${job}`);
+  for (const job of ["`brand`", "`email`", "`screens`", "`critique`", "`design`", "`massing`", "`plans`"]) assert.ok(text.includes(job), `ARTCRAFT.md table lacks ${job}`);
+});
+
+test("ARTCRAFT.md lists every app's window name as never started, and keeps the -cli rule", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  const rules = text.split(/^## Commands each job uses/m)[0];
+  for (const app of ["figcraft", "vectorcraft", "pdfcraft", "solidcraft", "cadcraft", "filmcraft", "effectcraft", "lightcraft"]) {
+    assert.ok(rules.includes(`\`${app}\``), `the rules lack \`${app}\``);
+  }
+  assert.match(rules, /Run only the `-cli` binaries/);
+});
+
+test("ARTCRAFT.md carries the confinement and side-file rules for the new apps", () => {
+  const rules = shipped("skills", "tools", "design", "ARTCRAFT.md").split(/^## Commands each job uses/m)[0];
+  for (const phrase of [
+    "no root flag", "`mcp`", "CADCRAFT_CONFIG_DIR", "`XDG_DATA_HOME`", "absolute", "saved command",
+    "`effectcraft-cli script`", "`--eval`", "`--connect`", "`--bridge`", "`solidcraft-cli fuzz`", "`lightcraft-cli denoise-serve`", "`merge`",
+    "Side files", "one `--export`", "`convert`", "an app version and the date",
+  ]) assert.ok(rules.includes(phrase), `the rules lack ${phrase}`);
+  assert.match(rules, /scan[^.\n]*(?:script|`path`)/i, "the scan covers the script's own path values");
+  assert.doesNotMatch(rules, /documented, not run/i, "no third status");
+});
+
+test("ARTCRAFT.md rows for massing and plans, with runs 6 to 14 stamped with the app version and the date", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  const rows = (job) => text.split("\n").find((l) => l.startsWith(`| \`${job}\` |`));
+  assert.match(rows("massing"), /solidcraft-cli run/);
+  assert.match(rows("massing"), /eval/);
+  assert.match(rows("massing"), /snapshot/);
+  assert.match(rows("massing"), /file\.export_view_dxf/);
+  assert.match(rows("plans"), /cadcraft-cli run/);
+  assert.match(rows("plans"), /convert/);
+  assert.match(rows("plans"), /pdfcraft-cli check/);
+  const runs = text.split(/^## Verified runs/m)[1].split(/^## Not run/m)[0];
+  const items = runs.split("\n").filter((l) => /^\d+\. /.test(l));
+  assert.equal(items.length, 5 + 9, "runs 1 to 5 stay, and nine new runs are added");
+  const added = items.slice(5).join("\n");
+  assert.match(added, /solidcraft-cli 0\.30\.1/);
+  assert.match(added, /cadcraft-cli 0\.18\.0/);
+  for (const item of items.slice(5)) assert.match(item, /2026-11-07/, item.slice(0, 40));
+  assert.match(added, /"fov": ?0/);
+  assert.match(added, /invalid camera/);
+  assert.match(added, /cannot be used multiple times/);
+  assert.match(added, /ISO-10303-21;/);
+  assert.doesNotMatch(text, /filmcraft-cli run|effectcraft-cli --empty|lightcraft-cli render|\| `(?:shots|storyboard|motion|develop)` \|/, "the rows of the next two pull requests are not here");
+});
+
+test("the not-run list gains the unrun SolidCraft and CADCraft commands, and no longer says FilmCraft and EffectCraft are not installed", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  const notRun = text.split(/^## Not run, so not relied on/m)[1];
+  for (const phrase of ["`solidcraft-cli render`", "`fuzz`", "`bench-*`", "`mcp`", "`hatch`", "layouts", "`mview`", "hosted runner"]) assert.ok(notRun.includes(phrase), `not-run list lacks ${phrase}`);
+  assert.doesNotMatch(text, /not installed/i, "every app named here is installed");
+  assert.match(notRun, /FilmCraft 0\.18\.0 and EffectCraft 0\.22\.0 are installed/);
+});
+
+test("ARTCRAFT.md says once that SolidCraft is independent, and no title or line calls it an ArtCraft app", () => {
+  const text = shipped("skills", "tools", "design", "ARTCRAFT.md");
+  assert.match(text, /SolidCraft is an independent app \(its package says so\) that the owner uses alongside the ArtCraft suite; it is not made by ArtCraft\./);
+  assert.equal(text.split("\n").filter((l) => /SolidCraft is an independent app/.test(l)).length, 1);
+  assert.doesNotMatch(text, /ArtCraft apps?[^.\n]{0,40}SolidCraft|SolidCraft[^.\n]{0,40}ArtCraft app/);
+});
+
+test("the design tool and its page say the command-line apps, with no ArtCraft claim and no count", () => {
+  const skill = shipped("skills", "tools", "design", "SKILL.md");
+  const page = shipped("docs", "tools", "design.md");
+  assert.match(skill, /driving the command-line apps/);
+  assert.doesNotMatch(skill, /three command-line apps/);
+  assert.match(page, /driving the command-line apps/);
+  assert.doesNotMatch(page, /three ArtCraft command-line apps|ArtCraft command-line apps/);
 });
 
 test("the screens row of ARTCRAFT.md records that frame.presets was run, with the date, and still lists the PNG export", () => {

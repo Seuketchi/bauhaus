@@ -2,7 +2,7 @@
 
 ## What it does
 
-`gropius` leads the design work. It makes sure a piece starts from a brief file, hands the piece to `bayer` (brand, logos, email) or `breuer` (app and web screens) with the brief and the project's `DESIGN.md`, and runs the craft pass on pieces that another session made. It makes no piece itself.
+`gropius` leads the design work. It makes sure a piece starts from a brief file, hands the piece to `bayer` (brand, logos, email), `breuer` (app and web screens) or `mies` (space work: form, plans, structure) with the brief and the project's `DESIGN.md`, and runs the craft pass on pieces that another session made. It makes no piece itself.
 
 It follows the precedence list kept in `design`: the project's own rules first, then the brief. When a brief contradicts a project rule, it stops, names the rule by file and heading and the brief line, and asks the owner which one yields.
 

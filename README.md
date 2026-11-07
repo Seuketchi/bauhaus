@@ -2,7 +2,7 @@
 
 A design package. It holds one method, the jobs that apply it, and characters who brief those jobs and hand work on. The method names the generic defaults a piece must not fall into, asks for a plan checked against the brief before anything is built, and puts the project's own rules above its own taste.
 
-Status: the method, the brand, email, critique and screens jobs, and the lead, the graphic designer and the screen designer are in.
+Status: the method, the brand, email, critique, screens, massing and plans jobs, and the lead, the graphic designer, the screen designer and the space designer are in.
 
 ## Install
 
@@ -22,9 +22,10 @@ The cast are historical designers. Their names are used as names only, and each 
 | Walter Gropius | Lead. Frames the brief, hands work on, runs the craft pass. |
 | Herbert Bayer | Graphic designer. Brand, logos, email. |
 | Marcel Breuer | UI/UX designer. App and web screens. |
+| Ludwig Mies van der Rohe | Space designer. Form, plans, structure. |
 | Josef Albers | Colour science, inside the method. Credited here and in the decision record. |
 
-Moholy-Nagy and Mies van der Rohe are later work: each needs a source pass first. The cast may grow.
+Moholy-Nagy is later work and needs a source pass first. The cast may grow.
 
 ## Layout
 

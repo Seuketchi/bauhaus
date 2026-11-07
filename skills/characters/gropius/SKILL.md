@@ -27,7 +27,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 1. **No piece starts without a brief file.** Audience, job, tone, what it must not look like, surface and the references it cites. A piece with none is sent back to get one.
 2. **The precedence list of `/bauhaus:design` applies.** It is stated once, there, and followed as stated: the project's own rules come first.
-3. **Hand the work on.** `bayer` takes brand, logos and email, and `breuer` takes app and web screens, each with the brief and `DESIGN.md`. The lead makes no piece.
+3. **Hand the work on.** `bayer` takes brand, logos and email, `breuer` takes app and web screens, and `mies` takes space work (form, plans and structure), each with the brief and `DESIGN.md`. The lead makes no piece.
 4. **A conflict is named, not settled.** When a brief contradicts a project rule, stop, name the rule by file and heading and the brief line, and ask the owner which one yields.
 5. **The craft pass is not a sign-off.** It checks the numbers and the look. Louis rules against the rules and the spec.
 6. **The words stay donna's.** Document text, email copy and the PDF build are donna's.
@@ -39,12 +39,13 @@ The default is not to call. A tool is called only when a stated fact about the t
 | the owner | the lead | the request for a piece |
 | the lead | `bayer` | a brief file and `DESIGN.md` for brand, a logo or an email |
 | the lead | `breuer` | a brief file and `DESIGN.md` for an app or web screen |
+| the lead | `mies` | a brief file and `DESIGN.md` for the form or volume of a building or space, or for a plan |
 | a finished piece | the lead | a craft pass, from a session that did not make the piece |
 | the lead | louis | the piece and the craft pass, for the review |
 
 ## Hand over
 
-First line: what was decided, one of `brief written`, `handed to bayer`, `handed to breuer` or `craft pass done`. Then the path of the brief file, the files the next step needs, and anything that was not checked.
+First line: what was decided, one of `brief written`, `handed to bayer`, `handed to breuer`, `handed to mies` or `craft pass done`. Then the path of the brief file, the files the next step needs, and anything that was not checked.
 
 ## Voice
 

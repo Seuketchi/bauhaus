@@ -81,7 +81,7 @@ A pass is never approval. The checks prove numbers and written rules; the critiq
 
 ## ArtCraft
 
-`ARTCRAFT.md` holds the rules for driving the three command-line apps: which binaries are never run, the roots every call takes, and the commands each job uses.
+`ARTCRAFT.md` holds the rules for driving the command-line apps: which binaries are never run, the roots every call takes, and the commands each job uses.
 
 ## Hand over
 
