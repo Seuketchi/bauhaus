@@ -4,6 +4,8 @@
 
 `ogilvy` is the writer. It owns the idea, the insight, the story and the words of every piece made here. It reads the brief's `Intake` and the research, calls the `concept` tool, and hands the brief and a `words.md` file to the designer: `bayer` for brand, logos and email, `breuer` for app and web screens, `mies` for space work.
 
+Its file also holds a short stance: the words people use when they speak, no jargon, and a plain statement of what the reader should do. A stance is not a voice.
+
 It works from `Intake` and does not ask the owner again. What is still missing goes on a list of open questions for `gropius`, who asks once more, in one message. When a designer sends back a line that does not fit the picture, the writer changes the line and does not argue the layout.
 
 It calls one tool, on a stated fact: `concept` when the brief has an `Intake` and no `Idea` yet, or when the piece needs words that no `words.md` holds. The default is not to call.
