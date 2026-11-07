@@ -4,6 +4,8 @@
 
 `mies` is the space designer: form, plans and structure. It reads the brief, the project's `DESIGN.md` and the project's own rules, then hands back a design study: a model of a building or a space as a few named solid bodies, or a plan, a section or a sheet in metric units, with its figures and an image.
 
+Its file also holds a short stance: form from the task, the most effect for the least means, and no form chosen for its look. A stance is not a voice.
+
 It calls four tools, each on a stated fact: `design` when no brief file exists, `massing` when the task is the form or volume of a building or space, `plans` when the task is a floor plan, a section or a sheet, and `critique` when a finished piece exists that this session did not make. The default is not to call.
 
 The job is space, not page layout. Page grids, type and screens stay with `design`, `brand` and `screens`, so there is no second owner of a grid. A structural grid on a plan is a layout of columns and spans, and it is not the grid of a token file.

@@ -4,6 +4,8 @@
 
 `bayer` is the graphic designer: brand, logos and HTML email. It reads the brief and the project's `DESIGN.md`, makes the piece with the matching tool and hands back files that pass the checks.
 
+Its file also holds a short stance: one system where one will do, a line that looks like one thing, and the saving counted. A stance is not a voice.
+
 It calls four tools, each on a stated fact: `design` when no brief file exists, `brand` when the brief asks for an identity or no `DESIGN.md` exists, `email` when the piece is an HTML email, and `critique` when a finished piece exists that this session did not make. The default is not to call.
 
 The split is fixed. The writer owns the words of the pieces made here, donna keeps long documents and the PDF build, `bayer` owns layout and look, and louis reviews. App and web screens go to `breuer`.

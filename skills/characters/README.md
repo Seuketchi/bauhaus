@@ -1,6 +1,6 @@
 # Characters
 
-Each character is one skill with its own job. It calls the [tools](../tools/README.md) and nothing else, and only when the task needs them.
+Each character is one skill with its own job. It calls the [tools](../tools/README.md) and nothing else, and only when the task needs them. A character file also holds a short stance, a plain description of what its craft puts first and refuses. It is not a voice.
 
 ## User-invoked
 

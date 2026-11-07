@@ -264,6 +264,14 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - PLN8 [T] Confinement as MAS7, plus `CADCRAFT_CONFIG_DIR` set under the output directory.
 - PLN9 [T] `critique` takes the PNG or the PDF; the SVG and the DXF it does not (C1). The hand-over says so, and `critique` is not widened.
 
+**The stance, in each character file** (amendment section 8; ADR 0003).
+
+- STN1 [T] Every character except one listed in `STANCE_LATER` has a `## Stance` section of 3 to 6 lines. `STANCE_LATER` holds `breuer` with the reason, and shrinks as stances are written. A character missing from the cast does not break the test.
+- STN2 [T] The `Stance` text passes the same scans as the rest of the file: a cast name beside a speech verb, a quoted sentence, an avoided topic, a persona, biography words, build words, a number of people, and also no first person, no attributing verb, no place and no year.
+- STN3 [T] The `Voice` section stays and still carries exactly one sample line of at most 30 words; the `Stance` carries none.
+- STN4 [T] The `Stance` section comes after `Hard rules` and `Hand over` and before `Voice`, and is inside none of them.
+- STN5 [J] The owner reads a sample of each character's answer and says whether the stance shows. No test can judge that.
+
 ### 4. Characters (theme: Bauhaus)
 
 **From `notes/design-package/theme-options.md` (rachel, 2026-11-07).** The owner chose the theme and approved the cast. The package and repo are `bauhaus`, at `/home/tan/projects/bauhaus`. The cast are real historical people who are dead; their names are used as names only (section 1). Facts below are rachel's, from English Wikipedia pages, which she calls a lead and not a primary source: tag **found (secondary)**, and I did not re-read the pages. Whether any estate or foundation restricts the use of a name was not checked.
@@ -282,6 +290,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - **Paraphrase, never quote.** Gropius gave a lecture at the 1923 Weimar exhibition on art and technology as a new unity (secondary: seen in search results, English wording varies, full text not opened). No file in the package quotes it or puts words in his mouth; where it is mentioned, it is mentioned as a paraphrase only. The same holds for every cast member.
 - **Skills are described by craft** (grid, light, colour, structure, the brief, the screen), not by biography. No skill text, docs page or test asserts a biographical fact; this table is the rationale for the casting, and sits only in this spec and the ADR.
 - **The voice rule.** The register is plain and professional everywhere. A voice would be an imitation of a real person, so none is attempted: suits's **Voice** section is kept for its safe part (a plain sample line, the register rule, speaks only to the owner) and drops the persona. **No character file, docs page or sample line mentions** the closing of the school under political pressure, anyone's exile or emigration, the 1937 exhibition of "Degenerate Art", Bayer's 1936 brochure, any illness (including Moholy-Nagy's) or any death date. A test scans for the words (CAST1).
+- **The stance.** A stance is a short plain description of what a person's craft puts first, what it asks and what it refuses: three to six lines in a `## Stance` section of the character's `SKILL.md`, after `Hard rules` and `Hand over` and before `Voice`, in the third person and in our words, each line resting on an opened research row listed in ADR `0003`. It is not a voice: it says what the craft does and never how anyone sounded, and the `Voice` section keeps the plain professional register and one sample line. The avoided topics above apply to a stance unchanged. `breuer` has none until a text of his own is opened.
 - Sample lines (30 words or fewer, plain, about the work):
   - Gropius: "The brief file is missing. Write it first: audience, job, tone, and what this piece must not look like."
   - Bayer: "The email has live text and a real button, and every pair passes 4.5:1. One tell remains: a tracked-caps label above the headline."
@@ -407,7 +416,7 @@ Not verified, and so not relied on: `figcraft-cli export` to PNG with `--scale`;
 
 **Harvey's budget of at most 14 files does not hold, and it did not hold before UI/UX.** His tally (manifests 2, README and CLAUDE.md 2, check script and test 2, method 1, character 1, commands 3, template 1, spare 2) leaves out what the suits layout requires of every skill: a docs page with four sections, and the bucket READMEs that list each skill. Counting those, the first release without UI/UX is already about 31 files, and with UI/UX, its character, the references and tells files and the trends file the owner has since asked for, 41. Recommendation: keep the cap at 14 per pull request and split the release into four pull requests, one ticket each. If the owner prefers harvey's original shape, the alternative is to cut the suits conventions (one `docs/skills.md` for all pages, one skills list in the README), which makes the package unlike suits; I do not recommend it. Open question 1.
 
-The full tree (59 files, with the space designer and the writer):
+The full tree (60 files, with the space designer, the writer and the stance record):
 
 ```
 bauhaus/
@@ -422,6 +431,7 @@ bauhaus/
   scripts/check-skills.mjs
   docs/adr/0001-bauhaus-is-a-separate-package.md
   docs/adr/0002-the-writer-and-the-cast.md
+  docs/adr/0003-a-stance-in-place-of-a-voice.md
   skills/characters/README.md
   skills/characters/gropius/SKILL.md
   skills/characters/bayer/SKILL.md
@@ -482,6 +492,7 @@ Split (each at most 14 files; a later PR also edits files from an earlier one, w
 | 4. UI/UX | `screens` and its REFERENCES, `breuer`, their two docs pages | 5 |
 | 5. The space designer | `mies`, `massing` and `plans` with their REFERENCES, and their three docs pages | 8 |
 | 6. The writer and the flow | `ogilvy`, `concept` with its REFERENCES, `RESEARCH.md`, the three `REGISTERS.md`, ADR 0002, and the docs pages of `ogilvy` and `concept` | 10 |
+| 7. The stance | `## Stance` in `gropius`, `bayer`, `mies` and `ogilvy`, ADR `0003` with the row table, the voice-rule paragraph, STN1 to STN5, and one line in the READMEs and four docs pages | 1 |
 
 PR 1 has no skill. Whether `claude plugin validate` accepts `"skills": []` is UNVERIFIED (the check runs it). If it refuses, `design/SKILL.md` and its docs page move into PR 1, which makes 15 and trips the cap, so the fallback is to ship PR 1 with `design` and drop the ADR to PR 2.
 

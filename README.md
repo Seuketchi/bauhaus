@@ -26,6 +26,8 @@ The cast are real people, now dead, and their names are used as names only. Each
 | David Ogilvy | Writer. The idea, the story and the words. |
 | Josef Albers | Colour science, inside the method. Credited here and in the decision record. |
 
+Each character file carries a short stance: what the craft puts first and what it refuses, in plain lines. It is not a voice, and ADR 0003 records the rows each line rests on.
+
 Moholy-Nagy is later work and needs a source pass first. The cast may grow.
 
 ## Layout

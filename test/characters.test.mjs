@@ -1585,3 +1585,167 @@ describe("specs/design-package.md carries the writer and the flow", () => {
     assert.match(spec, /^21\. \*\*owner\.\*\*[^\n]*Closed/m);
   });
 });
+
+// ---- the stance (spec amendment section 8: STN1 to STN4; STN5 is the owner's to judge) ----
+
+// A character whose own text has not been opened yet has no stance. The list shrinks as stances are written.
+const STANCE_LATER = {
+  breuer: "none of his own text was opened, so the stance waits for an opened text",
+};
+// Characters added by later branches (moholy-nagy, peterhans) write their stance in their own PR; until they exist they are not here.
+const STANCE_NOW = ["bayer", "gropius", "mies", "ogilvy"];
+const stanceLines = (source) => section(source, "Stance").split("\n").map((l) => l.trim()).filter(Boolean);
+const FIRST_PERSON = /\b(?:i|me|my|mine|we|us|our|ours)\b/i;
+const ATTRIBUTING = /\b(?:said|says|wrote|believed|believes|argued|argues|insisted|claimed|declared|quoted)\b/i;
+const PLACES = /\b(?:Weimar|Dessau|Berlin|Chicago|Vienna|London|Harvard|Germany|America|Europe)\b/;
+const YEAR = /\b(?:18|19|20)\d{2}\b/;
+// A stance line is dirty when any of the scans of the rest of the file finds something in it.
+const stanceHits = (text) => [
+  ...speechHits(text).map(() => "speech verb"),
+  ...quoteHits(text).map(() => "quote"),
+  ...topicHits(text).map((t) => `topic: ${t}`),
+  ...(PERSONA.test(text) ? ["persona"] : []),
+  ...(BIOGRAPHY.test(text) ? ["biography"] : []),
+  ...(BUILD_WORDS.test(bareWords(text)) ? ["build word"] : []),
+  ...(NUMBER_OF.test(text) ? ["number of people"] : []),
+  ...(FIRST_PERSON.test(text) ? ["first person"] : []),
+  ...(ATTRIBUTING.test(text) ? ["attributing verb"] : []),
+  ...(PLACES.test(text) ? ["place"] : []),
+  ...(YEAR.test(text) ? ["year"] : []),
+];
+
+describe("the stance readers, on fixtures", () => {
+  test("stanceLines() reads the non-empty lines of the Stance section only", () => {
+    const src = "## Hand over\n\nOne.\n\n## Stance\n\n- A.\n- B.\n\n## Voice\n\nText.\n";
+    assert.deepEqual(stanceLines(src), ["- A.", "- B."]);
+    assert.deepEqual(stanceLines("## Voice\n\nText.\n"), []);
+  });
+  const DIRTY = {
+    "a speech verb": "Gropius said the whole comes first.",
+    "a quote": 'Mies used a phrase for it: "less is a thing you can name here".',
+    "a topic": "Keeps working after the exile.",
+    "a persona": "As Bayer, drop the second alphabet.",
+    "biography": "Studied the trades first.",
+    "a build word": "Hands the work to the next agent.",
+    "first person": "I ask what can be dropped.",
+    "an attributing verb": "Wrote that the whole comes first.",
+    "a place": "Plans the series in Weimar.",
+    "a year": "Planned the series in 1923.",
+  };
+  for (const [what, text] of Object.entries(DIRTY)) {
+    test(`stanceHits() flags ${what}`, () => assert.ok(stanceHits(text).length > 0, text));
+  }
+  test("a plain craft line is clean", () => assert.deepEqual(stanceHits("Asks what can be dropped, and uses one system where one will do."), []));
+});
+
+describe("the stance (STN1 to STN4)", () => {
+  test("STN1: the characters that must have a stance are in the cast, and STANCE_LATER names only real characters with a reason", () => {
+    for (const name of STANCE_NOW) assert.ok(characters.includes(name), `${name} is not a character`);
+    for (const [name, reason] of Object.entries(STANCE_LATER)) {
+      assert.ok(characters.includes(name), `${name} in STANCE_LATER is not a character`);
+      assert.ok(reason.trim().length > 0, `${name} has no reason`);
+      assert.equal(stanceLines(read("skills/characters", name, "SKILL.md")).length, 0, `${name} has a Stance: remove it from STANCE_LATER`);
+    }
+  });
+
+  for (const name of characters) {
+    const source = read("skills/characters", name, "SKILL.md");
+    if (name in STANCE_LATER) continue;
+    describe(`${name} stance`, () => {
+      test("STN1: has a Stance section of 3 to 6 lines", () => {
+        const lines = stanceLines(source);
+        assert.ok(lines.length >= 3 && lines.length <= 6, `${lines.length} lines`);
+      });
+      test("STN2: the Stance passes the same scans as the rest of the file", () => {
+        assert.deepEqual(stanceHits(section(source, "Stance")), []);
+      });
+      test("STN3: the Voice section is unchanged in kind: one sample line of 30 words or fewer, none in the Stance", () => {
+        assert.equal(samples(section(source, "Voice")).length, 1);
+        assert.equal(samples(section(source, "Stance")).length, 0);
+        assert.equal(samples(source).length, 1, "a second sample line elsewhere in the file");
+        for (const line of samples(section(source, "Voice"))) assert.ok(!tooLong(line), line);
+        assert.match(section(source, "Voice"), /no real person'?s voice is imitated/i);
+        assert.match(section(source, "Voice"), /no words are attributed to anyone/i);
+      });
+      test("STN4: the Stance comes after Hard rules and Hand over, before Voice, and sits inside neither", () => {
+        const at = (title) => source.indexOf(`\n## ${title}\n`);
+        assert.ok(at("Hard rules") > 0 && at("Hand over") > at("Hard rules"), "Hard rules, then Hand over");
+        assert.ok(at("Stance") > at("Hand over"), "Stance after Hand over");
+        assert.ok(at("Voice") > at("Stance"), "Voice after Stance");
+        assert.doesNotMatch(section(source, "Hard rules"), /^## Stance/m);
+        assert.doesNotMatch(section(source, "Hand over"), /^## Stance/m);
+        assert.equal((source.match(/^## Stance$/gm) ?? []).length, 1);
+      });
+    });
+  }
+});
+
+describe("ADR 0003, a stance in place of a voice", () => {
+  const adr = exists("docs/adr/0003-a-stance-in-place-of-a-voice.md") ? read("docs/adr/0003-a-stance-in-place-of-a-voice.md") : "";
+  const rows = adr.split("\n").filter((l) => /^\|/.test(l));
+  test("the ADR exists with a context, a decision and consequences", () => {
+    assert.ok(adr.length > 0, "docs/adr/0003-a-stance-in-place-of-a-voice.md is missing");
+    for (const title of ["Context", "Decision", "Consequences"]) assert.ok(section(adr, title).trim().length > 0, title);
+  });
+  test("it says a stance is not a voice, and that breuer waits for an opened text", () => {
+    assert.match(adr, /not a voice/i);
+    assert.match(adr, /breuer/i);
+    assert.match(adr, /STANCE_LATER/);
+    assert.match(adr, /STN5/);
+  });
+  for (const name of STANCE_NOW) {
+    test(`${name}: every stance line is a table row that names its research row`, () => {
+      for (const line of stanceLines(read("skills/characters", name, "SKILL.md"))) {
+        const text = line.replace(/^-\s*/, "");
+        const row = rows.find((r) => r.includes(text));
+        assert.ok(row, `no table row for: ${text}`);
+        assert.match(row, /\bCGR\s+(?:1b?\.?\d*|2|4)\b[^|]*\br\d+|\bCGR[^|]*\bwould refuse\b/i, `no research row in: ${row}`);
+        assert.match(row, new RegExp(`\\b${name}\\b`, "i"), `row does not name ${name}`);
+      }
+    });
+  }
+  test("the table gives each row's status, and marks the secondary one", () => {
+    assert.match(adr, /secondary/i);
+    assert.match(adr, /opened/i);
+  });
+});
+
+describe("the spec carries the stance (section 4 voice rule, STN1 to STN5, the PR-S row)", () => {
+  const spec = read("specs/design-package.md");
+  const three = spec.split(/^### 3\./m)[1].split(/^### 4\./m)[0];
+  const cast = spec.split(/^### 4\./m)[1].split(/^### 5\./m)[0];
+  const tree = spec.split(/^### 8\./m)[1].split(/^### 9\./m)[0];
+  test("section 4 defines a stance, says it is not a voice, and keeps the avoided topics", () => {
+    assert.match(cast, /\*\*The stance\.\*\*/);
+    assert.match(cast, /stance[^\n]*is not a voice|not a voice/i);
+    assert.match(cast, /## Stance/);
+    assert.match(cast, /0003/);
+    assert.match(cast, /\*\*The voice rule\.\*\*[^\n]*closing of the school under political pressure[^\n]*any death date/);
+  });
+  test("section 3 lists STN1 to STN5, with STN5 left to the owner", () => {
+    for (const id of ["STN1", "STN2", "STN3", "STN4", "STN5"]) assert.match(three, new RegExp(`- ${id} \\[`), id);
+    assert.match(three, /- STN5 \[J\][^\n]*owner/);
+    assert.match(three, /STANCE_LATER/);
+  });
+  test("section 8 has the PR-S row with its one new file", () => {
+    assert.match(tree, /\| 7\. The stance[^\n]*0003[^\n]*\| 1 \|/);
+    assert.ok(tree.includes("docs/adr/0003-a-stance-in-place-of-a-voice.md"));
+  });
+});
+
+describe("the stance is mentioned once in the READMEs and on each affected docs page", () => {
+  test("README.md and the characters README have a line on the stance", () => {
+    assert.match(read("README.md"), /stance/i);
+    assert.match(read("skills/characters/README.md"), /stance/i);
+  });
+  for (const name of STANCE_NOW) {
+    test(`docs/characters/${name}.md has one line on the stance, in "What it does"`, () => {
+      const page = read("docs/characters", `${name}.md`);
+      assert.match(section(page, "What it does"), /stance/i);
+      assert.equal((page.match(/stance/gi) ?? []).length >= 1, true);
+    });
+  }
+  test("breuer's docs page does not claim a stance yet", () => {
+    assert.doesNotMatch(read("docs/characters/breuer.md"), /stance/i);
+  });
+});
