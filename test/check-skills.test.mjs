@@ -154,6 +154,49 @@ test("a plugin.json entry with no tracked skill folder is a problem", () => {
   );
 });
 
+// A link from one skill folder into another. A skill folder is skills/<bucket>/<name>/; a bucket README is not one.
+// Scope: every file inside a character folder or a tool folder, so tools are covered as well as characters.
+
+test("a link from a character folder into a tool folder is a problem, naming file and target", () => {
+  fails(
+    { "skills/characters/alpha/SKILL.md": `${GOOD["skills/characters/alpha/SKILL.md"]}\nSee [beta](../../tools/beta/SKILL.md).\n` },
+    "skills/characters/alpha/SKILL.md: link ../../tools/beta/SKILL.md leaves its skill folder, into skills/tools/beta",
+  );
+});
+
+test("a link from a tool folder into a character folder is a problem", () => {
+  fails(
+    { "skills/tools/beta/SKILL.md": `${GOOD["skills/tools/beta/SKILL.md"]}\nSee [alpha](../../characters/alpha/SKILL.md).\n` },
+    "skills/tools/beta/SKILL.md: link ../../characters/alpha/SKILL.md leaves its skill folder, into skills/characters/alpha",
+  );
+});
+
+test("a link from one tool folder to a file in another tool folder is a problem", () => {
+  const three = {
+    ".claude-plugin/plugin.json": JSON.stringify({ name: "bauhaus", skills: ["./skills/characters/alpha", "./skills/tools/beta", "./skills/tools/gamma"] }),
+    "skills/tools/README.md": "# Tools\n\n## User-invoked\n\nNone yet.\n\n## Model-invoked\n\n- **[beta](./beta/SKILL.md)**: The second.\n- **[gamma](./gamma/SKILL.md)**: The third.\n",
+    "skills/tools/gamma/SKILL.md": "---\nname: gamma\ndescription: The third.\n---\n\n# Gamma\n",
+    "skills/tools/gamma/REFERENCE.md": "Reference.\n",
+    "docs/tools/gamma.md": GOOD_DOC("Gamma"),
+    "skills/tools/beta/SKILL.md": `${GOOD["skills/tools/beta/SKILL.md"]}\nSee [the reference](../gamma/REFERENCE.md).\n`,
+  };
+  fails(three, "skills/tools/beta/SKILL.md: link ../gamma/REFERENCE.md leaves its skill folder, into skills/tools/gamma");
+});
+
+test("a link to its own folder, to a bucket README or to a docs page is not a cross-folder link", () => {
+  passes({
+    "skills/tools/beta/NOTES.md": "Notes.\n",
+    "skills/tools/beta/SKILL.md": `${GOOD["skills/tools/beta/SKILL.md"]}\n[own](./NOTES.md), [own again](NOTES.md#top), [bucket](../README.md), [other bucket](../../characters/README.md), [docs](../../../docs/tools/beta.md).\n`,
+    "skills/characters/alpha/SKILL.md": `${GOOD["skills/characters/alpha/SKILL.md"]}\nSee the [tools](../../tools/README.md).\n`,
+  });
+});
+
+test("a cross-folder link in backticks or a fenced block is not a link", () => {
+  passes({
+    "skills/characters/alpha/SKILL.md": `${GOOD["skills/characters/alpha/SKILL.md"]}\nWrite \`[x](../../tools/beta/SKILL.md)\` as text.\n\n\`\`\`\n[x](../../tools/beta/SKILL.md)\n\`\`\`\n`,
+  });
+});
+
 test("a broken relative link is a problem", () => {
   fails({ "docs/tools/beta.md": `${GOOD_DOC("Beta")}\nSee [the gap](./missing.md).\n` }, "docs/tools/beta.md: broken link ./missing.md");
 });

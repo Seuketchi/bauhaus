@@ -896,9 +896,16 @@ const RENDER_CHECKS = {
   },
   T20: ({ w, bands }, { brand }) => {
     const edges = new Set(bands.flatMap((b) => b.blobs.map((blob) => Math.round(blob.x0 / 4) * 4)));
-    const colWidth = (w - 2 * brand.grid.margin - (brand.grid.columns - 1) * brand.grid.gutter) / brand.grid.columns;
-    const starts = Array.from({ length: brand.grid.columns }, (_, i) => brand.grid.margin + i * (colWidth + brand.grid.gutter));
     const blobs = bands.flatMap((b) => b.blobs);
+    // Content centred in a wider render sits in a container of its own (a 600 px email in a 640 px window): the grid is
+    // measured from that container's edge, and the container's own edge counts as a line. Anything else is measured from the canvas.
+    const left = Math.min(...blobs.map((b) => b.x0));
+    const right = Math.max(...bands.flatMap((b) => b.blobs.map((blob) => blob.x1)));
+    const centred = right - left + 1 < w && Math.abs(left - (w - 1 - right)) <= 8;
+    const [origin, width] = centred ? [left, right - left + 1] : [0, w];
+    const colWidth = (width - 2 * brand.grid.margin - (brand.grid.columns - 1) * brand.grid.gutter) / brand.grid.columns;
+    const starts = Array.from({ length: brand.grid.columns }, (_, i) => origin + brand.grid.margin + i * (colWidth + brand.grid.gutter));
+    if (centred) starts.push(origin);
     const off = blobs.filter((blob) => !starts.some((s) => Math.abs(s - blob.x0) <= 4)).length;
     const found = [];
     if (edges.size > 6) found.push(`${edges.size} distinct left edges`);
@@ -1016,18 +1023,31 @@ function emailCommand({ positional, flags }) {
     for (const e of FILE_CHECKS[id](p, {})) add(`${id} ${row(id).tell}: ${e}`);
   }
 
+  // A row whose support is `none` blocks the email. Any other support level is only a note.
   const notes = [];
+  const read = [];
   if (flags.limits) {
-    for (const [feature, pattern, client, support, date, source] of limitsRows(flags.limits)) {
+    const rows = limitsRows(flags.limits);
+    read.push(`limits read: ${flags.limits} (${rows.length} rows)`);
+    for (const [feature, pattern, client, support, date, source] of rows) {
       if (!isDate(date)) problems.push(`${flags.limits}: ${feature}: no test date`);
       if (!/https?:\/\/\S+/.test(source ?? "")) problems.push(`${flags.limits}: ${feature}: no source URL`);
-      if (support.toLowerCase() === "none" && new RegExp(pattern.replace(/^`|`$/g, ""), "i").test(html)) add(`${feature} (${client}): ${support} support, and the email uses it`);
+      let used;
+      try {
+        used = new RegExp(pattern.replace(/^`|`$/g, ""), "i").test(html);
+      } catch (error) {
+        problems.push(`${flags.limits}: ${feature}: pattern is not a valid regular expression (${error.message})`);
+        continue;
+      }
+      if (!used) continue;
+      if (support.toLowerCase() === "none") add(`${feature} (${client}): ${support} support, and the email uses it`);
+      else notes.push(`note: ${feature} (${client}): ${support}; the email uses it, so legibility must not depend on it`);
     }
   } else {
     notes.push("LIMITS.md rows were not checked: no --limits file given");
   }
-  if (problems.length) return { code: 1, err: problems };
-  return { out: [`ok: ${positional[0]}`, ...notes] };
+  if (problems.length) return { code: 1, out: read, err: problems };
+  return { out: [`ok: ${positional[0]}`, ...read, ...notes] };
 }
 commands.email = emailCommand;
 
