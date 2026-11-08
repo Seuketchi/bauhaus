@@ -35,6 +35,8 @@ timeout 20 pdfcraft-cli render /project/out/piece.pdf --page 1 --dpi 72 --out /p
 timeout 20 google-chrome --headless=new --no-sandbox --disable-gpu --user-data-dir=/tmp/critique-chrome --screenshot=/project/out/piece.png --window-size=640,900 file:///project/out/piece.html
 ```
 
+With no `google-chrome`, render the HTML with Firefox instead, after `mkdir -p /tmp/critique-firefox`: `timeout 20 firefox --headless --no-remote --profile /tmp/critique-firefox --screenshot /project/out/piece.png --window-size=640,900 file:///project/out/piece.html`.
+
 The rules for driving the command-line apps are in the `design` tool's `ARTCRAFT.md`.
 
 ## What the tells check can read

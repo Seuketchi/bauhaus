@@ -35,6 +35,8 @@ const onPath = (name) =>
     }
   });
 const missingOf = (apps) => ["timeout", ...apps].filter((name) => !onPath(name));
+// The headless browser the HTML renders use: Chrome when it is installed, else Firefox.
+const BROWSER = ["google-chrome", "firefox"].find(onPath) ?? "google-chrome";
 
 const work = mkdtempSync(join(tmpdir(), "bauhaus-artcraft-"));
 after(() => rmSync(work, { recursive: true, force: true }));
@@ -623,21 +625,23 @@ function pixel(file, x, y) {
 }
 
 // P4: the email skill's render call, run on an email taller than one screen, shows the whole of it at both widths.
-hand("the email skill's headless Chrome render shows an email 3,000 px tall to its last row at 640 and at 375 px wide", ["google-chrome"], () => {
+hand(`the email skill's headless ${BROWSER} render shows an email 3,000 px tall to its last row at 640 and at 375 px wide`, [BROWSER], () => {
   const skill = readFileSync(join(here, "..", "skills", "tools", "email", "SKILL.md"), "utf8");
-  const lines = skill.split("\n").filter((l) => /^timeout 60 google-chrome /.test(l));
+  const lines = skill.split("\n").filter((l) => l.startsWith(`timeout 60 ${BROWSER} `));
   assert.equal(lines.length, 2, "one call per width");
   const mail = join(out, "tall-email.html");
   const rows = Array.from({ length: 30 }, (_, i) => `<tr><td style="height:100px;background:${i === 29 ? "#ff0000" : "#dddddd"}"></td></tr>`).join("");
   writeFileSync(mail, `<!doctype html><html><body style="margin:0"><table width="300" style="width:300px;border-collapse:collapse">${rows}</table></body></html>`);
   for (const [width, line] of [[640, lines[0]], [375, lines[1]]]) {
     const png = join(out, `tall-${width}.png`);
+    mkdirSync(join(out, "firefox"), { recursive: true });
     const call = line
       .replace(/--user-data-dir=\S+/, `--user-data-dir=${join(out, "chrome")}`)
-      .replace(/--screenshot=\S+/, `--screenshot=${png}`)
+      .replace(/--profile \S+/, `--profile ${join(out, "firefox")}`)
+      .replace(/--screenshot[= ]\S+/, (m) => `--screenshot${m[12]}${png}`)
       .replace(/file:\/\/\S+/, `file://${mail}`);
     assert.match(call, new RegExp(`--window-size=${width},\\d+`));
-    // Chrome is not an ArtCraft app: its calls run under timeout 60, which the skill's lines state and the test repeats.
+    // The browser is not an ArtCraft app: its calls run under timeout 60, which the skill's lines state and the test repeats.
     const made = run(call.replace(/^timeout 60 /, "").split(" "), { seconds: 60 });
     assert.equal(made.status, 0, made.stderr);
     const size = pngSize(png);
@@ -648,8 +652,8 @@ hand("the email skill's headless Chrome render shows an email 3,000 px tall to i
   }
 });
 
-// ground: the ASCII tile is SVG text drawn to a PNG by headless Chrome under `timeout 60`, as the email skill does for HTML.
-hand("the ground tool draws an ASCII tile to a PNG of the field's size, in the two colours, and a second run gives the same bytes", ["google-chrome"], () => {
+// ground: the ASCII tile is SVG text drawn to a PNG by a headless browser under `timeout 60`, as the email skill does for HTML.
+hand(`the ground tool draws an ASCII tile to a PNG of the field's size with ${BROWSER}, in the two colours, and a second run gives the same bytes`, [BROWSER], () => {
   const tool = join(here, "..", "skills", "tools", "ground", "ground.mjs"), dir = join(out, "ground");
   mkdirSync(dir);
   const colour = (h, c) => ({ $value: { colorSpace: "srgb", components: c, hex: h } });

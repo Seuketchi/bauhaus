@@ -803,7 +803,10 @@ describe("email (E1 to E7)", () => {
   test("the render window is taller than one screen, and the skill says the shot is cut at the window height and how to tell", () => {
     const render = section(source, "Render");
     const heights = [...render.matchAll(/--window-size=(?:640|375),(\d+)/g)].map((m) => Number(m[1]));
-    assert.equal(heights.length, 2, "one window per width");
+    for (const browser of ["google-chrome", "firefox"]) {
+      const widths = render.split("\n").filter((l) => l.startsWith(`timeout 60 ${browser} `)).map((l) => l.match(/--window-size=(\d+),/)?.[1]);
+      assert.deepEqual(widths, ["640", "375"], `${browser}: one window per width`);
+    }
     for (const h of heights) assert.ok(h >= 8000, `a ${h} px window crops a long email`);
     assert.match(render, /cut at the window height/i);
     assert.match(render, /blank (?:page )?ground/i);
