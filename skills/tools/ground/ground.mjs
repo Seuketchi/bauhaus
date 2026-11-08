@@ -14,7 +14,7 @@
 //
 // P is a token path such as semantic.color.accent. A hex colour is refused. Grain flags: --grain AMOUNT --seed N
 // --grain-size N. Methods: bayer2, bayer4, bayer8, fs, atkinson, none.
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { extname, join } from "node:path";
@@ -158,18 +158,29 @@ export function asciiSvg(field, bg, fg, cell = 12, ramp = " .,:;+*#%@") {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${field.w} ${field.h}" width="${field.w}" height="${field.h}"><rect width="100%" height="100%" fill="${bg}"/><g font-family="monospace" font-size="${cell / 0.6}" fill="${fg}">${text}</g></svg>\n`;
 }
 
-// SVG text drawn to a PNG of w by h pixels by headless Chrome, under `timeout 60`. The PNG is read and written again
-// by this module, so its bytes depend on its pixels alone.
+// SVG text drawn to a PNG of w by h pixels by a headless browser, under `timeout 60`: Chrome when it is installed, else
+// Firefox. The PNG is read and written again by this module, so its bytes depend on its pixels alone.
 export function svgToPng(svg, w, h) {
   const dir = mkdtempSync(join(tmpdir(), "bauhaus-ground-"));
   try {
     const file = join(dir, "tile.svg"), shot = join(dir, "tile.png");
     writeFileSync(file, svg);
-    const run = spawnSync("timeout", ["60", "google-chrome", "--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${join(dir, "chrome")}`, `--screenshot=${shot}`, `--window-size=${w},${h}`, `file://${file}`], { encoding: "utf8" });
-    if (run.error?.code === "ENOENT" || run.status === 127) throw new Error("drawing ASCII to a PNG needs headless Chrome (google-chrome) and `timeout` on the PATH; write an .svg instead");
-    if (run.status !== 0 || !existsSync(shot)) throw new Error(`Chrome did not draw the tile (exit ${run.status}): ${(run.stderr || "").trim().split("\n").slice(-2).join(" ")}`);
+    const browsers = [
+      ["Chrome", ["google-chrome", "--headless=new", "--no-sandbox", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${join(dir, "chrome")}`, `--screenshot=${shot}`, `--window-size=${w},${h}`, `file://${file}`]],
+      ["Firefox", ["firefox", "--headless", "--no-remote", "--profile", join(dir, "firefox"), "--screenshot", shot, `--window-size=${w},${h}`, `file://${file}`]],
+    ];
+    mkdirSync(join(dir, "firefox"));
+    let name, run;
+    for (const [n, args] of browsers) {
+      const r = spawnSync("timeout", ["60", ...args], { encoding: "utf8" });
+      if (r.error?.code === "ENOENT" || r.status === 127) continue; // not installed: try the next
+      [name, run] = [n, r];
+      break;
+    }
+    if (!run) throw new Error("drawing ASCII to a PNG needs headless Chrome (google-chrome) or Firefox (firefox), and `timeout`, on the PATH; write an .svg instead");
+    if (run.status !== 0 || !existsSync(shot)) throw new Error(`${name} did not draw the tile (exit ${run.status}): ${(run.stderr || "").trim().split("\n").slice(-2).join(" ")}`);
     const img = decodePng(readFileSync(shot));
-    if (img.w < w || img.h < h) throw new Error(`Chrome drew ${img.w} by ${img.h}, not ${w} by ${h}`);
+    if (img.w < w || img.h < h) throw new Error(`${name} drew ${img.w} by ${img.h}, not ${w} by ${h}`);
     const rgba = new Uint8ClampedArray(w * h * 4);
     for (let y = 0; y < h; y++) rgba.set(img.rgba.subarray(y * img.w * 4, y * img.w * 4 + w * 4), y * w * 4); // the top left w by h
     return pngBytes(w, h, rgba);
