@@ -1,6 +1,6 @@
 # bauhaus: a design package (spec)
 
-Status: built. Drafted for the owner's confirmation on 2026-11-07; the jobs and characters it names are in the package as of 2026-11-08. Open question 9 is still open. No money flow is involved, so there are no money invariants.
+Status: built. Drafted for the owner's confirmation on 2026-11-07; the jobs and characters it names are in the package as of 2026-11-08. Every open question is closed. No money flow is involved, so there are no money invariants.
 
 Governing inputs, read for this spec: `notes/donna/harvey-design-package-picks.md` (harvey's picks), `designer-package-research.md` (rachel), `designer-package-stocktake.md` (mike), the suits repo at `f7c015f` (layout, tests, CLAUDE.md rules, `check-skills`), `design-systems-trends-research.md`, `references-research.md` and `notes/design-package/theme-options.md` (rachel and a second researcher), and the ui-ux-pro-max 2.13.0 install. Facts are tagged VERIFIED (read or run by me today, with the source), or UNVERIFIED (with the fastest check).
 
@@ -753,7 +753,7 @@ Each carries my recommendation.
 6. **harvey.** No `/suits:` calls in the first scope, and later a one-way link (a designer calling `/suits:code-review`) only by a new decision. Recommend: keep it closed now; louis reviews from outside.
 7. **harvey.** The Outlook for Windows rendering engine has no primary source. Recommend: ship with the "not tested in Outlook for Windows" line in every email hand-over and re-read caniemail at write time; revisit when the owner has a real Outlook client to test.
 8. **harvey.** Whether `claude plugin validate` accepts an empty `skills` list (PR 1) and a plugin that has no `version`. Recommend: the first ticket checks both before anything else, with the fallback of section 8. Whether one `DESIGN.md` may be read from a project that uses `plating` is answered above (it fits, with the preserved extra sections). Closed: the plugin has no `version`, and `claude plugin validate` runs and passes in CI.
-9. **harvey.** How an outside planning tool binds a role to `bauhaus:gropius`, `bauhaus:bayer` and `bauhaus:breuer`. UNVERIFIED; the owner confirms. No bauhaus file names that tool or its roles.
+9. **harvey.** How an outside planning tool binds a role to `bauhaus:gropius`, `bauhaus:bayer` and `bauhaus:breuer`. UNVERIFIED; the owner confirms. No bauhaus file names that tool or its roles. Closed: not needed (2026-11-08). No outside planning tool is in use, and no bauhaus file names one; adopting one later is a new decision in `docs/adr/`.
 
 10. **harvey.** What "fails on any tell" means for a tell only a person can see. Recommend: `critique` reports it as a failure with the check that found it, so the first line is binary; the owner can overrule a single row in `DESIGN.md` under Bans (a recorded exception, with a date), not silently. Alternative: judged tells advise only, which weakens the owner's aim that output not look machine-made. Closed: a judged tell fails like any other. A recorded exception is a dated entry under **Not to do** in `DESIGN.md`, and `critique` reports that tell as earned.
 11. **harvey.** All three research files have landed and sections 4, 5, 10 and 11 follow them. Recommend: PR 1 may start once the owner confirms this spec; nothing else blocks it. Closed: PR 1 merged (`8a37b51`), and the later pull requests followed.
