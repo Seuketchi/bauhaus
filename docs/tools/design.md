@@ -29,7 +29,7 @@ Skip it for the words of a document, which it leaves to whoever writes them. The
 
 **Why does the ratio not round up?** WCAG does not round up. A pair at 4.4999 is shown as 4.4999, never as 4.5, so a failing pair never reads as a pass.
 
-**What about a colour in a wide-gamut space?** A ratio needs `srgb` components or a hex. A colour with neither says "cannot compute", and no ratio is guessed.
+**What about a colour in a wide-gamut space?** A ratio needs a hex, `srgb` components, or `oklab` or `oklch` components. An `oklab` or `oklch` colour with no hex is computed, and a hex beside it wins. One that falls outside the sRGB gamut says "cannot compute" and is never clipped, so no ratio is guessed. Any other space (display-p3, for one) with no hex says "cannot compute".
 
 **Are the 29 checks proven?** No. Every row is `proposed, not run` until the checks have been run on real files and each false positive is fixed or listed.
 

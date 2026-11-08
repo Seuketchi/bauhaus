@@ -115,6 +115,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - D14 [T] The colour rules of `design` cite WCAG 2.2 (opened) and say a colour's reading depends on its neighbours, so pairs are checked in place as well as by ratio. They cite no lending-only book (section 10).
 
 - D16 [T] `check.mjs research <research.md>` accepts a valid file and rejects each of: the head lines `Date:` and `Client:` missing, a section of P1 to P7 missing or out of order, a P1 source row with no `opened` or `summary only`, fewer than 6 sources or fewer than 2 makers, a P2 entry with an empty field of its eight, a P4 that is neither the not-that table nor `no earlier piece`, a P7 that cites no source, and a missing `Not checked` or `Open` section. It cannot judge whether a look was read correctly; the reviewer does that.
+- D17 [T] `check.mjs` computes a ratio for an `oklab` or `oklch` colour with no `hex`, by the Oklab definition: white is (1, 0, 0) and maps to `#ffffff`, black to `#000000`, the sRGB primaries and 20 colours round-trip through `oklch` and `oklab` to themselves, and a `hex` beside the components wins. An `oklab` or `oklch` colour outside the sRGB gamut fails with "cannot compute" and is not clipped, because a clipped colour is not the colour the token names. Any other colour space with no `hex` still fails with "cannot compute". This reverses the earlier rule that an `oklch` colour with no hex fails (section 5).
 
 **Intake, in `design` and `gropius`.**
 
@@ -221,7 +222,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 **`bayer` (character). The graphic designer: brand, logos, email, critique.**
 
 - BAY1 [T] Same section, register and attribution tests as GRO1.
-- BAY2 [T] Calls only `/bauhaus:design`, `/bauhaus:brand`, `/bauhaus:email`, `/bauhaus:critique`. Triggers: `design` when no brief file exists for the piece; `brand` when the brief asks for an identity or no `DESIGN.md` exists; `email` when the piece is an HTML email; `critique` when a finished piece exists that this session did not make.
+- BAY2 [T] Calls only `/bauhaus:design`, `/bauhaus:brand`, `/bauhaus:email`, `/bauhaus:ground`, `/bauhaus:critique`. Triggers: `design` when no brief file exists for the piece; `brand` when the brief asks for an identity or no `DESIGN.md` exists; `email` when the piece is an HTML email; `ground` when the brief names a ground or a dither; `critique` when a finished piece exists that this session did not make.
 - BAY3 [T] States the split: the writer owns the words of the pieces made here and donna keeps long documents and the PDF build; this character owns layout and look; louis reviews. App screens go to `breuer`.
 - BAY4 [T] Names no build process, no tool of it and no team size.
 
@@ -334,6 +335,17 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - DEV9 [T] The sample line of `peterhans` is at most 30 words about the work, with no biography, no image and no quote.
 - DEV10 [T] The brief's `Minimum:` line for `develop` is 2 only with one of the two stated reasons (an editing brief; a still-life or tabletop brief), and 3 otherwise.
 
+**`ground` (tool). Grounds and dither as files.** Owns `REFERENCES.md`, `ground.mjs`, `dither.mjs` and `raster.mjs`. It is the first tool that ships its own generator code (ADR 0004). Produces a PNG, or an SVG for a dither and an ASCII tile, and `ground.sh`, the commands that made them.
+
+- GND1 [T] The dither methods follow their definitions: the Bayer map is built by recursion (the 4 by 4 map is checked by hand, the 8 by 8 map holds 0 to 63 once, a side that is not a power of two is refused), Floyd–Steinberg sends 7, 3, 5 and 1 over 16 and Atkinson one eighth to each of six neighbours (so a quarter of the error is dropped and darks come out darker and lights lighter). Every pixel is an index into a palette of 2 to 256 colours, and the nearest colour is found in linear light (the split between black and white falls at 188, not 128).
+- GND2 [T] The grounds: a linear gradient and a mesh gradient are mixed in Oklab, so blue to yellow does not pass through grey; the blur field, seeded grain (zero mean shift, about a third of the amount as spread, in blocks of a chosen size), halftone (coverage falls as the field lightens) and the ASCII tile (an SVG in the generic `monospace` family, each row spread over its columns) are each tested on fixtures made in code. A ground is written as a PNG only. A dither is a PNG or an SVG, and an ASCII tile an SVG or a PNG.
+- GND3 [T] Colours come only from the token file: the command line refuses a hex colour, names a token path that is not in the file, reads an `oklch` token as its computed colour and refuses one outside the sRGB gamut.
+- GND4 [T] The same input and method give byte-identical files, for every dither method, every ground and the SVG. The seeded generator is defined in `raster.mjs` and is tested for its mean, spread and period.
+- GND5 [R] An ASCII tile is drawn to a PNG of the field's size by headless Chrome under `timeout 60`, the PNG is written again by the script, and a second run gives the same bytes. It skips where Chrome is not installed, and `npm run test:artcraft` fails instead.
+- GND6 [T] The defaults of section 2 hold: the tool is not called by default; colour stops come only from the token file; a mesh or blur ground is refused unless `--brief` names mesh, blur or aurora; grain and stripes are a PNG and never `feTurbulence`; for email the ground is a PNG at final size.
+- GND7 [T] Provenance: `REFERENCES.md` states each method's public definition, whether the primary source or only an encyclopedia page was opened, and the date; the OKLab constants with their sources, licences and date opened; that no text or pseudocode is pasted; that no code from jp2a, libcaca, ImageMagick or FFmpeg is used and none is a dependency; that no palette preset, sample image or font ships; and that fixtures are made in code. A test fails on any binary file or `data:` URI in the folder, on an import other than Node's own modules and the folder's own files, and on a dependency in `package.json`.
+- GND8 [T] No text of the tool, its docs page or its decision names another product as the model or says the tool is a copy of one, and none calls into suits.
+
 ### 4. Characters (theme: Bauhaus)
 
 **From `notes/design-package/theme-options.md` (rachel, 2026-11-07).** The owner chose the theme and approved the cast. The package and repo are `bauhaus`, at `/home/tan/projects/bauhaus`. The cast are real historical people who are dead; their names are used as names only (section 1). Facts below are rachel's, from English Wikipedia pages, which she calls a lead and not a primary source: tag **found (secondary)**, and I did not re-read the pages. Whether any estate or foundation restricts the use of a name was not checked.
@@ -407,7 +419,7 @@ rules-win:                   # project rules that outrank this file
 - Format: the Design Tokens Community Group Format Module 2025.10, a Final Community Group Report dated 2025-10-28 (found by the researcher at w3.org). Files use the `.tokens` extension. A token is an object with a required `$value` and optional `$type` and `$description`; groups nest; aliases are written `{group.token}`. **It is not a W3C Standard and not on the Standards Track,** its status text contradicts itself, and its FAQ says the spec is still evolving. The format version is therefore pinned in the front matter (`tokens-format`), and a later version is a deliberate change, not a drift.
 - Tiers, by top-level group: `primitive` (raw values, may be named by hue), `semantic` (named by role, such as text, surface, border, accent; every value an alias to a primitive), `component` (every value an alias to a semantic token). Carbon, Spectrum, Atlassian and Primer tier and name by role in the same way (researcher's inference).
 - A `document` group holds the six properties donna's three styles already read (`--accent`, `--ink`, `--muted`, `--line`, `--tint`, `--font`), each an alias to a semantic token. `check.mjs document-css` writes them as CSS custom properties, so a brand restyles a PDF through the property names donna reads and no file moves between repos. This generator is new work and is open question 12.
-- Colour: the DTCG colour value is an object with `colorSpace` and `components` (14 spaces are listed, including srgb, oklch and display-p3), with an optional `hex`. For a contrast computation the file must give `srgb` components or a `hex`; another colour space with no `hex` fails the check with "cannot compute", so no ratio is ever guessed.
+- Colour: the DTCG colour value is an object with `colorSpace` and `components` (14 spaces are listed, including srgb, oklch and display-p3), with an optional `hex`. For a contrast computation the file must give a `hex`, `srgb` components, or `oklab` or `oklch` components (a `hex` beside components wins). An `oklab` or `oklch` colour with no `hex` gets a computed ratio, by the Oklab definition, when it falls inside the sRGB gamut; outside it the check fails with "cannot compute" and the colour is not clipped, because a clipped colour is not the colour the token names. Another colour space with no `hex` fails the check with "cannot compute", so no ratio is ever guessed.
 - Modes: the format module has no modes; the Resolver module does, and its report contradicts itself on its own version string. So the Resolver is not used. Each mode (for example dark, high contrast) is its own token file with the same token paths, and the check asserts the path sets match.
 - Email takes inline hex values taken from the same file and never relies on a mode.
 
@@ -468,6 +480,7 @@ Commands each job uses, and the proof (all runs below were made today from the s
 | `shots` | none | none | none | `filmcraft-cli run shots-base.jsonl`, then `run shots.jsonl` (`timeline.place`, `markers.add`, `file.exportEdl`, `file.exportOtio`), `inspect sequence`, `render --seconds S --out f.png` (filmcraft-cli 0.18.0, run 2026-11-07) |
 | `storyboard` | `run storyboard.json --out x.figcraft`, `export x.figcraft -o frames/ --format png`, both with `--no-system-fonts` and both roots (figcraft-cli 0.16.0, run 2026-11-07) | none | none | `filmcraft-cli import`, `run animatic.jsonl` (one `timeline.place` per still, with its own `duration`; `file.exportMedia` as a GIF), `inspect sequence` (filmcraft-cli 0.18.0, run 2026-11-07) |
 | `motion` | none | none | none | `effectcraft-cli --empty --json --save-as x.ecproj run --commands motion.json`, `--project x.ecproj --save set …`, `get …`, `render-frame`, `render --format gif` (effectcraft-cli 0.22.0, run 2026-11-07) |
+| `ground` | none | none | none | `node ground.mjs <command>` (Node only); for an ASCII tile as a PNG, `timeout 60 google-chrome --headless=new --screenshot`, called by the script (Google Chrome 156.0.8078.47, run 2026-11-07) |
 
 Verified runs (each wrote only under the scratch directory):
 
@@ -484,7 +497,7 @@ Not verified, and so not relied on: `figcraft-cli export` to PNG with `--scale`;
 
 **Harvey's budget of at most 14 files does not hold, and it did not hold before UI/UX.** His tally (manifests 2, README and CLAUDE.md 2, check script and test 2, method 1, character 1, commands 3, template 1, spare 2) leaves out what the suits layout requires of every skill: a docs page with four sections, and the bucket READMEs that list each skill. Counting those, the first release without UI/UX is already about 31 files, and with UI/UX, its character, the references and tells files and the trends file the owner has since asked for, 41. Recommendation: keep the cap at 14 per pull request and split the release into four pull requests, one ticket each. If the owner prefers harvey's original shape, the alternative is to cut the suits conventions (one `docs/skills.md` for all pages, one skills list in the README), which makes the package unlike suits; I do not recommend it. Open question 1.
 
-The full tree (79 files, with the space designer, the writer, the stance record, the shot and motion designer and the photographer):
+The full tree (87 files, with the space designer, the writer, the stance record, the shot and motion designer, the photographer and the ground tool):
 
 ```
 bauhaus/
@@ -501,6 +514,7 @@ bauhaus/
   docs/adr/0001-bauhaus-is-a-separate-package.md
   docs/adr/0002-the-writer-and-the-cast.md
   docs/adr/0003-a-stance-in-place-of-a-voice.md
+  docs/adr/0004-tools-may-ship-generator-code.md
   skills/characters/README.md
   skills/characters/gropius/SKILL.md
   skills/characters/bayer/SKILL.md
@@ -541,6 +555,11 @@ bauhaus/
   skills/tools/motion/REFERENCES.md
   skills/tools/develop/SKILL.md
   skills/tools/develop/REFERENCES.md
+  skills/tools/ground/SKILL.md
+  skills/tools/ground/REFERENCES.md
+  skills/tools/ground/ground.mjs
+  skills/tools/ground/dither.mjs
+  skills/tools/ground/raster.mjs
   skills/tools/critique/SKILL.md
   docs/characters/gropius.md
   docs/characters/bayer.md
@@ -559,6 +578,7 @@ bauhaus/
   docs/tools/motion.md
   docs/characters/peterhans.md
   docs/tools/develop.md
+  docs/tools/ground.md
   docs/tools/concept.md
   docs/tools/critique.md
   test/check-skills.test.mjs
@@ -567,6 +587,7 @@ bauhaus/
   test/artcraft.test.mjs
   test/film.test.mjs
   test/film-lib.mjs
+  test/ground.test.mjs
 ```
 
 Split (each at most 14 files; a later PR also edits files from an earlier one, which does not add to its count). PR 3 is at the cap exactly. `gropius` is in PR 3, not PR 2, because he calls `critique`, and a character may only call a skill that exists:
@@ -582,6 +603,7 @@ Split (each at most 14 files; a later PR also edits files from an earlier one, w
 | 7. The stance | `## Stance` in `gropius`, `bayer`, `mies` and `ogilvy`, ADR `0003` with the row table, the voice-rule paragraph, STN1 to STN5, and one line in the READMEs and four docs pages | 1 |
 | 8. The shot and motion designer | `moholy-nagy`, `shots`, `storyboard` and `motion` with their REFERENCES, and their four docs pages, and `test/film.test.mjs` and `test/film-lib.mjs`, the rules of the film tools as functions over strings and their tests | 13 |
 | 9. The photographer | `peterhans`, `develop` with its REFERENCES, and their two docs pages | 5 |
+| 10. Grounds and dither | `ground` with its `REFERENCES.md`, `ground.mjs`, `dither.mjs` and `raster.mjs`, its docs page, `test/ground.test.mjs` and ADR `0004`; edits to `bayer` and its docs page, the READMEs, `plugin.json`, `ARTCRAFT.md`, `check.mjs` (D17) and this spec | 8 |
 
 PR 1 has no skill. Whether `claude plugin validate` accepts `"skills": []` is UNVERIFIED (the check runs it). If it refuses, `design/SKILL.md` and its docs page move into PR 1, which makes 15 and trips the cap, so the fallback is to ship PR 1 with `design` and drop the ADR to PR 2.
 

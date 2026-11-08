@@ -25,6 +25,7 @@
     "./skills/tools/storyboard",
     "./skills/tools/motion",
     "./skills/characters/peterhans",
-    "./skills/tools/develop"
+    "./skills/tools/develop",
+    "./skills/tools/ground"
   ]
 }

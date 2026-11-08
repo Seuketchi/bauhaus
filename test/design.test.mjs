@@ -471,11 +471,115 @@ test("design: a stated ratio that matches the computed one passes and one that d
   bad(D, "stated ratio 7 differs from the computed 4.61", pairs("- text: semantic.color.g46 on semantic.color.surface = 7\n"));
 });
 
-test("design: a pair of a colour with no hex in a space that cannot be computed says cannot compute", () => {
-  const tokens = tokenFile((t) => (t.primitive.color.ink.$value = { colorSpace: "oklch", components: [0.2, 0.02, 260] }));
+// ---- OKLCH and Oklab tokens ----
+// An oklab or oklch colour with no hex gets a computed ratio, from the Oklab definition (CSS Color Module Level 4, opened
+// 2026-11-07). The test builds its expected colours another way from the code under test: it goes sRGB to XYZ to Oklab
+// with CSS Color 4's own matrices at 64-bit precision, and the code uses the matrices of the Oklab post, so two routes
+// have to agree. An oklab or oklch colour outside the sRGB gamut has no ratio and is refused, not clipped.
+
+const CSS_LIN_TO_XYZ = [[506752 / 1228815, 87881 / 245763, 12673 / 70218], [87098 / 409605, 175762 / 245763, 12673 / 175545], [7918 / 409605, 87881 / 737289, 1001167 / 1053270]];
+const CSS_XYZ_TO_LMS = [[0.819022437996703, 0.3619062600528904, -0.1288737815209879], [0.0329836539323885, 0.9292868615863434, 0.0361446663506424], [0.0481771893596242, 0.2642395317527308, 0.6335478284694309]];
+const CSS_LMS_TO_OKLAB = [[0.210454268309314, 0.7936177747023054, -0.0040720430116193], [1.9779985324311684, -2.42859224204858, 0.450593709617411], [0.0259040424655478, 0.7827717124575296, -0.8086757549230774]];
+const mulMat = (m, v) => m.map((row) => row[0] * v[0] + row[1] * v[1] + row[2] * v[2]);
+const linearOf = (c) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+const cssOklab = (hexText) => {
+  const rgb = [1, 3, 5].map((i) => linearOf(parseInt(hexText.slice(i, i + 2), 16)));
+  return mulMat(CSS_LMS_TO_OKLAB, mulMat(CSS_XYZ_TO_LMS, mulMat(CSS_LIN_TO_XYZ, rgb)).map(Math.cbrt));
+};
+const cssOklch = (hexText) => {
+  const [L, a, b] = cssOklab(hexText);
+  return [L, Math.hypot(a, b), ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360];
+};
+const oklchColour = (hexText) => ({ colorSpace: "oklch", components: cssOklch(hexText) });
+// The six document properties from five colours, which is what document-css writes.
+const writtenColours = (colours, space = oklchColour) => {
+  const [accent, ink, muted, line, tint] = colours;
+  const r = ok(["document-css", "d.tokens"], tok((t) => {
+    for (const [name, value] of Object.entries({ blue: accent, ink, grey: muted, mist: line, wash: tint })) t.primitive.color[name].$value = space(value);
+  }));
+  return [...r.out.matchAll(/--(?:accent|ink|muted|line|tint): (#[0-9a-f]{6});/g)].map((m) => m[1]);
+};
+
+test("oklch: anchors: white is (1, 0, 0) and black (0, 0, 0), in oklch and in oklab", () => {
+  const out = ok(["document-css", "d.tokens"], tok((t) => {
+    t.primitive.color.blue.$value = { colorSpace: "oklch", components: [1, 0, 0] };
+    t.primitive.color.ink.$value = { colorSpace: "oklch", components: [0, 0, 0] };
+    t.primitive.color.grey.$value = { colorSpace: "oklab", components: [1, 0, 0] };
+    t.primitive.color.mist.$value = { colorSpace: "oklab", components: [0, 0, 0] };
+  })).out;
+  assert.match(out, /--accent: #ffffff;/);
+  assert.match(out, /--ink: #000000;/);
+  assert.match(out, /--muted: #ffffff;/);
+  assert.match(out, /--line: #000000;/);
+});
+
+test("oklch: anchors: the sRGB primaries, from the CSS Color 4 route, come out as themselves", () => {
+  assert.deepEqual(writtenColours(["#ff0000", "#00ff00", "#0000ff", "#ffffff", "#000000"]), ["#ff0000", "#00ff00", "#0000ff", "#ffffff", "#000000"]);
+  const [, , h] = cssOklch("#ff0000");
+  assert.ok(Math.abs(h - 29.23) < 0.05, `red hue ${h}`);
+});
+
+test("oklch: a round trip, hex to oklch by the CSS route and back through the checker, returns 20 colours unchanged", () => {
+  const colours = ["#0b2a44", "#c8553d", "#f4e8d0", "#767676", "#12ab9c", "#1f4e79", "#e5e7eb", "#f3f4f6", "#595959", "#ff8800", "#111827", "#ffffff", "#010101", "#fefefe", "#7a3c91", "#33cc66", "#cc3366", "#336699", "#999999", "#d9d9d9"];
+  for (let i = 0; i < colours.length; i += 5) {
+    const group = colours.slice(i, i + 5);
+    assert.deepEqual(writtenColours(group), group);
+  }
+});
+
+test("oklch: the same colours given in oklab (a, b) come back the same", () => {
+  const asOklab = (h) => ({ colorSpace: "oklab", components: cssOklab(h) });
+  const group = ["#0b2a44", "#c8553d", "#f4e8d0", "#12ab9c", "#7a3c91"];
+  assert.deepEqual(writtenColours(group, asOklab), group);
+});
+
+test("oklch: a hue of none is read as 0, so a grey can leave it out", () => {
+  const [L] = cssOklch("#767676");
+  assert.deepEqual(writtenColours(["#767676", "#767676", "#767676", "#767676", "#767676"], () => ({ colorSpace: "oklch", components: [L, 0, "none"] })), Array(5).fill("#767676"));
+});
+
+test("oklch: a colour outside the sRGB gamut has no ratio: it is refused with its path and not clipped", () => {
+  const r = bad(["document-css", "d.tokens"], "outside the sRGB gamut", tok((t) => (t.primitive.color.blue.$value = { colorSpace: "oklch", components: [0.7, 0.4, 150] })));
+  assert.match(r.all, /cannot compute: primitive\.color\.blue is oklch outside the sRGB gamut/);
+  assert.equal(r.out, "");
+  bad(["document-css", "d.tokens"], "outside the sRGB gamut", tok((t) => (t.primitive.color.blue.$value = { colorSpace: "oklab", components: [1.2, 0, 0] })));
+});
+
+test("oklch: components that are not three numbers cannot be computed", () => {
+  for (const components of [[0.2, 0.02], [0.2, 0.02, "blue"], [0.2, 0.02, 260, 1], [0.2, NaN, 260].map((v) => (Number.isNaN(v) ? null : v))]) {
+    bad(["document-css", "d.tokens"], "cannot compute", tok((t) => (t.primitive.color.blue.$value = { colorSpace: "oklch", components })));
+  }
+});
+
+test("oklch: a hex beside the components wins, as it does for every other space", () => {
+  const out = ok(["document-css", "d.tokens"], tok((t) => (t.primitive.color.blue.$value = { colorSpace: "oklch", components: [0.7, 0.4, 150], hex: "#123456" }))).out;
+  assert.match(out, /--accent: #123456;/);
+});
+
+test("oklch: a translucent oklch colour has no ratio", () => {
+  bad(["document-css", "d.tokens"], "cannot compute", tok((t) => (t.primitive.color.blue.$value = { colorSpace: "oklch", components: [0.5, 0.1, 200], alpha: 0.5 })));
+});
+
+test("design: a pair of an oklch colour with no hex gets a computed ratio, the same as the hex colour it stands for", () => {
+  const tokens = tokenFile((t) => (t.primitive.color.ink.$value = oklchColour("#111827")));
+  ok(D, design({}, { tokens }));
+  const greys = tokenFile((t) => {
+    t.primitive.color.g46 = { $value: oklchColour("#757575") };
+    t.primitive.color.g28 = { $value: oklchColour("#999999") };
+    for (const name of ["g46", "g28"]) t.semantic.color[name] = { $value: `{primitive.color.${name}}` };
+  });
+  ok(D, design({ bodies: { "Accessibility floor": "- text: semantic.color.g46 on semantic.color.surface = 4.61\n" } }, { tokens: greys }));
+  bad(D, "ui pair semantic.color.g28 on semantic.color.surface is 2.8", design({ bodies: { "Accessibility floor": "- ui: semantic.color.g28 on semantic.color.surface\n" } }, { tokens: greys }));
+});
+
+test("design: an oklch colour outside the gamut in a pair says cannot compute", () => {
+  const tokens = tokenFile((t) => (t.primitive.color.ink.$value = { colorSpace: "oklch", components: [0.7, 0.4, 150] }));
+  bad(D, "outside the sRGB gamut", design({}, { tokens }));
+});
+
+test("design: a colour in a space other than srgb, oklab and oklch with no hex still says cannot compute", () => {
+  const tokens = tokenFile((t) => (t.primitive.color.ink.$value = { colorSpace: "display-p3", components: [0.1, 0.1, 0.2] }));
   bad(D, "cannot compute", design({}, { tokens }));
-  const withHex = tokenFile((t) => (t.primitive.color.ink.$value = { colorSpace: "oklch", components: [0.2, 0.02, 260], hex: "#111827" }));
-  ok(D, design({}, { tokens: withHex }));
 });
 
 test("design: a change log not in newest-first order is rejected", () => {

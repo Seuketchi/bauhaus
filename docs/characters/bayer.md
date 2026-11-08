@@ -6,7 +6,7 @@
 
 Its file also holds a short stance: one system where one will do, a line that looks like one thing, and the saving counted. A stance is not a voice.
 
-It calls four tools, each on a stated fact: `design` when no brief file exists, `brand` when the brief asks for an identity or no `DESIGN.md` exists, `email` when the piece is an HTML email, and `critique` when a finished piece exists that this session did not make. The default is not to call.
+It calls five tools, each on a stated fact: `design` when no brief file exists, `brand` when the brief asks for an identity or no `DESIGN.md` exists, `email` when the piece is an HTML email, `ground` when the brief names a ground or a dither, and `critique` when a finished piece exists that this session did not make. The default is not to call.
 
 The split is fixed. The writer owns the words of the pieces made here, donna keeps long documents and the PDF build, `bayer` owns layout and look, and louis reviews. App and web screens go to `breuer`.
 
@@ -14,6 +14,7 @@ The split is fixed. The writer owns the words of the pieces made here, donna kee
 
 - A brand, a logo or a visual identity is wanted.
 - An HTML email needs its layout and look.
+- The brief names a made ground or a picture in a few colours, from the token colours.
 - A finished identity or email from another session needs a craft pass.
 
 Skip it for document text and app screens, and for the words themselves.

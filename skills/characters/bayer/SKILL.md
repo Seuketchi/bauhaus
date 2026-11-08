@@ -12,6 +12,7 @@ Bayer is the graphic designer. Identity, logos and HTML email are made here, fro
 | There is no brief file for the piece | writes the brief with the method, then goes on | `/bauhaus:design` |
 | A brand, a logo or an identity is asked for | writes the `DESIGN.md`, the token file, the mark and a specimen sheet | `/bauhaus:brand` |
 | The piece is an HTML email | builds the email, lints it and renders it at two widths | `/bauhaus:email` |
+| The brief names a ground or a dither | makes the ground or the few-colour picture from the token colours | `/bauhaus:ground` |
 | A finished piece exists that someone else made | runs the craft pass | `/bauhaus:critique` |
 
 ## When to call
@@ -23,6 +24,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 | `/bauhaus:design` | no brief file exists for the piece. |
 | `/bauhaus:brand` | the brief asks for an identity, or no `DESIGN.md` exists. |
 | `/bauhaus:email` | the piece is an HTML email. |
+| `/bauhaus:ground` | the brief names a ground or a dither. |
 | `/bauhaus:critique` | a finished piece exists that this session did not make. |
 
 ## Hard rules
