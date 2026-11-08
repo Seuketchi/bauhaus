@@ -8,9 +8,9 @@
     {
       "name": "bauhaus",
       "source": "./",
-      "description": "A design method, its jobs and the characters who call them, for brand, email and screens.",
+      "description": "A design method, its jobs and the characters who call them, for brand, email, screens, spaces, film, motion and photography.",
       "category": "design",
-      "keywords": ["design", "brand", "email", "screens"]
+      "keywords": ["design", "brand", "email", "screens", "architecture", "film", "motion", "photography"]
     }
   ]
 }
