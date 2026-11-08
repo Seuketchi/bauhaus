@@ -31,7 +31,7 @@ Skip it for the words of a document, which it leaves to whoever writes them. The
 
 **What about a colour in a wide-gamut space?** A ratio needs a hex, `srgb` components, or `oklab` or `oklch` components. An `oklab` or `oklch` colour with no hex is computed, and a hex beside it wins. One that falls outside the sRGB gamut says "cannot compute" and is never clipped, so no ratio is guessed. Any other space (display-p3, for one) with no hex says "cannot compute".
 
-**Are the 29 checks proven?** No. Every row is `proposed, not run` until the checks have been run on real files and each false positive is fixed or listed.
+**Are the 29 checks proven?** Partly. 18 rows have run on three real files. The other 11 stay `proposed, not run`, with fixtures in the tests only, until a real file has their subject. `TELLS.md` marks each row.
 
 ## It's working if
 
