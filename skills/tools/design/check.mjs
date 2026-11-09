@@ -8,7 +8,8 @@
 //   check.mjs trends <TRENDS.md> [--as-of <date>]
 //   check.mjs brief <brief.md> [--tells <TELLS.md>]
 //   check.mjs research <research.md>
-//   check.mjs email <file.html> [--limits <LIMITS.md>]
+//   check.mjs email <file.html> [--limits <LIMITS.md>] [--words <words.md>]
+//   check.mjs email-set <a.html> <b.html> [<more.html> ...]
 //   check.mjs tells <piece.html> --brief <brief.md> [--brand <file.tokens>] [--render <file.png>]
 //                    [--references <REFERENCES.md>] [--only T1,T2] [--tells <TELLS.md>]
 //
@@ -30,7 +31,7 @@ const fail = (message) => {
 };
 
 // Flags that take a value. Anything else starting with "--" is an error.
-const VALUE_FLAGS = new Set(["--min", "--as-of", "--trends", "--brief", "--brand", "--render", "--references", "--limits", "--only", "--tells"]);
+const VALUE_FLAGS = new Set(["--min", "--as-of", "--trends", "--brief", "--brand", "--render", "--references", "--limits", "--only", "--tells", "--words"]);
 function parseArgs(argv) {
   const positional = [];
   const flags = {};
@@ -1158,6 +1159,72 @@ function tellsCommand({ positional, flags }) {
 }
 commands.tells = tellsCommand;
 
+// ---- locked parts and the writer's words ----
+
+// Elements marked data-part="<name>": the parts an email copies from the brand and never redraws.
+// Returns [{ name, html }] with each element's whole markup, nested tags of the same name counted.
+function partsOf(html) {
+  const parts = [];
+  for (const m of html.matchAll(/<(\w+)\b[^>]*\sdata-part\s*=\s*"([^"]+)"[^>]*>/gi)) {
+    const tag = m[1].toLowerCase();
+    const re = new RegExp(`<(/?)${tag}\\b[^>]*>`, "gi");
+    re.lastIndex = m.index + m[0].length;
+    let depth = 1;
+    let end = html.length;
+    for (let t; depth && (t = re.exec(html)); ) {
+      if (t[1]) depth--;
+      else if (!t[0].endsWith("/>")) depth++;
+      if (!depth) end = t.index + t[0].length;
+    }
+    parts.push({ name: m[2], html: html.slice(m.index, end) });
+  }
+  return parts;
+}
+
+// The markup of a part with its text taken out: two copies of a part match when only their words differ
+// (a button keeps its look and takes a new label).
+const partShape = (html) => html.replace(/<!--[\s\S]*?-->/g, "").replace(/>[^<]*</g, "><").replace(/\s+/g, " ").trim();
+
+// Text compared with no spaces, no case and plain quotes and dashes, so a line split by a <b> still matches.
+const squash = (t) => decode(t).replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-").replace(/\s+/g, "").toLowerCase();
+
+// The rows of words.md: | Slot | Words | Research row |, markdown emphasis removed.
+function wordsRows(file) {
+  return readText(file)
+    .split("\n")
+    .filter((line) => line.startsWith("|") && !/^\|\s*(Slot\b|-)/i.test(line))
+    .map((line) => line.split("|").slice(1, -1).map((c) => c.trim()))
+    .filter((cells) => cells.length >= 2 && cells[1] && cells[1] !== "—")
+    .map(([slot, words]) => ({ slot, words: words.replace(/\*\*|__|`/g, ""), key: squash(words.replace(/\*\*|__|`/g, "")) }));
+}
+
+// Every line on the page comes from words.md, in the order words.md gives, and no line of words.md is left out.
+// Text inside a data-part element is the brand's, not the writer's, and is not read.
+function wordsProblems(html, file) {
+  const rows = wordsRows(file);
+  if (!rows.length) return [`${file}: no rows with words`];
+  let body = html;
+  for (const part of partsOf(html)) body = body.replace(part.html, " ");
+  const nodes = readPiece(body.replace(/<title\b[\s\S]*?<\/title>/gi, " ")).textNodes;
+  const problems = [];
+  let at = 0;
+  for (const node of nodes) {
+    const key = squash(node);
+    if (!key) continue;
+    const later = rows.findIndex((r, i) => i >= at && r.key.includes(key));
+    if (later >= 0) {
+      at = later;
+      continue;
+    }
+    const earlier = rows.findIndex((r) => r.key.includes(key));
+    if (earlier >= 0) problems.push(`out of the order of words.md: "${node}" (slot ${rows[earlier].slot}) comes after slot ${rows[at].slot}`);
+    else problems.push(`text not in words.md: "${node}"`);
+  }
+  const page = squash(nodes.join(""));
+  for (const r of rows) if (!page.includes(r.key)) problems.push(`slot ${r.slot} of words.md is not on the page: "${r.words.slice(0, 60)}"`);
+  return problems;
+}
+
 // ---- email ----
 
 function limitsRows(file) {
@@ -1169,7 +1236,7 @@ function limitsRows(file) {
 }
 
 function emailCommand({ positional, flags }) {
-  if (positional.length !== 1) fail("usage: email <file.html> [--limits <LIMITS.md>]");
+  if (positional.length !== 1) fail("usage: email <file.html> [--limits <LIMITS.md>] [--words <words.md>]");
   const html = readText(positional[0]);
   const p = readPiece(html);
   const problems = [];
@@ -1213,10 +1280,36 @@ function emailCommand({ positional, flags }) {
   } else {
     notes.push("LIMITS.md rows were not checked: no --limits file given");
   }
+  if (flags.words) {
+    for (const problem of wordsProblems(html, flags.words)) add(problem);
+    read.push(`words read: ${flags.words}`);
+  } else {
+    notes.push("words.md was not read: no --words file given, so the words on the page are unchecked");
+  }
   if (problems.length) return { code: 1, out: [...read, ...notes], err: problems };
   return { out: [`ok: ${positional[0]}`, ...read, ...notes] };
 }
 commands.email = emailCommand;
+
+// The emails of one set share their locked parts: each data-part name in any email is in every email,
+// with the same markup once the words are taken out.
+function emailSetCommand({ positional }) {
+  if (positional.length < 2) fail("usage: email-set <a.html> <b.html> [<more.html> ...]");
+  const sets = positional.map((file) => ({ file, parts: partsOf(readText(file)) }));
+  const names = [...new Set(sets.flatMap((s) => s.parts.map((p) => p.name)))];
+  const problems = [];
+  if (!names.length) problems.push('no element in any email has a data-part="<name>" attribute');
+  for (const name of names) {
+    const have = sets.map((s) => ({ file: s.file, part: s.parts.find((p) => p.name === name) }));
+    for (const h of have.filter((h) => !h.part)) problems.push(`${h.file}: part "${name}" is missing`);
+    const present = have.filter((h) => h.part);
+    const [first] = present;
+    for (const h of present.slice(1)) if (partShape(h.part.html) !== partShape(first.part.html)) problems.push(`${h.file}: part "${name}" differs from ${first.file}`);
+  }
+  if (problems.length) return { code: 1, err: problems };
+  return { out: [`ok: ${positional.length} emails share ${names.length} parts (${names.join(", ")})`] };
+}
+commands["email-set"] = emailSetCommand;
 
 // ---- main ----
 

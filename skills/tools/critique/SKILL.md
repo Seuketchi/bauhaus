@@ -39,6 +39,17 @@ With no `google-chrome`, render the HTML with Firefox instead, after `mkdir -p /
 
 The rules for driving the command-line apps are in the `design` tool's `ARTCRAFT.md`.
 
+## A photograph
+
+A photograph made outside the package, such as a persona shot from an image generator, is read before it is placed. It is judged by looking, listed as judged, and each finding names what to change in the request to the generator or in the grade.
+
+- **The action reads at a glance.** Someone who has not read the brief can say what the person is doing and why. A face with no visible cause fails: show the cause (a crumb pulled from a beard, not a frown at clean fingers).
+- **The register fits the brand.** The expression and the setting match the brand's past photographs: amused and not disgusted, a calm room and not a party.
+- **No machine look.** Plastic or over-smooth skin, a worm-like texture on the forehead and cheeks, harsh HDR, over-sharpening, glow, too-orange colour, garbled lettering, a hand with the wrong number of fingers.
+- **Same person, same place.** The face, the hair and the clothes match the persona sheet, and the room matches the other shots of the set. A generator edits the newest image in its chat, not the one named, so check which version the room came from.
+
+A machine look in the light (HDR, sharpening, colour) is often fixed in the grade and needs no new image: lower highlights, contrast, clarity and texture, take saturation down and add grain. A fault in the action or the person needs a new image.
+
 ## What the tells check can read
 
 `check.mjs tells` reads `.html` and `.svg` pieces only. For a `.png`, a `.pdf` or a `.figcraft` file, say which checks could not run. A check that could not run is exit 3, never a pass. Name the file the check needs.

@@ -6,7 +6,9 @@
 
 It lints the email with `check.mjs email` against `LIMITS.md`, a table of client limits where each row has a feature, a pattern, a client, a support level, a test date and a caniemail page. A row whose support is `none` fails the email. Any other level is a note.
 
-The words come from the writer's `words.md`, by slot id, and so does the plain-text part. `email` writes none of them.
+The words come from the writer's `words.md`, by slot id, and so does the plain-text part. `email` writes none of them, and `check.mjs email --words words.md` fails any line on the page that is not in the file, out of its order, or left out.
+
+The parts a client repeats in every email (top bar, logo, button, sign-off, footer, decorations) are copied from the `DESIGN.md`, never redrawn, and marked `data-part` in the HTML. `check.mjs email-set` compares them across the emails of a set.
 
 ## When to reach for it
 
@@ -25,9 +27,14 @@ Skip it for the words of the email, for a web page or an app screen.
 
 **Where do the colours come from?** Inline hex values taken from the token file. The email never relies on a mode.
 
+**Can the email add a label or a badge the copy does not have?** No. A visual device carries no new words. Ask the writer for the line.
+
+**What if the client has no brand kit?** `brand` makes one first, from the client's past pieces, and the email starts after it.
+
 ## It's working if
 
-- `check.mjs email email.html --limits LIMITS.md` passes and prints which `LIMITS.md` it read.
+- `check.mjs email email.html --limits LIMITS.md --words words.md` passes and prints which files it read.
+- In a set, `check.mjs email-set` passes: every email has the same locked parts.
 - Every colour pair passes `check.mjs contrast --min`: 4.5:1 for text and 3:1 for a button or other interface part.
 - The comp was shown to the owner first, and the render of the HTML sits beside it at the same width.
 - Both renders exist, at 640 px and at 375 px, and the email reads with images blocked.

@@ -38,12 +38,25 @@ The questions live here, once. The lead gets them by calling `design`, and a cha
 4. How should it feel?
 5. What is special? (if you had one sentence, what would it be)
 
+- **Ask for the material in the same message.** The copy, any past pieces, a brand kit, the pictures that set the mood, and the photographs or people the piece may use. Nothing starts on assumed copy, and a brief made before the mood pictures arrive is made again when they do. Each missing item is named once, plainly, with what it blocks.
 - **Ask once.** Put every open question in one message. Do not ask a question the request, `DESIGN.md` or an earlier brief already answers; write where the answer came from, for example `from DESIGN.md section 1`.
 - **Keep the owner's words.** The brief's `Intake` section holds each answer as given, not tidied.
 - **An unanswered question is written down as unanswered.** The brief says `not answered`, the research step treats it as open, and nobody fills it by guess.
 - **The writer does not ask again.** The writer reads `Intake` and works from it. If something is still missing, the writer lists it as open and the lead asks, once more, in one message.
 - **Skip the intake** when the owner has named the designer and a complete brief file already exists. A complete brief has all eleven sections, or an `Intake` that says which file it comes from.
 - **A conflict with a project rule still stops and asks,** as the precedence section says.
+
+## Pictures from the owner
+
+A picture the owner sends as a reference is read as an image, not summarised from its caption.
+
+- **Name the moves.** For each picture, write the concrete moves it shows in the brief's `Research`: a shape, a material, a light, a type treatment, a colour pairing. A move is taken only when it is named, with the picture it came from.
+- **Moves, not marks.** Take the move and leave the mark: a script on a thick plate is a move, a company's own logo or wordmark is a mark. The piece never copies a logo, a character or a product's look one to one.
+- **A later picture can overturn an earlier choice.** Say which choice it overturns and change the brief, not only the piece.
+- **A picture that does not open, or arrives blank, is reported** at once, and nothing is drawn from it.
+- **Each round says what changed** and which picture or which word of the owner's asked for it, so the owner can push one move further without re-reading the whole piece.
+
+When the owner is shown options, one of them takes the owner's existing work further rather than replacing it.
 
 ## The token plan
 

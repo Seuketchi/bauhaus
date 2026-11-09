@@ -125,6 +125,8 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - I4 [T] The writer does not ask again: the writer reads `Intake` and lists what is still missing, and `gropius` asks once more, in one message.
 - I5 [T] The grill is skipped when the owner has named the designer and a complete brief file already exists.
 - I6 [T] A conflict with a project rule still stops and asks (section 2).
+- I7 [T] The intake asks, in the same message, for the material: the copy, past pieces, a brand kit, the mood pictures and the photographs or people the piece may use. A brief made before the mood pictures arrive is made again when they do.
+- I8 [J] Each reference picture is read as an image; the brief's `Research` names each move taken and the picture it came from. A move is taken, a mark (a logo, a character, a product's look) is not. A picture that does not open is reported. A set of options includes one that takes the owner's existing work further, and each round says what changed and what asked for it.
 
 **The brief and the research step, in `design`.**
 
@@ -188,6 +190,9 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - E4 [T] Every colour pair in the email passes D6.
 - E5 [T] The hand-over says "not tested in Outlook for Windows" until a real test exists. Which rendering engine Outlook for Windows uses today has no primary source (rachel), so the skill says so and cites caniemail.
 - E6 [J] Dark mode: the skill states that Gmail recolours on its own and the sender's `prefers-color-scheme` does not reach it (inferred by rachel from caniemail), so legibility must not depend on it; images carry no background that fails on a dark client.
+- E8 [T] `check.mjs email --words <words.md>` fails a line on the page that is not in `words.md`, a line out of the order of `words.md`, and a line of `words.md` left off the page. Text inside an element marked `data-part` is the brand's and is not read. With no `--words` the output says the words were not read.
+- E9 [T] `check.mjs email-set <a.html> <b.html> ...` fails a `data-part` that is missing from one email of the set, or whose markup differs from the first email's once its text is taken out, and fails a set with no marked part.
+- E10 [J] The email copies the locked parts from section 4 of the `DESIGN.md` and redraws none; a project with no `DESIGN.md` gets one from `brand` first. `critique` reads a generated photograph for its action, its register, a machine look and its match with the persona, and says whether the grade or a new image fixes each finding.
 - E7 [R] The HTML renders headless in Chrome (`google-chrome --headless=new --screenshot` under `timeout 60`, because Chrome is not an ArtCraft app) to a PNG at both widths. A real Outlook for Windows test is not available here.
 
 **`screens` (tool). App and web screens.**
