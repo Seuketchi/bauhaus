@@ -32,3 +32,4 @@ Skip it for a piece made in the same session. The report says so on its first li
 - Every finding names a location, a source and a fix, and the list is no longer than 12.
 - The piece under review is unchanged afterwards.
 - Checks that could not run are named, and none is passed silently.
+- A photograph from an image generator is read for its action, its register, any machine look and its match with the persona, and each finding says whether the grade or a new image fixes it.

@@ -22,6 +22,7 @@ Only `brand` creates a `DESIGN.md`. Every other job reads it.
 2. **A `DESIGN.md`** that references the token file and copies no value from it. Its foundations name the mark as an entry with the file, the clear space and the minimum size in px, and the type roles with their fallback stack. Check it: `node skills/tools/design/check.mjs design DESIGN.md`. The checker is named by its path from the plugin root; give the project's files by path.
 3. **The mark**, made by VectorCraft (below).
 4. **A specimen sheet** made by FigCraft (below).
+5. **The locked parts.** When the client has past pieces, read them before anything else: they are the system as it ships. Each part they repeat (top bar, logo, button, sign-off, footer, background grid, decorations) becomes a component in section 4 of the `DESIGN.md`, `Stable`, with the past piece and the layer it was taken from. Later pieces copy these parts and never redraw them. Take the fonts, colours and spacing of the identity from the same pieces, not from a written kit that disagrees with them; where the two differ, name the difference and ask the owner.
 
 Set up the identity so it can be applied the same way from the first piece to the last (row V1), choose from what this client and this problem need and not from a favourite style (row V2), and keep the number of type families very small, carrying the hierarchy in scale and size (row V3).
 

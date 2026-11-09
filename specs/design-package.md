@@ -188,6 +188,9 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - E4 [T] Every colour pair in the email passes D6.
 - E5 [T] The hand-over says "not tested in Outlook for Windows" until a real test exists. Which rendering engine Outlook for Windows uses today has no primary source (rachel), so the skill says so and cites caniemail.
 - E6 [J] Dark mode: the skill states that Gmail recolours on its own and the sender's `prefers-color-scheme` does not reach it (inferred by rachel from caniemail), so legibility must not depend on it; images carry no background that fails on a dark client.
+- E8 [T] `check.mjs email --words <words.md>` fails a line on the page that is not in `words.md`, a line out of the order of `words.md`, and a line of `words.md` left off the page. Text inside an element marked `data-part` is the brand's and is not read. With no `--words` the output says the words were not read.
+- E9 [T] `check.mjs email-set <a.html> <b.html> ...` fails a `data-part` that is missing from one email of the set, or whose markup differs from the first email's once its text is taken out, and fails a set with no marked part.
+- E10 [J] The email copies the locked parts from section 4 of the `DESIGN.md` and redraws none; a project with no `DESIGN.md` gets one from `brand` first. `critique` reads a generated photograph for its action, its register, a machine look and its match with the persona, and says whether the grade or a new image fixes each finding.
 - E7 [R] The HTML renders headless in Chrome (`google-chrome --headless=new --screenshot` under `timeout 60`, because Chrome is not an ArtCraft app) to a PNG at both widths. A real Outlook for Windows test is not available here.
 
 **`screens` (tool). App and web screens.**

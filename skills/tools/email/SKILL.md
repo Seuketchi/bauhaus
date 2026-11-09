@@ -38,18 +38,32 @@ Make the comp frame 600 px wide and name it `comp`. Read the PNG before the owne
 
 ## Before you build
 
+- **No `DESIGN.md`, no email.** When the project has none, the identity is made first, by `brand`, from the client's past pieces where they exist. Say so and stop.
 - Read the `DESIGN.md` and the project's own rules if there are any, and write the brief file for the piece. Cite at least three rows of `REFERENCES.md`, only rows marked `opened`.
 - Start from the register of the email's category in `REGISTERS.md`, and add what the piece's own research shows. The register is a starting point and not a template: the brief names the register used and what the piece departs from. If the category has no register, write one first from the research and mark it as new.
 - Take every colour as an inline hex value from the token file. The email never relies on a mode, and a client may invert colours on its own.
 - Lay the email out in tables and keep every container at 640 px or narrower (rows CE2 and CE1).
 
+## Locked parts
+
+The parts every email of the client repeats (top bar, logo, button, sign-off, footer, background grid, decorations) are components in section 4 of the `DESIGN.md`, each with the past piece it was taken from. An email copies them and never redraws or restyles them: only the words of a part change, such as a button's label.
+
+- Mark each copied part in the HTML with `data-part="<name>"`, the component's name.
+- The words inside a marked part are the brand's, not the writer's, and the words check does not read them.
+- A decoration is placed beside the content it belongs to, never over text. Look at it again after any row moves.
+
+## The words
+
+The page holds the lines of `words.md` and nothing else: no added title, label, badge, tag, link or kicker. A visual device carries no new words. The lines keep the order of `words.md`, so the first call to action stands where the writer put it, usually right under the headline. A line that does not fit goes back to the writer.
+
 ## Build and check
 
 1. Make the comp and show it to the owner. Build the email only after that.
 2. Build the email.
-3. Run the lint first: `node skills/tools/design/check.mjs email email.html --limits skills/tools/email/LIMITS.md`. It fails an image with no alt text, a call to action that is only an image, a body with no live text, a container wider than 640 px, a blocking row of `LIMITS.md` and any tell it can see. The checker is named by its path from the plugin root; give the email's files by path.
+3. Run the lint first: `node skills/tools/design/check.mjs email email.html --limits skills/tools/email/LIMITS.md --words words.md`. It fails a line that is not in `words.md`, a line out of its order and a line of `words.md` left off the page. It also fails an image with no alt text, a call to action that is only an image, a body with no live text, a container wider than 640 px, a blocking row of `LIMITS.md` and any tell it can see. The checker is named by its path from the plugin root; give the email's files by path.
 4. Check every colour pair with `node skills/tools/design/check.mjs contrast <fg> <bg> --min 4.5` for text, and `--min 3` for a button or other interface part (row W1). Without `--min` a failing pair still exits 0.
 5. Render and look at the result, beside the comp.
+6. When the email is one of a set, check the set: `node skills/tools/design/check.mjs email-set a.html b.html c.html`. It fails a locked part missing from one email, or one whose markup differs once its words are taken out. Then look at the renders side by side: the same parts at the same spacing, and the decorations in the same place against the content.
 
 ## Client limits
 
@@ -60,6 +74,8 @@ Make the comp frame 600 px wide and name it `comp`. Read the PNG before the owne
 Gmail recolours an email on its own, and the sender's `prefers-color-scheme` does not reach it (row CE3). The email is therefore legible in its light default, and legibility must not depend on a dark scheme. A dark scheme may be offered as an enhancement. Images carry no background that fails on a dark client.
 
 ## Images
+
+A photograph from outside the package, such as a persona shot made in an image generator, gets the photograph check in `critique` before it is placed. A product in a photograph is the client's own cutout laid on top, never a generated one: a generator garbles the label.
 
 Make each image asset with `figcraft-cli run` and `render` to a PNG. `figcraft-cli export` to PNG ran at `--scale 1` and `--scale 2` (see `ARTCRAFT.md`); `--scale 2` doubles the pixels and does not sharpen a small source, so export at the size the image is placed.
 
@@ -95,7 +111,7 @@ Then look at both images beside one real email of the same kind (row RG1).
 
 State, in this order:
 
-- The files made, the comp the owner saw, and the checks run with their result. A tells run that exited 3 on the comp is `not run`.
+- The files made, the comp the owner saw, and the checks run with their result. A tells run that exited 3 on the comp is `not run`. The words check is `not run` when no `--words` file was given, and the set check is `not run` for an email that is not part of a set.
 - **Not tested in Outlook for Windows.** Say "not tested in Outlook for Windows" until a real test exists. Which rendering engine Outlook for Windows uses today has no primary source, so say that and cite caniemail.
 - The date `LIMITS.md` was re-read from caniemail.
 - The rows of `REFERENCES.md` the brief cites.

@@ -1209,6 +1209,66 @@ test("email: a colour pair that fails 4.5:1 is rejected", () => {
   bad(["email", "e.html"], "T24", dir({ "e.html": GOOD_EMAIL.replace("color:#1f4e79", "color:#999999;background:#ffffff") }));
 });
 
+// ---- email: the words come from words.md, in its order ----
+
+const WORDS = `| Slot | Words | Research row |
+| --- | --- | --- |
+| headline | Your account is ready | — |
+| body | You can **sign in** now. | — |
+| cta | Sign in to your account | — |
+`;
+
+test("email --words: an email whose every line is in words.md, in order, passes", () => {
+  const r = ok(["email", "e.html", "--words", "words.md"], dir({ "e.html": GOOD_EMAIL.replace("sign in now", "<b>sign in</b> now"), "words.md": WORDS }));
+  assert.match(r.out, /words read: words\.md/);
+});
+
+test("email: without --words, the hand-over says the words were not checked", () => {
+  const r = ok(["email", "good.html"], dir({ "good.html": GOOD_EMAIL }));
+  assert.match(r.out, /words\.md was not read: no --words file given/);
+});
+
+test("email --words: a line the writer did not write is rejected", () => {
+  bad(["email", "e.html", "--words", "words.md"], 'text not in words.md: "VIP STATUS · UNLOCKED"', dir({ "e.html": GOOD_EMAIL.replace("<h1>", "<p>VIP STATUS · UNLOCKED</p><h1>"), "words.md": WORDS }));
+});
+
+test("email --words: a line moved out of the order of words.md is rejected", () => {
+  const moved = GOOD_EMAIL.replace("<p>You can sign in now.</p>", "").replace("</a>", "</a><p>You can sign in now.</p>");
+  bad(["email", "e.html", "--words", "words.md"], "out of the order of words.md", dir({ "e.html": moved, "words.md": WORDS }));
+});
+
+test("email --words: a slot of words.md left off the page is rejected", () => {
+  bad(["email", "e.html", "--words", "words.md"], "slot body of words.md is not on the page", dir({ "e.html": GOOD_EMAIL.replace("<p>You can sign in now.</p>", ""), "words.md": WORDS }));
+});
+
+test("email --words: the text of a locked part (data-part) is the brand's and is not read", () => {
+  const footer = '<table data-part="footer"><tr><td><p>Contact us</p><table><tr><td>© Example</td></tr></table></td></tr></table>';
+  ok(["email", "e.html", "--words", "words.md"], dir({ "e.html": GOOD_EMAIL.replace("</body>", `${footer}</body>`), "words.md": WORDS }));
+});
+
+// ---- email-set: the emails of a set share their locked parts ----
+
+const part = (name, label = "", style = "color:#111111") => `<table data-part="${name}" style="${style}"><tr><td><p>${label}</p></td></tr></table>`;
+const setEmail = (...parts) => GOOD_EMAIL.replace("</td></tr></table></body>", `</td></tr></table>${parts.join("")}</body>`);
+
+test("email-set: emails with the same parts pass, and a part may carry different words", () => {
+  const r = ok(["email-set", "a.html", "b.html"], dir({ "a.html": setEmail(part("sign-off", "Bluebeards."), part("cta", "Claim")), "b.html": setEmail(part("sign-off", "Bluebeards."), part("cta", "Get the goods")) }));
+  assert.match(r.out, /2 emails share 2 parts \(sign-off, cta\)/);
+});
+
+test("email-set: a part missing from one email is rejected", () => {
+  bad(["email-set", "a.html", "b.html"], 'b.html: part "sign-off" is missing', dir({ "a.html": setEmail(part("sign-off", "Bluebeards.")), "b.html": setEmail(part("cta", "Go")) }));
+});
+
+test("email-set: a part restyled in one email is rejected", () => {
+  bad(["email-set", "a.html", "b.html"], 'b.html: part "sign-off" differs from a.html', dir({ "a.html": setEmail(part("sign-off", "Bluebeards.")), "b.html": setEmail(part("sign-off", "Bluebeards.", "color:#333333;font-family:Rye")) }));
+});
+
+test("email-set: emails with no marked part are rejected, and one email is a usage error", () => {
+  bad(["email-set", "a.html", "b.html"], "no element in any email has a data-part", dir({ "a.html": GOOD_EMAIL, "b.html": GOOD_EMAIL }));
+  bad(["email-set", "a.html"], "usage: email-set", dir({ "a.html": GOOD_EMAIL }));
+});
+
 // ---- email: the shipped LIMITS.md ----
 
 const SHIPPED_LIMITS = join(here, "..", "skills", "tools", "email", "LIMITS.md");

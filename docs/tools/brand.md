@@ -34,4 +34,5 @@ Skip it for a single email, a screen or a document that the project's existing `
 - Every colour pair in section 6 of the `DESIGN.md` has a computed ratio at or above its threshold.
 - The saved mark command runs again and writes a file of the same byte length.
 - A specimen sheet PNG exists with the palette, the type roles and the mark at three sizes.
+- When the client has past pieces, each part they repeat is a `Stable` component in section 4 of the `DESIGN.md`, with the piece it was taken from.
 - The brief for the identity cites at least three rows of `REFERENCES.md`, or states a lower minimum with a reason.
