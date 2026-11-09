@@ -125,6 +125,8 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - I4 [T] The writer does not ask again: the writer reads `Intake` and lists what is still missing, and `gropius` asks once more, in one message.
 - I5 [T] The grill is skipped when the owner has named the designer and a complete brief file already exists.
 - I6 [T] A conflict with a project rule still stops and asks (section 2).
+- I7 [T] The intake asks, in the same message, for the material: the copy, past pieces, a brand kit, the mood pictures and the photographs or people the piece may use. A brief made before the mood pictures arrive is made again when they do.
+- I8 [J] Each reference picture is read as an image; the brief's `Research` names each move taken and the picture it came from. A move is taken, a mark (a logo, a character, a product's look) is not. A picture that does not open is reported. A set of options includes one that takes the owner's existing work further, and each round says what changed and what asked for it.
 
 **The brief and the research step, in `design`.**
 

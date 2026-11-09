@@ -41,3 +41,4 @@ Skip it for the words of a document, which it leaves to whoever writes them. The
 - `check.mjs tells` on a finished piece gives `PASS: no tells`, with a render and the brand's data supplied, and exits 1 on a piece that carries a default the brief did not earn.
 - No piece in the project falls into a ban in `TELLS.md` without a dated reason in the brief or in `DESIGN.md` under **Not to do**.
 - The project's own rules were read first, and a conflict with the brief was named and not resolved silently.
+- The intake asked for the copy, past pieces, brand kit and mood pictures in its one message, and the brief names each move taken from a reference picture and the picture it came from.
