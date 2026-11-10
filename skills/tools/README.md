@@ -15,6 +15,7 @@ None yet.
 - **[develop](./develop/SKILL.md)**: A photograph developed or prepared in LightCraft: exposure, colour and straightening set as stated values, a JPG, a PNG preview and the command that made them, with the source left untouched.
 - **[email](./email/SKILL.md)**: HTML email layout and look, built on live text and tables and linted against the client limits.
 - **[ground](./ground/SKILL.md)**: Grounds and dither as files: a picture reduced to a few token colours, and a gradient, mesh, blur, grain, halftone or text-picture ground, made by a script with no dependency.
+- **[handoff](./handoff/SKILL.md)**: Finished HTML pages handed on: Figma layers through Scripter scripts with the images inside, and one HTML file for the developer with every page, its links, a mobile view and the interactions.
 - **[massing](./massing/SKILL.md)**: The form and volume of a building or space as a SolidCraft model: a saved script, a closed-body check, an isometric image and the figures, handed on as a design study.
 - **[motion](./motion/SKILL.md)**: An animated title, graphic or effect as an EffectCraft project: a saved command list, keyframes read back, a poster frame that is the reduced-motion version, and a GIF render.
 - **[plans](./plans/SKILL.md)**: A floor plan, a section or a sheet as a CADCraft drawing in metric units, with layers, overall dimensions, a PDF, an SVG and a PNG, and a short structure note.

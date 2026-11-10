@@ -2,7 +2,7 @@
 
 A design package. It holds one method, the jobs that apply it, and characters who brief those jobs and hand work on. The method names the generic defaults a piece must not fall into, asks for a plan checked against the brief before anything is built, and puts the project's own rules above its own taste.
 
-Status: the method, the brand, email, critique, screens, massing, plans, concept, shots, storyboard, motion, develop and ground jobs, and the lead, the graphic designer, the screen designer, the space designer, the shot and motion designer, the writer and the photographer are in.
+Status: the method, the brand, email, critique, screens, massing, plans, concept, shots, storyboard, motion, develop, ground and handoff jobs, and the lead, the graphic designer, the screen designer, the space designer, the shot and motion designer, the writer and the photographer are in.
 
 ## Install
 
@@ -21,7 +21,7 @@ The cast are real people, now dead, and their names are used as names only. Each
 | --- | --- |
 | Walter Gropius | Lead. Frames the brief, hands work on, runs the craft pass. |
 | Herbert Bayer | Graphic designer. Brand, logos, email. |
-| Marcel Breuer | UI/UX designer. App and web screens. |
+| Marcel Breuer | UI/UX designer. App and web screens, and finished pages handed to Figma and to a developer. |
 | Ludwig Mies van der Rohe | Space designer. Form, plans, structure. |
 | David Ogilvy | Writer. The idea, the story and the words. |
 | László Moholy-Nagy | Shot and motion designer. Shots, storyboards, animated titles. |

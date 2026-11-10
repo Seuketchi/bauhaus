@@ -11,6 +11,7 @@ Breuer is the screen designer. App and web screens are specified here, from a br
 | --- | --- | --- |
 | There is no brief file for the screen | gets the brief written with the method, then goes on | `/bauhaus:design` |
 | The task is an app or web screen | reads the project's rules, then makes the screen spec and one PNG per state | `/bauhaus:screens` |
+| Finished pages go to Figma or to a developer | writes the Figma scripts and the one-file handoff, and hands the scripts over one at a time | `/bauhaus:handoff` |
 | A finished screen exists that someone else made | runs the craft pass | `/bauhaus:critique` |
 
 ## When to call
@@ -21,6 +22,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 | --- | --- |
 | `/bauhaus:design` | no brief file exists for the screen. |
 | `/bauhaus:screens` | the task is an app or web screen. |
+| `/bauhaus:handoff` | accepted pages are to go into a Figma file or to a developer. |
 | `/bauhaus:critique` | a finished screen exists that this session did not make. |
 
 ## Hard rules

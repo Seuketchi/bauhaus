@@ -205,6 +205,15 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - S6 [T] Optional lookup: when ui-ux-pro-max is installed, the skill may name `/ui-ux-pro-max:ui-ux-pro-max` once, as a lookup for style, palette or type ideas, never required, never above project rules, and says its output is a suggestion. It copies none of that package's data.
 - S7 [T] UI strings on a screen are specified in the project's own shape (its l10n rules win). Document-length text stays donna's; the words of a piece made here come from the writer's file, and a screen's strings follow the project's l10n shape. See open question 5.
 
+**`handoff` (tool). Finished pages to Figma and to a developer. Owns `figma.mjs`, `extract.js`, `runtime.js`, `bundle.mjs`.** Added 2026-11-10 from the Omii website project (owner's decision).
+
+- H1 [T] `figma.mjs build` turns a page layout into Scripter scripts that run with no error against a stand-in for the Figma plugin API, and `figma.mjs check` fails a script that throws. The images are inside the scripts; nothing is dragged in.
+- H2 [T] The converter skips an element that does not render (0 by 0), keeps text that sits bare in a flex box beside an icon, turns a border on one side into a line, copies an SVG group's stroke and fill onto each shape, sets a dotted or dashed stroke again after import, and places text on a path as one layer per letter.
+- H3 [T][R] `figma.mjs extract` reads a page in headless Chrome with the page's own scripts left out, and removes its temporary files.
+- H4 [T] Every script wraps its body in `async function main()` and says in its first lines to paste into a new Scripter script. A script run twice leaves one copy of its part.
+- H5 [T] `bundle.mjs` writes one HTML file with a tab per page, each image inlined once, the page links switching tabs, a Desktop / Mobile switch and an Interactions tab read from `interactions.md`.
+- H6 [J] The scripts go to the owner one at a time, with a screenshot asked for after the first part of each frame; a missing part is fixed in the converter, not by hand in the file.
+
 **`critique` (tool). The craft pass on a finished piece.**
 
 - C1 [T] Input: the piece's path, the brief, and `DESIGN.md` if any. The piece types are `.html`, `.png`, `.pdf`, `.figcraft`.
@@ -434,7 +443,7 @@ rules-win:                   # project rules that outrank this file
 - D10: the token file parses; every `$value` is present; every alias resolves and none cycles; semantic tokens alias primitives and component tokens alias semantic ones; the `document` group has all six properties; mode files carry the same paths.
 - A ratio is computed by `check.mjs` from the token file, never written by hand.
 
-**Not used, by decision:** the DTCG Resolver module; Style Dictionary, Terrazzo or any token build tool (a dependency the package does not need for one CSS output); a Figma export. Whether Figma, Penpot, Sketch, Tokens Studio, Style Dictionary and Terrazzo support the format was not confirmed on the tools' own pages (researcher), so the package claims no interchange.
+**Not used, by decision:** the DTCG Resolver module; Style Dictionary, Terrazzo or any token build tool (a dependency the package does not need for one CSS output); a Figma export of tokens. (Pages go into Figma as layers through `handoff`, which carries no tokens.) Whether Figma, Penpot, Sketch, Tokens Studio, Style Dictionary and Terrazzo support the format was not confirmed on the tools' own pages (researcher), so the package claims no interchange.
 
 ### 6. UI/UX: how the package relates to ui-ux-pro-max
 
@@ -560,6 +569,11 @@ bauhaus/
   skills/tools/motion/REFERENCES.md
   skills/tools/develop/SKILL.md
   skills/tools/develop/REFERENCES.md
+  skills/tools/handoff/SKILL.md
+  skills/tools/handoff/figma.mjs
+  skills/tools/handoff/extract.js
+  skills/tools/handoff/runtime.js
+  skills/tools/handoff/bundle.mjs
   skills/tools/ground/SKILL.md
   skills/tools/ground/REFERENCES.md
   skills/tools/ground/ground.mjs
@@ -573,6 +587,7 @@ bauhaus/
   docs/tools/brand.md
   docs/tools/email.md
   docs/tools/screens.md
+  docs/tools/handoff.md
   docs/characters/mies.md
   docs/characters/ogilvy.md
   docs/characters/moholy-nagy.md
@@ -593,6 +608,7 @@ bauhaus/
   test/film.test.mjs
   test/film-lib.mjs
   test/ground.test.mjs
+  test/handoff.test.mjs
 ```
 
 Split (each at most 14 files; a later PR also edits files from an earlier one, which does not add to its count). PR 3 is at the cap exactly. `gropius` is in PR 3, not PR 2, because he calls `critique`, and a character may only call a skill that exists:
