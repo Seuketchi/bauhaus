@@ -10,6 +10,8 @@
 //   check.mjs research <research.md>
 //   check.mjs email <file.html> [--limits <LIMITS.md>] [--words <words.md>]
 //   check.mjs email-set <a.html> <b.html> [<more.html> ...]
+//   check.mjs parts-set <a.html> <b.html> [<more.html> ...]
+//   check.mjs roles <piece.html> --design <DESIGN.md>
 //   check.mjs tells <piece.html> --brief <brief.md> [--brand <file.tokens>] [--render <file.png>]
 //                    [--references <REFERENCES.md>] [--only T1,T2] [--tells <TELLS.md>]
 //
@@ -31,7 +33,7 @@ const fail = (message) => {
 };
 
 // Flags that take a value. Anything else starting with "--" is an error.
-const VALUE_FLAGS = new Set(["--min", "--as-of", "--trends", "--brief", "--brand", "--render", "--references", "--limits", "--only", "--tells", "--words"]);
+const VALUE_FLAGS = new Set(["--design", "--min", "--as-of", "--trends", "--brief", "--brand", "--render", "--references", "--limits", "--only", "--tells", "--words"]);
 function parseArgs(argv) {
   const positional = [];
   const flags = {};
@@ -392,6 +394,8 @@ commands.trends = trendsCommand;
 const DESIGN_KEYS = ["project", "design-md", "tokens", "tokens-format", "rules-win"];
 const DESIGN_SECTIONS = ["Brand and references", "Foundations as roles", "Token source", "Components and patterns in use", "Content and voice", "Accessibility floor", "Platform conformance", "Trends in use", "Decisions and evidence", "Change log", "Not to do"];
 const COMPONENT_STATUSES = ["Trial", "Stable", "Deprecated"];
+// What a colour may be used for, from small to large. A colour without "block" or "ground" never fills a band.
+const COLOUR_USES = ["text", "button", "accent", "block", "ground"];
 const PAIR = /^(text|large|ui):\s*(\S+)\s+on\s+(\S+?)(?:\s+=\s+([\d.]+))?$/;
 
 function designCommand({ positional, flags }) {
@@ -419,7 +423,16 @@ function designCommand({ positional, flags }) {
       else if (!isDate(decided)) add(`entry "${entry.name}": Decided: "${decided}" is not a date (YYYY-MM-DD)`);
     }
   }
+  for (const entry of entriesOf(body("Foundations as roles"))) {
+    const use = boldField(entry.text, "Use");
+    if (use === undefined) continue;
+    const bad = use.split(/\s*,\s*/).filter((u) => !COLOUR_USES.includes(u));
+    if (!use || bad.length) add(`entry "${entry.name}": Use: "${use}" is not a list of ${COLOUR_USES.join(", ")}`);
+    if (!boldField(entry.text, "Token")) add(`entry "${entry.name}": a **Use:** needs the **Token:** it applies to`);
+  }
   for (const entry of entriesOf(body("Components and patterns in use"))) {
+    const part = boldField(entry.text, "Part");
+    if (part !== undefined && !/^[a-z0-9][a-z0-9-]*$/.test(part)) add(`component "${entry.name}": Part: "${part}" is not a data-part name (lowercase, digits, hyphens)`);
     const status = boldField(entry.text, "Status");
     if (!status) add(`component "${entry.name}": no **Status:**`);
     else if (!COMPONENT_STATUSES.includes(status)) add(`component "${entry.name}": status "${status}" is not Trial, Stable or Deprecated`);
@@ -1293,12 +1306,12 @@ commands.email = emailCommand;
 
 // The emails of one set share their locked parts: each data-part name in any email is in every email,
 // with the same markup once the words are taken out.
-function emailSetCommand({ positional }) {
-  if (positional.length < 2) fail("usage: email-set <a.html> <b.html> [<more.html> ...]");
+const setCommand = (noun, command) => ({ positional }) => {
+  if (positional.length < 2) fail(`usage: ${command} <a.html> <b.html> [<more.html> ...]`);
   const sets = positional.map((file) => ({ file, parts: partsOf(readText(file)) }));
   const names = [...new Set(sets.flatMap((s) => s.parts.map((p) => p.name)))];
   const problems = [];
-  if (!names.length) problems.push('no element in any email has a data-part="<name>" attribute');
+  if (!names.length) problems.push(`no element in any ${noun.slice(0, -1)} has a data-part="<name>" attribute`);
   for (const name of names) {
     const have = sets.map((s) => ({ file: s.file, part: s.parts.find((p) => p.name === name) }));
     for (const h of have.filter((h) => !h.part)) problems.push(`${h.file}: part "${name}" is missing`);
@@ -1307,9 +1320,50 @@ function emailSetCommand({ positional }) {
     for (const h of present.slice(1)) if (partShape(h.part.html) !== partShape(first.part.html)) problems.push(`${h.file}: part "${name}" differs from ${first.file}`);
   }
   if (problems.length) return { code: 1, err: problems };
-  return { out: [`ok: ${positional.length} emails share ${names.length} parts (${names.join(", ")})`] };
+  return { out: [`ok: ${positional.length} ${noun} share ${names.length} parts (${names.join(", ")})`] };
+};
+commands["email-set"] = setCommand("emails", "email-set");
+// The pages of a site keep their accepted parts (a closing card, a footer) the same way the emails of a set do.
+commands["parts-set"] = setCommand("pages", "parts-set");
+
+// ---- roles: a colour used for more than its role allows ----
+
+// A rule fills a band when it targets a sectioning element or gives the box real size.
+const BAND_TAGS = /(^|[\s>+~,(])(section|header|footer|main|article|aside|body)(?=$|[\s.#:[>+~,)])/i;
+function fillsBand(rule) {
+  if (BAND_TAGS.test(rule.selector)) return true;
+  const px = (prop) => declsNamed(rule, prop).map(([, v]) => Math.max(...v.split(/\s+/).map((x) => toPx(x) ?? 0)));
+  return [...px("height"), ...px("min-height")].some((n) => n >= 160) || [...px("padding"), ...px("padding-top"), ...px("padding-bottom")].some((n) => n >= 48);
 }
-commands["email-set"] = emailSetCommand;
+function rolesCommand({ positional, flags }) {
+  if (positional.length !== 1 || !flags.design) fail("usage: roles <piece.html> --design <DESIGN.md>");
+  const fm = frontMatter(readText(flags.design)) ?? fail(`${flags.design}: front matter: missing`);
+  const section = sectionsOf(fm.body).find((s) => s.name === "Foundations as roles")?.body ?? "";
+  const tokens = loadTokens(resolve(dirname(flags.design), fm.fields.tokens)).tokens;
+  const limited = [];
+  for (const entry of entriesOf(section)) {
+    const use = boldField(entry.text, "Use"), token = boldField(entry.text, "Token");
+    if (!use || !token) continue;
+    const uses = use.split(/\s*,\s*/);
+    if (uses.includes("block") || uses.includes("ground")) continue;
+    limited.push({ name: entry.name, use, hex: colourHex(tokens, token.replace(/^\{|\}$/g, "")).toLowerCase() });
+  }
+  if (!limited.length) return { out: [`ok: ${flags.design} limits no colour to small uses`] };
+  const problems = [], rules = cssRules(readText(positional[0]));
+  // custom properties, so background: var(--navy) is read as the colour it names
+  const vars = Object.fromEntries(rules.flatMap((r) => r.decls.filter(([p]) => p.startsWith("--"))));
+  const expand = (v) => v.replace(/var\(\s*(--[\w-]+)\s*(?:,[^)]*)?\)/g, (m, name) => vars[name] ?? m);
+  for (const rule of rules) {
+    if (!fillsBand(rule)) continue;
+    for (const [, raw] of declsNamed(rule, "background", "background-color", "background-image")) {
+      const value = expand(raw);
+      for (const c of limited) if (value.toLowerCase().includes(c.hex)) problems.push(`${positional[0]}: "${rule.selector}" fills a band with ${c.name} (${c.hex}), whose use is ${c.use}`);
+    }
+  }
+  if (problems.length) return { code: 1, err: problems };
+  return { out: [`ok: no band in ${limited.map((c) => c.name).join(", ")}`] };
+}
+commands.roles = rolesCommand;
 
 // ---- main ----
 

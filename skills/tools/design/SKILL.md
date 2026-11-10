@@ -90,6 +90,24 @@ Generated work falls into a small set of looks. Each is a default, not a crime: 
 - Never estimate. `check.mjs contrast <fg> <bg>` computes the ratio, never shows a failing pair as passing (it prints `fail`), but exits 0 on a failing pair unless `--min` is passed: pass `--min 4.5` for text and `--min 3` for an interface part, and the exit is 1 when the pair is under it. It refuses a colour name, a short hex of the wrong length or a colour with alpha. A colour in another colour space is used through its hex.
 - Colour pairs in `DESIGN.md` are role paths. The ratio is computed from the token file and never written by hand.
 
+## A site or a set
+
+When the work is more than one page, or emails that follow a site:
+
+- Make the brand kit first: logo, colour roles, type with email fallbacks, buttons, the signature parts and the imagery rules. Every later page and email is built from it.
+- Hold each new page to the colour density of the page the owner accepted. A page that is mostly white beside an accepted page that is mostly colour reads as another brand.
+- Write each colour's role (`**Use:**` in `DESIGN.md`). A colour kept to text and buttons that fills a whole band changes the brand's tone.
+- Signature parts (the closing card, the footer, the nav) are locked once accepted and stay the same on every page. Mark them with `data-part` and run `parts-set`.
+- Vary the layout device between neighbouring sections: a split, then a grid, then a full-bleed picture. The same device three times in a row reads as a template.
+- One signature device per page at most (a ribbon, a large numeral), and it carries copy the owner already has.
+- Use the owner's real photographs. Generated pictures beside real ones read as a template; when the real ones run out, ask for more.
+- The first call to action sits right under the headline, on every page.
+- Offer the interaction layer with the first build: hover, reveal on scroll and the menu, each with a reduced-motion version.
+
+## When rounds go nowhere
+
+After two rounds of polish, or two tools, that the owner rejects, stop. Name the root cause in one line (missing material, a wrong brief, a tool that cannot do it), then offer two or three directions or ask for the material. A third round of the same kind is not made.
+
 ## The checks
 
 Run them from this folder with `node check.mjs <command>`.
@@ -104,6 +122,8 @@ Run them from this folder with `node check.mjs <command>`.
 | `brief <brief.md>` | The brief has all eleven sections, a two-word idea, a story of 3 to 5 beats (or none, with a reason), its tells have reasons, and its reference minimum is allowed. |
 | `research <research.md>` | The research file has its date and client line, the seven parts in order, every source marked opened or summary only, the eight fields in every source note, and the not-that table. |
 | `email <file.html> [--limits <LIMITS.md>]` | Alt text, a real button, live text, a container of at most 640 px, the tells a script can see, and the limits table when one is given. |
+| `parts-set <page.html>...` | Every `data-part` the pages share is the same in each: one closing card, one footer, one nav. |
+| `roles <piece.html> --design <DESIGN.md>` | No band is filled with a colour whose `**Use:**` leaves out `block` and `ground`, also through a CSS variable. |
 | `tells <piece> --brief <brief.md> [--brand <tokens>] [--render <png>]` | The rows of `TELLS.md`. Exit 0 no tell, 1 a tell, 2 too few reference rows, 3 a check could not run. The first line is `PASS: no tells` or `FAIL: ...`. |
 
 A pass is never approval. The checks prove numbers and written rules; the critique pass and the owner's reviewer rule on the rest.

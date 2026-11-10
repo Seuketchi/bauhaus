@@ -54,6 +54,21 @@ Semantic text on surface.
 
 `**Decided:**` is a real date (`YYYY-MM-DD`) and is required. A component is a `###` heading under section 4 with `**Status:** Trial`, `Stable` or `Deprecated`.
 
+A colour entry under section 2 may limit where the colour goes:
+
+```
+### Ink
+The dark brand colour.
+
+**Token:** semantic.color.text
+**Use:** text, button
+**Decided:** 2026-11-10
+```
+
+`**Use:**` lists one or more of `text`, `button`, `accent`, `block` and `ground`, and needs the `**Token:**` it applies to. A colour without `block` or `ground` never fills a band: `check.mjs roles` fails any section, header, footer or tall or deeply padded box whose background is that colour.
+
+A component that must look the same on every page names its `data-part` with `**Part:** <name>` (lowercase, digits, hyphens). `check.mjs parts-set` compares that part across the pages.
+
 A colour pair in section 6 is a list item `- <kind>: <role path> on <role path>`. The kind is `text` (4.5:1, SC 1.4.3), `large` (3:1, SC 1.4.3) or `ui` (3:1, SC 1.4.11). Write role paths from the token file, never values. The checker computes the ratio. A ratio may follow as `= 4.61`, and it must equal the computed one.
 
 A trend in section 8 is a list item `- <name> | reviewed <date> | brief: <sentence>`. The name must be an entry of `TRENDS.md` that is not `Retired` and, when `--as-of` is given, not past its review-by date.
