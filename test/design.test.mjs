@@ -1853,3 +1853,46 @@ test("develop: the two lowered minimums its skill states are accepted by `check.
   }
   bad(["brief", "brief.md"], "Minimum: 2 is below 3 and needs a Reason:", brief({ References: "- LD1: Exposure counted in stops.\n- LD9: Keep the frame simple.\nMinimum: 2." }));
 });
+
+// ---- colour use and roles: a colour kept to text and buttons never fills a band ----
+
+const INK_ENTRY = "### Ink\nThe dark colour.\n\n**Token:** semantic.color.text\n**Use:** text, button\n**Decided:** 2026-11-10\n";
+const roleDesign = (page) => dir({ "DESIGN.md": designMd({ bodies: { "Foundations as roles": INK_ENTRY } }), "d.tokens": tokenFile(), "page.html": page });
+
+test("design: a Use list of known uses with its Token passes", () => {
+  ok(D, design({ bodies: { "Foundations as roles": INK_ENTRY } }));
+});
+
+test("design: an unknown use is rejected", () => {
+  bad(D, 'Use: "text, banner" is not a list of text, button, accent, block, ground', design({ bodies: { "Foundations as roles": INK_ENTRY.replace("text, button", "text, banner") } }));
+});
+
+test("design: a Use with no Token is rejected", () => {
+  bad(D, 'entry "Ink": a **Use:** needs the **Token:** it applies to', design({ bodies: { "Foundations as roles": INK_ENTRY.replace("**Token:** semantic.color.text\n", "") } }));
+});
+
+test("design: a component Part must be a data-part name", () => {
+  bad(D, 'Part: "Closing Card" is not a data-part name', design({ bodies: { "Components and patterns in use": "### Closing card\n\n**Part:** Closing Card\n**Status:** Stable\n" } }));
+  ok(D, design({ bodies: { "Components and patterns in use": "### Closing card\n\n**Part:** closing-card\n**Status:** Stable\n" } }));
+});
+
+test("roles: a section filled with a text-only colour is rejected, also through a CSS variable", () => {
+  bad(["roles", "page.html", "--design", "DESIGN.md"], '"section.rt" fills a band with Ink (#111827), whose use is text, button',
+    roleDesign("<style>:root{--ink:#111827}section.rt{background:var(--ink);color:#fff}</style><section class=rt>x</section>"));
+  bad(["roles", "page.html", "--design", "DESIGN.md"], '".band" fills a band with Ink',
+    roleDesign("<style>.band{background-color:#111827;padding:90px 0}</style><div class=band>x</div>"));
+});
+
+test("roles: the same colour as text, on a button or on a thin strip passes", () => {
+  ok(["roles", "page.html", "--design", "DESIGN.md"],
+    roleDesign("<style>h2{color:#111827}.btn{background:#111827;padding:12px 24px}.ann{background:#111827;height:46px}</style><h2>x</h2>"));
+});
+
+test("parts-set: pages keep their accepted parts", () => {
+  const page = (card) => `<html><body><main>page</main>${card}</body></html>`;
+  const card = (h) => `<section data-part="closing-card" class="fin"><h2>${h}</h2><span class="sbtn">GO</span></section>`;
+  assert.match(ok(["parts-set", "a.html", "b.html"], dir({ "a.html": page(card("Ready?")), "b.html": page(card("This is OMII.")) })).out, /ok: 2 pages share 1 parts/);
+  bad(["parts-set", "a.html", "b.html"], 'b.html: part "closing-card" differs from a.html',
+    dir({ "a.html": page(card("Ready?")), "b.html": page(card("Ready?").replace('class="fin"', 'class="fin fin-sun"')) }));
+  bad(["parts-set", "a.html", "b.html"], "no element in any page has a data-part", dir({ "a.html": page(""), "b.html": page("") }));
+});

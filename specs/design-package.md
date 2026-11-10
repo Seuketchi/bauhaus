@@ -116,6 +116,9 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 
 - D16 [T] `check.mjs research <research.md>` accepts a valid file and rejects each of: the head lines `Date:` and `Client:` missing, a section of P1 to P7 missing or out of order, a P1 source row with no `opened` or `summary only`, fewer than 6 sources or fewer than 2 makers, a P2 entry with an empty field of its eight, a P4 that is neither the not-that table nor `no earlier piece`, a P7 that cites no source, and a missing `Not checked` or `Open` section. It cannot judge whether a look was read correctly; the reviewer does that.
 - D17 [T] `check.mjs` computes a ratio for an `oklab` or `oklch` colour with no `hex`, by the Oklab definition: white is (1, 0, 0) and maps to `#ffffff`, black to `#000000`, the sRGB primaries and 20 colours round-trip through `oklch` and `oklab` to themselves, and a `hex` beside the components wins. An `oklab` or `oklch` colour outside the sRGB gamut fails with "cannot compute" and is not clipped, because a clipped colour is not the colour the token names. Any other colour space with no `hex` still fails with "cannot compute". This reverses the earlier rule that an `oklch` colour with no hex fails (section 5).
+- D18 [T] A colour entry may carry `**Use:**`, a list of `text`, `button`, `accent`, `block` and `ground`, with the `**Token:**` it applies to; `check.mjs design` fails an unknown use and a use with no token. `check.mjs roles <piece.html> --design <DESIGN.md>` fails a band (a section, header, footer, main, article, aside or body, or a box at least 160 px tall or with at least 48 px of padding) whose background resolves, also through a CSS variable, to a colour whose use leaves out `block` and `ground`.
+- D19 [T] A component may carry `**Part:** <name>`, a `data-part` name in lowercase, digits and hyphens. `check.mjs parts-set <a.html> <b.html> ...` holds the pages of a site to the rule E9 holds an email set to.
+- D20 [T][J] `SKILL.md` has a section for a site or a set (brand kit first, colour density held to the accepted page, colour roles, locked signature parts, varied layout devices, one signature device carrying existing copy, real photographs, the first call to action under the headline, interactions with reduced motion offered with the first build) and a section for rounds that go nowhere (after two rejected rounds of polish or tools: stop, name the root cause, offer directions or ask for the material).
 
 **Intake, in `design` and `gropius`.**
 
@@ -439,7 +442,7 @@ rules-win:                   # project rules that outrank this file
 
 **What the checker enforces**
 
-- D7: `DESIGN.md` has the front-matter keys, the 11 headings in order, the entry fields, a valid status on each component, a `Trends in use` entry that resolves to a live entry in the trends file, a descending change log, and every accessibility pair resolving to two colours with a computed ratio at or above its threshold.
+- D7: `DESIGN.md` has the front-matter keys, the 11 headings in order, the entry fields, a valid status on each component, a `**Use:**` list with its token and a `**Part:**` name where given, a `Trends in use` entry that resolves to a live entry in the trends file, a descending change log, and every accessibility pair resolving to two colours with a computed ratio at or above its threshold.
 - D10: the token file parses; every `$value` is present; every alias resolves and none cycles; semantic tokens alias primitives and component tokens alias semantic ones; the `document` group has all six properties; mode files carry the same paths.
 - A ratio is computed by `check.mjs` from the token file, never written by hand.
 
