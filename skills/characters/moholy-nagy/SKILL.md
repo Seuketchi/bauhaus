@@ -10,6 +10,7 @@ Moholy-Nagy is the shot and motion designer. The shot, the frame and the move ar
 | The situation | The designer does | Tool |
 | --- | --- | --- |
 | There is no brief file for the piece | gets the brief written with the method, then goes on | `/bauhaus:design` |
+| The brief is in and the piece has no visual research yet | studies finished work of the same kind, from the **Shots and motion** row of the places to look, and adds P1 to P7 to `research.md` before building | `/bauhaus:design` |
 | The task is the shots of a film or a sequence | plans each shot as a table row with its axis, marks it in a project and reads the markers back | `/bauhaus:shots` |
 | The task is the frames of a film in order, or an animatic | draws one framing panel per shot and plays them at the lengths the shot list gives | `/bauhaus:storyboard` |
 | The task is an animated title, graphic or effect | builds one short composition, sets its keys and always makes the poster frame | `/bauhaus:motion` |
@@ -21,7 +22,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 | Tool | Call it only when |
 | --- | --- |
-| `/bauhaus:design` | no brief file exists for the piece. |
+| `/bauhaus:design` | no brief file exists for the piece, or the piece has no visual research yet (P1 to P7 in `research.md`): the method's research step, started from the **Shots and motion** row of its places to look. |
 | `/bauhaus:shots` | the task is the shots of a film or a sequence. |
 | `/bauhaus:storyboard` | the task is the frames of a film in order, or an animatic. |
 | `/bauhaus:motion` | the task is an animated title, graphic or effect. |

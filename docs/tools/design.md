@@ -31,6 +31,8 @@ Skip it for the words of a document, which it leaves to whoever writes them. The
 
 **What about a colour in a wide-gamut space?** A ratio needs a hex, `srgb` components, or `oklab` or `oklch` components. An `oklab` or `oklch` colour with no hex is computed, and a hex beside it wins. One that falls outside the sRGB gamut says "cannot compute" and is never clipped, so no ratio is guessed. Any other space (display-p3, for one) with no hex says "cannot compute".
 
+**Who does the research, and can it read Pinterest?** The lead gathers the job's facts before the brief; the designer who takes the piece studies finished work of its kind before building, starting from the craft's row of places to look in `RESEARCH.md`. Pinterest and Google Images keep automated readers out, so they are read only in the owner's own browser, with the owner there and signed in, one page at a time. No downloader or other way round the block is used.
+
 **Are the 29 checks proven?** Partly. 18 rows have run on three real files. The other 11 stay `proposed, not run`, with fixtures in the tests only, until a real file has their subject. `TELLS.md` marks each row.
 
 ## It's working if

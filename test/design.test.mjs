@@ -1771,6 +1771,26 @@ test("RESEARCH.md states R1 to R10 and P1 to P7, the ranking line, the fetch rul
   assert.doesNotMatch(text, /\/suits:|ui-ux-pro-max|rachel/i);
 });
 
+test("RESEARCH.md gives the piece layer to the designer, lists places to look by craft, and lets a closed site be read only in the owner's browser (RES7)", () => {
+  const text = designText("RESEARCH.md");
+  assert.match(text, /piece layer[^.\n]*designer who takes the piece/i);
+  const where = text.split(/^## Where to look$/m)[1]?.split(/^## /m)[0] ?? "";
+  assert.ok(where, "no Where to look section");
+  assert.match(where, /robots\.txt[^.\n]*\d{4}-\d{2}-\d{2}/, "the table says when robots.txt was read");
+  const rows = where.split("\n").filter((l) => /^\| \*\*/.test(l));
+  assert.ok(rows.length >= 5, "a row per craft");
+  for (const row of rows) for (const site of ["Pinterest", "Google Images"]) assert.ok(row.includes(site), `${row.slice(0, 30)} lacks ${site}`);
+  const r6 = text.split("**R6.")[1].split("**R7.")[0];
+  assert.match(r6, /no downloader/i);
+  assert.match(r6, /owner's browser/i);
+  const browser = text.split(/^## The owner's browser$/m)[1]?.split(/^## /m)[0] ?? "";
+  assert.ok(browser, "no The owner's browser section");
+  assert.match(browser, /owner signs in/i);
+  assert.match(browser, /never[^.\n]*password/i);
+  assert.match(browser, /one page at a time/i);
+  assert.match(browser, /owner is away|owner says no/i);
+});
+
 test("RESEARCH.md describes the file the checker reads: the head lines, the parts in order and the closing lists", () => {
   const text = designText("RESEARCH.md");
   for (const phrase of ["Date:", "Client:", "## Job facts", "## P1. Sources", "## P2. Source notes", "## P3. Register", "## P4. Not that", "## P5. Gaps and substitutes", "## P6. What the supplied pictures can carry", "## P7. Output to craft", "## Not checked", "## Open", "Better pictures change this", "no earlier piece"]) assert.ok(text.includes(phrase), phrase);

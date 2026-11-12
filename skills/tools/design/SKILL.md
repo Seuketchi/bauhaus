@@ -25,7 +25,7 @@ A brief that contradicts a project rule is not obeyed silently: stop, name the r
 - Find the project's own rules (a `CLAUDE.md` or `AGENTS.md`, files on UI idioms or themes, a design gate). They rank first.
 - Run the intake (below) when no complete brief file exists, and keep the owner's answers word for word.
 - Write a brief file for the piece before any work: audience, job, tone, what it must not look like, surface, Intake, Idea, Insight, Story and Research, the references it cites, and the tells it earns, each with a reason. Intake and Research are filled before the writer; Idea, Insight and Story are the writer's. The format is in `DESIGN-MD.md`. Check it with `check.mjs brief`.
-- Run the research step in `RESEARCH.md` before the brief is final (the job's facts) and again before craft (the piece's visual research), and write `research.md` beside the brief. Check it with `check.mjs research`.
+- Run the research step in `RESEARCH.md`: the lead runs it before the brief is final (the job's facts), and the designer who takes the piece runs it again before craft (the piece's visual research, from the craft's row of places to look). Write `research.md` beside the brief, and check it with `check.mjs research` once the piece's research is in.
 - Cite at least three reference rows and say which rule you took from each, so a ban never stands alone. A brief may state a lower minimum with a reason; the floor is one. A rule rests only on a reference that was opened.
 
 ## The intake

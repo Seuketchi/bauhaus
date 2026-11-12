@@ -6,8 +6,8 @@ Research is evidence for the brief, not a rule above it. A register or a referen
 
 ## Two layers
 
-- **The job layer, once, before the brief is final.** Who the audience is, what the category looks like, what the owner already has, what is known and what is not. It asks for one reference that shows the world the idea lives in, and not only for craft rules.
-- **The piece layer, after the brief and before craft.** The visual research for this kind of piece, in the parts P1 to P7 below.
+- **The job layer, by the lead, once, before the brief is final.** Who the audience is, what the category looks like, what the owner already has, what is known and what is not. It asks for one reference that shows the world the idea lives in, and not only for craft rules.
+- **The piece layer, by the designer who takes the piece, after the brief and before craft.** The visual research for this kind of piece, in the parts P1 to P7 below, started from the craft's row under **Where to look**. The designer reads the job layer first, adds P1 to P7 to the same `research.md`, and checks the file once they are in.
 
 ## The rules
 
@@ -16,13 +16,40 @@ Research is evidence for the brief, not a rule above it. A register or a referen
 - **R3. Say what was not checked.** `research.md` ends with a list of what was not read and why.
 - **R4. Never invent a source, a quote or a number.** What cannot be confirmed goes under `could not verify`.
 - **R5. Offer a side question; do not follow it.** A side question goes into the `Open` list for the lead to put to the owner.
-- **R6. Respect the site.** Read `robots.txt` first. If it keeps automated readers out, or the site answers with a block page, record the gap and stop. Send a plain client name, never a person's address. Do not look for another way in.
+- **R6. Respect the site.** Read `robots.txt` first. If it keeps automated readers out, or the site answers with a block page or a sign-in wall, do not fetch it: record the gap and stop. Send a plain client name, never a person's address. Do not look for another way in: no downloader, no mirror, no changed client name. The one exception is the owner's browser, below.
 - **R7. A reference that cannot be had is a gap, and the substitute is named.** A retailer's email is not the brand's own. Say what was used instead and what it cannot show.
 - **R8. Number the sources and keep the picture.** The pictures are for study only. They stay in the project's notes folder and are not placed in a piece.
 - **R9. Collect references for the idea as well as for the rules.** One reference shows the world the idea lives in.
 - **R10. The file is short and dated.** `research.md` carries its date and the client name used for any fetch, or `none` when nothing was fetched.
 
 How the step fetches a page is not fixed by this package: use whatever fetch you have in the session, read `robots.txt` first, and write down which one was used.
+
+## Where to look
+
+Places that hold finished work of each kind. They are where the search starts, not sources: a piece enters P1 only once it has been opened and its maker is named. The split follows each site's `robots.txt` as read on 2026-11-12 for a search or gallery page; it changes, so read it again before a fetch (R6). A site open to a fetch can still answer with a sign-in wall, and then it is closed too.
+
+| Craft | Open to a fetch | The owner's browser only |
+| --- | --- | --- |
+| **Brand and logos** | Brand New (underconsideration.com/brandnew), Fonts In Use, Dribbble | Pinterest, Google Images, Behance |
+| **Email** | Really Good Emails | Pinterest, Google Images, Milled |
+| **Screens** | Mobbin, Dribbble, Awwwards, Land-book | Pinterest, Google Images |
+| **Space** | ArchDaily, Dezeen, Divisare | Pinterest, Google Images |
+| **Shots and motion** | Film-Grab | Pinterest, Google Images, ShotDeck, Art of the Title, Vimeo |
+| **Photograph** | Magnum Photos, Unsplash, 500px | Pinterest, Google Images, Flickr search |
+
+Behance, ShotDeck and Vimeo admit a generic reader but name some readers they keep out; read the file for the one in use. Pinterest and Google Images are where most people start, so they are in every row, and both are closed to a fetch.
+
+## The owner's browser
+
+A site closed to a fetch may be read in the owner's own browser, when the session can drive it and the owner is there. It is read as a person would read it:
+
+- Ask the owner first, and say which site and what will be searched.
+- The owner signs in. Never ask for, read or type a password or a code.
+- One page at a time: a search, then the pieces chosen from it. No endless scroll of a feed, no saving a whole board, no batch download.
+- Keep only the pictures that become P1 sources, each with its page address, in the project's notes folder for study (R8).
+- In P1, write `owner's browser` after the date in `Fetched`, and in `Client:` name the fetch client and the owner's browser, or the browser alone.
+
+When the owner is away or says no, the site is a gap (R7): name the open site used instead and what it cannot show.
 
 ## The file
 
