@@ -22,7 +22,9 @@ Skip the intake when the owner has named the designer and a complete brief file,
 
 **Why will it not start without a brief file?** The brief names the audience, the job, the tone, what the piece must not look like, the surface and the references. Without it a piece falls back on the generic defaults that `design` bans.
 
-**Does a craft pass approve a piece?** No. It is a craft pass and not a sign-off. Louis rules against the rules and the numbers.
+**What about a small job?** One piece, or a set of one kind, for a brand that already exists starts from a one-page proposal instead of the brief. The lead shows it to the owner before anything is made, unless the owner is away, and the writer is called only for a missing line.
+
+**Does a craft pass approve a piece?** No. Only the owner signs off, and the lead records the owner's words and the locked files in `approvals.md`. It is a craft pass and not a sign-off. Louis rules against the rules and the numbers.
 
 **Who writes the words?** The writer, except documents and the PDF build, which are donna's. The lead hands on the brief and writes none.
 

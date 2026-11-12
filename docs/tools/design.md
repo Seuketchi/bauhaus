@@ -31,6 +31,10 @@ Skip it for the words of a document, which it leaves to whoever writes them. The
 
 **What about a colour in a wide-gamut space?** A ratio needs a hex, `srgb` components, or `oklab` or `oklch` components. An `oklab` or `oklch` colour with no hex is computed, and a hex beside it wins. One that falls outside the sRGB gamut says "cannot compute" and is never clipped, so no ratio is guessed. Any other space (display-p3, for one) with no hex says "cannot compute".
 
+**Does a small job need the eleven-section brief?** No. One piece, or a set of one kind, for a brand that already exists starts from a one-page proposal (`PROPOSAL.md`): scope, deliverables, words, three examples, rounds, usage and what is left out. The owner sees it before anything is made, unless away. A new identity is never small, and the owner can say small or full. `check.mjs proposal` checks it, and `tells` takes it in place of a brief.
+
+**Who approves a piece?** Only the owner. The brief or proposal, the comp and the final files are signed off by the owner's word and locked by their hashes in `approvals.md` (`SIGN-OFF.md`). Later feedback is a change request, counted against the rounds; past them it waits for the owner. `check.mjs approvals` fails when a locked file changed with no request that reopens it.
+
 **Who does the research, and can it read Pinterest?** The lead gathers the job's facts before the brief; the designer who takes the piece studies finished work of its kind before building, starting from the craft's row of places to look in `RESEARCH.md`. Pinterest and Google Images keep automated readers out, so they are read only in the owner's own browser, with the owner there and signed in, one page at a time. No downloader or other way round the block is used.
 
 **Are the 29 checks proven?** Partly. 18 rows have run on three real files. The other 11 stay `proposed, not run`, with fixtures in the tests only, until a real file has their subject. `TELLS.md` marks each row.

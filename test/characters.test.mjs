@@ -2202,3 +2202,52 @@ describe("each designer researches their own piece (RES8)", () => {
     assert.match(when, /designer[^.\n]*piece layer|piece layer[^.\n]*designer/i);
   });
 });
+
+// QS3 to QS5. A small job starts from a one-page proposal (design/PROPOSAL.md) in place of the eleven-section brief.
+describe("a small job starts from a proposal (QS3 to QS5)", () => {
+  const gropius = read("skills/characters/gropius/SKILL.md");
+  test("the lead writes a proposal for a small job, shows it to the owner unless the owner is away, and says so in the hand-over (QS3)", () => {
+    const does = section(gropius, "What the lead does");
+    assert.match(does, /small job[^\n]*proposal/i);
+    const when = section(gropius, "When to call").split("\n").find((l) => l.startsWith("| `/bauhaus:design` |")) ?? "";
+    assert.match(when, /small job[^.]*proposal/i);
+    assert.match(section(gropius, "Hard rules"), /brief file, or for a small job a proposal/i);
+    assert.match(section(gropius, "Hard rules"), /owner is away/i);
+    assert.match(section(gropius, "Hand over"), /`proposal written`/);
+  });
+  test("the writer writes only the missing lines of a small job's proposal, with no idea, insight or story (QS4)", () => {
+    const ogilvy = read("skills/characters/ogilvy/SKILL.md");
+    const row = section(ogilvy, "When to call").split("\n").find((l) => l.startsWith("| `/bauhaus:concept` |")) ?? "";
+    assert.match(row, /proposal[^.]*`Words`[^.]*(?:missing|empty)/i);
+    assert.match(ogilvy, /no idea, insight or story/i);
+  });
+  for (const name of Object.keys(CRAFTS)) {
+    test(`${name} takes a small job from its proposal and gathers its three examples (QS5)`, () => {
+      const row = section(read("skills/characters", name, "SKILL.md"), "When to call").split("\n").find((l) => l.startsWith("| `/bauhaus:design` |")) ?? "";
+      assert.match(row, /three examples[^.]*proposal|proposal[^.]*three examples/i);
+    });
+  }
+});
+
+// SO3 to SO5. Sign-off is the owner's alone; a locked file changes only under a change request.
+describe("sign-off is the owner's and locks the stage (SO3 to SO5)", () => {
+  test("the lead records the owner's sign-off and logs later feedback as change requests (SO3)", () => {
+    const g = read("skills/characters/gropius/SKILL.md");
+    assert.match(section(g, "What the lead does"), /owner approves a stage[^\n]*approvals\.md/i);
+    assert.match(section(g, "What the lead does"), /change request/i);
+    assert.match(section(g, "Hard rules"), /only the owner signs off/i);
+    assert.match(section(g, "Hard rules"), /past the rounds[^.\n]*extra[^.\n]*waits/i);
+  });
+  for (const name of Object.keys(CRAFTS)) {
+    test(`${name} changes a locked file only under a change request, and never calls work approved (SO4)`, () => {
+      const rules = section(read("skills/characters", name, "SKILL.md"), "Hard rules");
+      assert.match(rules, /locked/i);
+      assert.match(rules, /change request[^.\n]*reopens/i);
+      assert.match(rules, /never[^.\n]*approved/i);
+    });
+  }
+  test("the craft pass points to the owner's sign-off (SO5)", () => {
+    const c = read("skills/tools/critique/SKILL.md");
+    assert.match(section(c, "Hard rules"), /sign-off is the owner's[^.\n]*approvals\.md/i);
+  });
+});

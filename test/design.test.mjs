@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateSync, crc32 } from "node:zlib";
+import { createHash } from "node:crypto";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const designDir = join(here, "..", "skills", "tools", "design");
@@ -851,6 +852,134 @@ test("research: a missing file is refused", () => {
   bad(["research", "nope.md"], "nope.md: no such file", dir());
 });
 
+// ---- proposal (QS1): the one page that stands in for the brief on a small job ----
+
+const exampleRows = (n = 3, { read = "opened", move = "a single dark field" } = {}) =>
+  Array.from({ length: n }, (_, i) => `| ${i + 1} | Maker ${i + 1} | https://example.com/banner/${i + 1} | ${read} | ${move} |`).join("\n");
+const PROPOSAL_PARTS = {
+  Scope: "One web banner for a talk, for the brand as it stands.",
+  Deliverables: "| File | Size | Format |\n| --- | --- | --- |\n| banner/banner.png | 1200 by 400 px | PNG |\n",
+  Words: "| Slot | Words | From |\n| --- | --- | --- |\n| title | Making with less | owner |\n| date | 14 February 2027 | owner |\n",
+  Examples: `| # | Maker | URL | Read | Move taken |\n| --- | --- | --- | --- | --- |\n${exampleRows()}\n`,
+  Rounds: "Rounds: 2",
+  Usage: "The event's site and social posts, until the talk.",
+  "Not included": "- Print sizes.\n- Animation.",
+  References: "- V1: Discipline in the grid.\n- W2: Contrast of 4.5:1 for text.\n- C3: One focal point.",
+};
+const proposalText = (parts = {}, { head = "Date: 2026-11-12\nApproved: owner away\n" } = {}) =>
+  `# Proposal: talk banner\n\n${head}\n${Object.entries({ ...PROPOSAL_PARTS, ...parts }).filter(([, v]) => v !== null).map(([k, v]) => `## ${k}\n\n${v}\n`).join("\n")}`;
+const proposal = (parts, options) => dir({ "proposal.md": proposalText(parts, options) });
+const PR = ["proposal", "proposal.md"];
+
+test("proposal: a valid proposal passes, approved on a date or with the owner away (QS1)", () => {
+  ok(PR, proposal());
+  ok(PR, proposal({}, { head: "Date: 2026-11-12\nApproved: 2026-11-12\n" }));
+});
+
+for (const part of ["Scope", "Deliverables", "Words", "Examples", "Rounds", "Usage", "Not included", "References"]) {
+  test(`proposal: a proposal missing "${part}" is rejected`, () => {
+    bad(PR, `missing section "${part}"`, proposal({ [part]: null }));
+  });
+}
+
+test("proposal: the head lines are required, and Approved is a date or owner away", () => {
+  bad(PR, "no Date: line", proposal({}, { head: "Approved: owner away\n" }));
+  bad(PR, "no Approved: line", proposal({}, { head: "Date: 2026-11-12\n" }));
+  bad(PR, 'Approved: "soon" is not a date or owner away', proposal({}, { head: "Date: 2026-11-12\nApproved: soon\n" }));
+});
+
+test("proposal: at least one deliverable, and a number of rounds", () => {
+  bad(PR, "Deliverables: no file listed", proposal({ Deliverables: "| File | Size | Format |\n| --- | --- | --- |\n" }));
+  bad(PR, "Rounds: needs a whole number of 1 or more", proposal({ Rounds: "As many as needed." }));
+  bad(PR, "Rounds: needs a whole number of 1 or more", proposal({ Rounds: "Rounds: 0" }));
+});
+
+test("proposal: each line of words comes from the owner or the writer, or the piece has none", () => {
+  bad(PR, 'Words row 1: From "designer" is not owner or writer', proposal({ Words: "| Slot | Words | From |\n| --- | --- | --- |\n| title | Less | designer |\n" }));
+  ok(PR, proposal({ Words: "none: the piece carries no words." }));
+});
+
+test("proposal: three examples of the same kind, each opened, each with the move taken", () => {
+  bad(PR, "Examples: 2 opened, needs 3", proposal({ Examples: `| # | Maker | URL | Read | Move taken |\n| --- | --- | --- | --- | --- |\n${exampleRows(2)}\n` }));
+  bad(PR, "Examples: 0 opened, needs 3", proposal({ Examples: `| # | Maker | URL | Read | Move taken |\n| --- | --- | --- | --- | --- |\n${exampleRows(3, { read: "summary only" })}\n` }));
+  bad(PR, "Examples row 2: no Move taken", proposal({ Examples: `| # | Maker | URL | Read | Move taken |\n| --- | --- | --- | --- | --- |\n${exampleRows(3, { move: "" })}\n` }));
+});
+
+test("proposal: it fits on one page", () => {
+  const long = Array.from({ length: 60 }, (_, i) => `- Line ${i + 1}.`).join("\n");
+  bad(PR, "the proposal is longer than one page", proposal({ "Not included": long }));
+});
+
+test("tells: a proposal stands in for the brief on a small job, with its references and earned tells", () => {
+  clean(ck(["tells", "piece.html", "--brief", "proposal.md", "--only", "T28"], dir({ "piece.html": ROWS.T28.pass, "proposal.md": proposalText() })));
+  flagged(ck(["tells", "piece.html", "--brief", "proposal.md", "--only", "T28"], dir({ "piece.html": ROWS.T28.flag, "proposal.md": proposalText() })), "T28");
+  const bare = dir({ "piece.html": "<p>x</p>", "proposal.md": proposalText({ Rounds: "" }) });
+  assert.match(ck(["tells", "piece.html", "--brief", "proposal.md"], bare).all, /proposal: /);
+});
+
+// ---- approvals (SO1): the owner's sign-offs, the locked files and the change requests ----
+
+const sha = (text) => createHash("sha256").update(text).digest("hex");
+const PIECE = "<p>final</p>";
+const COMP = "comp v1";
+const signRows = (rows) => `| Stage | Date | Owner's words | File | SHA-256 |\n| --- | --- | --- | --- | --- |\n${rows.join("\n")}\n`;
+const changeRows = (rows) => `| # | Date | Asked | Reopens | Round | Go-ahead |\n| --- | --- | --- | --- | --- | --- |\n${rows.join("\n")}\n`;
+const SIGNED = [
+  `| comp | 2026-11-12 | "approved, build it" | comp.png | ${sha(COMP)} |`,
+  `| final | 2026-11-13 | "approved" | piece.html | ${sha(PIECE)} |`,
+];
+const approvalsText = ({ rounds = "Rounds: 2", signed = SIGNED, changes = [] } = {}) =>
+  `# Approvals: talk banner\n\n${rounds}\n\n## Sign-offs\n\n${signRows(signed)}\n## Change requests\n\n${changes.length ? changeRows(changes) : "None.\n"}`;
+const approvals = (options = {}, files = { "piece.html": PIECE, "comp.png": COMP }) => dir({ "approvals.md": approvalsText(options), ...files });
+const AP = ["approvals", "approvals.md"];
+
+test("approvals: files that match their signed hash pass (SO1)", () => {
+  ok(AP, approvals());
+});
+
+test("approvals: a locked file that changed with no change request fails, and names the file and stage", () => {
+  bad(AP, "piece.html changed after the final sign-off of 2026-11-13, and no change request reopens final", approvals({}, { "piece.html": "<p>edited</p>", "comp.png": COMP }));
+  bad(AP, "comp.png is signed off at comp but missing", approvals({}, { "piece.html": PIECE }));
+});
+
+test("approvals: a change request within the rounds reopens its stage", () => {
+  const changes = [`| 1 | 2026-11-14 | "make the date bigger" | final | 1 | within rounds |`];
+  ok(AP, approvals({ changes }, { "piece.html": "<p>edited</p>", "comp.png": COMP }));
+  bad(AP, "comp.png changed after the comp sign-off", approvals({ changes }, { "piece.html": PIECE, "comp.png": "comp v2" }));
+});
+
+test("approvals: a round past the limit is extra work and reopens nothing until the owner approves it", () => {
+  const waiting = [`| 1 | 2026-11-14 | "a new colour" | final | 3 | extra: waiting |`];
+  bad(AP, "no change request reopens final", approvals({ changes: waiting }, { "piece.html": "<p>edited</p>", "comp.png": COMP }));
+  ok(AP, approvals({ changes: waiting }));
+  const approved = [`| 1 | 2026-11-14 | "a new colour" | final | 3 | extra: owner approved 2026-11-14 |`];
+  ok(AP, approvals({ changes: approved }, { "piece.html": "<p>edited</p>", "comp.png": COMP }));
+});
+
+test("approvals: the go-ahead must match the round against the limit", () => {
+  bad(AP, "change request 1: round 3 is past Rounds: 2, so its go-ahead is extra: waiting or extra: owner approved <date>", approvals({ changes: [`| 1 | 2026-11-14 | "x" | final | 3 | within rounds |`] }));
+  bad(AP, "change request 1: round 1 is within Rounds: 2, so its go-ahead is within rounds", approvals({ changes: [`| 1 | 2026-11-14 | "x" | final | 1 | extra: waiting |`] }));
+});
+
+test("approvals: a change request before the sign-off does not reopen it, and a new sign-off locks the stage again", () => {
+  const early = [`| 1 | 2026-11-12 | "x" | final | 1 | within rounds |`];
+  bad(AP, "no change request reopens final", approvals({ changes: early }, { "piece.html": "<p>edited</p>", "comp.png": COMP }));
+  const resigned = [...SIGNED, `| final | 2026-11-15 | "approved again" | piece.html | ${sha("<p>v2</p>")} |`];
+  ok(AP, approvals({ signed: resigned, changes: [`| 1 | 2026-11-14 | "x" | final | 1 | within rounds |`] }, { "piece.html": "<p>v2</p>", "comp.png": COMP }));
+});
+
+test("approvals: the owner's words are quoted, the stage is known, and the hash is a SHA-256", () => {
+  bad(AP, 'sign-off row 1: Owner\'s words must quote the owner', approvals({ signed: [`| comp | 2026-11-12 | ready | comp.png | ${sha(COMP)} |`] }));
+  bad(AP, 'sign-off row 1: stage "polish" is not brief, proposal, comp or final', approvals({ signed: [`| polish | 2026-11-12 | "ok" | comp.png | ${sha(COMP)} |`] }));
+  bad(AP, "sign-off row 1: SHA-256 is not 64 hex characters", approvals({ signed: [`| comp | 2026-11-12 | "ok" | comp.png | abc |`] }));
+  bad(AP, "no Rounds: line", approvals({ rounds: "" }));
+});
+
+test("hash prints each file's SHA-256 for a sign-off row", () => {
+  const r = ok(["hash", "piece.html"], dir({ "piece.html": PIECE }));
+  assert.equal(r.first, `${sha(PIECE)}  piece.html`);
+});
+
 // ---- tells: file and text rows ----
 
 const page = (css, body) => `<!doctype html><html><head><title>t</title><style>${css}</style></head><body>${body}</body></html>`;
@@ -1384,7 +1513,7 @@ test("email: a pattern with a | inside backticks is one cell", () => {
 
 const root = join(here, "..");
 const shipped = (...parts) => readFileSync(join(root, ...parts), "utf8");
-const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "RESEARCH.md", "TELLS.md", "TRENDS.md"];
+const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "PROPOSAL.md", "RESEARCH.md", "SIGN-OFF.md", "TELLS.md", "TRENDS.md"];
 
 test("TELLS.md has 29 complete rows T1 to T29 and each one has a check that runs", () => {
   const rows = shipped("skills", "tools", "design", "TELLS.md").split("\n").filter((l) => /^\| T\d+ /.test(l)).map((l) => l.split("|").slice(1, -1).map((c) => c.trim()));
@@ -1789,6 +1918,53 @@ test("RESEARCH.md gives the piece layer to the designer, lists places to look by
   assert.match(browser, /never[^.\n]*password/i);
   assert.match(browser, /one page at a time/i);
   assert.match(browser, /owner is away|owner says no/i);
+});
+
+test("SKILL.md: a small job starts from a one-page proposal, and the checks table lists the proposal command (QS2)", () => {
+  const skill = designText("SKILL.md");
+  const small = skill.split(/^## A small job$/m)[1]?.split(/^## /m)[0] ?? "";
+  assert.ok(small, "no A small job section");
+  assert.match(small, /PROPOSAL\.md/);
+  assert.match(small, /one piece[^.\n]*one kind[^.\n]*brand that already exists/i);
+  assert.match(small, /new identity[^.\n]*never small/i);
+  assert.match(small, /owner says[^.\n]*small[^.\n]*full/i);
+  assert.match(small, /shows? the owner[^.\n]*waits|waits[^.\n]*owner/i);
+  assert.match(small, /owner is away/i);
+  assert.match(small, /writer[^.\n]*only[^.\n]*missing|missing[^.\n]*writer/i);
+  assert.match(small, /stands? in for[^.\n]*brief/i);
+  assert.match(small, /`research\.md`[^.\n]*`words\.md`/);
+  assert.match(skill, /\| `proposal <proposal\.md>` \|/);
+  assert.match(skill, /`tells <piece> --brief <brief\.md or proposal\.md>/);
+});
+
+test("PROPOSAL.md describes the file the checker reads: the head lines, the sections in order and the floors (QS1)", () => {
+  const text = designText("PROPOSAL.md");
+  const at = ["Date:", "Approved:", "## Scope", "## Deliverables", "## Words", "## Examples", "## Rounds", "## Usage", "## Not included", "## References"].map((p) => text.indexOf(p));
+  assert.ok(at.every((i) => i >= 0) && at.every((i, k) => k === 0 || i > at[k - 1]), `in order: ${at}`);
+  for (const phrase of ["owner away", "`owner`", "`writer`", "opened", "Move taken", "Rounds:", "check.mjs proposal", "one page"]) assert.ok(text.includes(phrase), phrase);
+  assert.match(text, /three/i);
+  assert.match(text, /usage[^.\n]*`not given`|`not given`[^.\n]*usage/i);
+});
+
+test("SKILL.md: sign-off is the owner's alone, at three stages, and the checks table lists approvals and hash (SO2)", () => {
+  const skill = designText("SKILL.md");
+  const so = skill.split(/^## Sign-off$/m)[1]?.split(/^## /m)[0] ?? "";
+  assert.ok(so, "no Sign-off section");
+  assert.match(so, /SIGN-OFF\.md/);
+  assert.match(so, /only the owner signs off/i);
+  assert.match(so, /brief[^.\n]*comp[^.\n]*final/i);
+  assert.match(so, /craft pass[^.\n]*not a sign-off|critique[^.\n]*not a sign-off/i);
+  assert.match(so, /change request/i);
+  assert.match(so, /owner is away[^.\n]*(?:unsigned|no sign-off)/i);
+  assert.match(skill, /\| `approvals <approvals\.md>` \|/);
+  assert.match(skill, /\| `hash <file>/);
+});
+
+test("SIGN-OFF.md describes approvals.md: the Rounds line, the two tables and their columns, and the go-ahead values (SO1)", () => {
+  const text = designText("SIGN-OFF.md");
+  for (const phrase of ["Rounds:", "## Sign-offs", "## Change requests", "| Stage | Date | Owner's words | File | SHA-256 |", "| # | Date | Asked | Reopens | Round | Go-ahead |", "within rounds", "extra: waiting", "extra: owner approved", "check.mjs approvals", "check.mjs hash"]) assert.ok(text.includes(phrase), phrase);
+  for (const stage of ["`brief`", "`proposal`", "`comp`", "`final`"]) assert.ok(text.includes(stage), stage);
+  assert.match(text, /never[^.\n]*(?:write|add)[^.\n]*sign-off[^.\n]*owner did not/i);
 });
 
 test("RESEARCH.md describes the file the checker reads: the head lines, the parts in order and the closing lists", () => {
