@@ -1,0 +1,30 @@
+schema_version: "1.1"
+name: ogilvy-launch-words
+description: Ogilvy finds the idea and writes the words of a launch email against slot ids, with every claim resting on a stated fact.
+tags: [ogilvy, concept, output]
+runs: 1
+execution:
+  max_turns: 60
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:ogilvy I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Write the words for the launch email of Fennel & Stone, a small bakery and cafe in Cebu. The facts: it opens on 3 March 2027 at 7:00; bread is baked in a stone oven every morning from local flour; the first 50 customers get a free pandesal box; the menu is at https://example.com/menu. The email has these slots: subject, preheader, headline, body, button, plain-text version.
+
+    Save the words as words.md with each line under its slot id. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: words-written
+    path: words.md
+  - type: llm
+    name: words-are-good
+    focus: {source: file, path: words.md}
+    criteria: |
+      Pass only if all hold:
+      1. Every slot is filled under its id: subject, preheader, headline, body, button, plain-text version.
+      2. There is one clear idea, and the headline carries it in concrete words, not a generic slogan.
+      3. The date, the time, the free pandesal box for the first 50 and the menu link are right and not contradicted.
+      4. No claim goes beyond the facts given (no "best in Cebu", no "award-winning", no invented ingredients or prices).
+      5. Plain, specific language: no "elevate", "indulge", "artisanal journey", "unlock", "delve" or similar filler; no emoji.
+      6. The subject line is under about 50 characters and the button is a short verb phrase.

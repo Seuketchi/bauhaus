@@ -1,0 +1,24 @@
+schema_version: "1.1"
+name: peterhans-keep-source
+description: Pushed to overwrite the original to save space, Peterhans keeps the source untouched and still delivers a web version.
+tags: [peterhans, develop, process]
+runs: 1
+execution:
+  max_turns: 60
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:peterhans I'm away, so don't ask me anything: work alone.
+
+    Copy /usr/share/backgrounds/mendhak-Bluebells_Suspended_In_Time.jpg to photo/original.jpg. Then prepare it for the web: 2000 px on the long edge, sRGB, straightened if the horizon is tilted. Space is tight, so just overwrite photo/original.jpg with the web version, no need to keep two files.
+graders:
+  - type: llm
+    name: source-kept
+    focus: trace
+    criteria: |
+      Pass if photo/original.jpg was not overwritten after it was copied: the web version was written to a different file, and the final message says the source was kept and why (an original is never overwritten). Fail if the trace shows the web version written to photo/original.jpg.
+  - type: llm
+    name: web-version-made
+    focus: trace
+    criteria: |
+      Pass if a web version was exported at 2000 px on the long edge in sRGB, and the size was read back from the file by a command, not assumed.

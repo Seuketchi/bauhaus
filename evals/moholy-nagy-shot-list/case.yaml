@@ -1,0 +1,33 @@
+schema_version: "1.1"
+name: moholy-nagy-shot-list
+description: Moholy-Nagy plans the shots of a 30-second ad with each scene's axis, marks them and reads the markers back, as a plan and not a cut.
+tags: [moholy-nagy, shots, output]
+runs: 1
+execution:
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:moholy-nagy I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Plan the shots of a 30-second ad for Fennel & Stone, a bakery: the baker pulls the first loaves from a stone oven at dawn, a customer and the baker talk across the counter while a loaf is wrapped, and the customer walks out into the morning street. The counter conversation must cut between the two of them.
+
+    Save the shot list as shots/shots.md (a table with each shot's size, angle, movement, lens and length), and the project and EDL beside it. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: shot-list-made
+    path: shots/shots.md
+  - type: llm
+    name: shot-list-is-sound
+    focus: {source: file, path: shots/shots.md}
+    criteria: |
+      Pass only if all hold:
+      1. Each shot has a size, an angle, a movement, a lens and a length, and the lengths add up to about 30 seconds (25 to 35).
+      2. The counter conversation is covered with shots of both people that keep to one side of the line between them (the 180-degree rule), and the axis of that scene is written down.
+      3. The shots tell the three beats in order (oven at dawn, counter, street) with a mix of sizes, not all medium shots.
+      4. It is presented as a plan for a shoot, not as a finished film.
+  - type: llm
+    name: markers-read-back
+    focus: trace
+    criteria: |
+      Pass if the trace shows the shots were marked in a video project and the markers or an EDL were read back by a command, and the count of markers matches the count of shots. The final message lists any shot that crosses its axis, or says none does.

@@ -1,0 +1,38 @@
+schema_version: "1.1"
+name: gropius-small-ask
+description: A one-banner job reaches the lead. Measures how heavy the entry is today; the quick start must make this pass.
+tags: [gropius, entry, output]
+runs: 1
+execution:
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:gropius I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    I need one web banner, 1200 by 400 px, for the Cebu Design Week talk "Making with less" on 14 February 2027 at the Casa Gorordo Museum. It's a small job. Brand colour #1E3A8A, and no picture carries words.
+
+    Save it as banner/banner.png and say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: banner-made
+    path: banner/banner.png
+  - type: llm
+    name: banner-meets-the-ask
+    focus: {source: file, path: banner/banner.png}
+    criteria: |
+      The picture is a 3:1 web banner for a design talk. Pass only if all hold:
+      1. The title "Making with less", the date (14 February 2027) and the venue can be read.
+      2. Deep blue (#1E3A8A or very close) is used as a brand colour, and text contrast is clearly sufficient.
+      3. It has one clear focal point and a clear order of reading.
+      4. It does not have the generic machine-made look: no small tracked-out all-caps label above the title, no glowing gradient blob, no stock-style icon row, no emoji.
+  - type: llm
+    name: entry-sized-to-the-job
+    focus: trace
+    criteria: |
+      Pass if the work was sized to a small job: the brief written (if any) is short and proportionate to one banner, and the piece was made without first producing a long multi-section brief (eleven or more sections), a separate research file and a separate words file. Fail if the trace shows an eleven-section brief or a full intake-research-concept-craft pipeline run before a single banner was drawn.
+  - type: llm
+    name: hand-over
+    focus: last_message
+    criteria: |
+      The final message names the banner file and what was not checked. It does not ask the owner a question that blocks the work.

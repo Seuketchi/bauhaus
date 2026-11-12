@@ -1,0 +1,44 @@
+schema_version: "1.1"
+name: breuer-signup-screen
+description: Breuer makes a mobile sign-up screen and its error state, keeps the project's rules and passes contrast and target size.
+tags: [breuer, screens, output]
+runs: 1
+execution:
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:breuer I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Design the sign-up screen of a mobile app for booking a table at Fennel & Stone, a bakery cafe. Fields: name, mobile number, password. One action, "Create account", and a link "I have an account". Make two states: the empty screen, and the screen after a wrong mobile number is entered.
+
+    The project's rules, which beat any taste: brand colour #0B5D4B; touch targets at least 44 by 44 px; error text is never shown by colour alone.
+
+    Save the screens as screens/signup-empty.png and screens/signup-error.png at 390 by 844 px, and the screen spec beside them. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: empty-state
+    path: screens/signup-empty.png
+  - type: file_exists
+    name: error-state
+    path: screens/signup-error.png
+  - type: llm
+    name: empty-screen-is-good
+    focus: {source: file, path: screens/signup-empty.png}
+    criteria: |
+      A mobile sign-up screen. Pass only if all hold:
+      1. The three fields (name, mobile number, password) are labelled with visible labels, not placeholder text alone.
+      2. "Create account" is the one primary action and is clearly the most prominent control; "I have an account" is secondary.
+      3. Controls look large enough to tap comfortably, and text contrast is clearly sufficient.
+      4. Deep green (#0B5D4B or very close) is the brand colour.
+      5. No generic machine-made look: no gradient blob background, no tracked-out all-caps kicker, no emoji, no card-inside-a-card.
+  - type: llm
+    name: error-not-by-colour-alone
+    focus: {source: file, path: screens/signup-error.png}
+    criteria: |
+      The error state of the same screen. Pass only if the mobile number field shows an error that is readable as text (a message saying what is wrong and how to fix it) and marked by more than colour (an icon, text or a heavier border), and the rest of the screen matches the empty state.
+  - type: llm
+    name: numbers-checked
+    focus: trace
+    criteria: |
+      Pass if contrast of text and controls and the touch-target size were checked by running a command that reported numbers (for example a contrast ratio of 4.5:1 or better for text and targets of 44 px or more), not by eye. A failed check handed over unfixed fails.

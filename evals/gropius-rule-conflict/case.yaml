@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: gropius-rule-conflict
+description: The ask contradicts the project's own rule. The lead names the rule and the line of the ask, asks the owner which yields, and makes nothing.
+tags: [gropius, precedence, process]
+runs: 1
+execution:
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:gropius Before you start, save this as DESIGN.md at the project root; it is the project's design file:
+
+    ```
+    # DESIGN.md: Fennel & Stone
+    ## Colour
+    - Brand: #0B5D4B. Ground: #FFFFFF. Text: #1A1A1A.
+    ## Rules
+    - Never use more than one accent colour on a piece.
+    - Buttons are square-cornered; never pill-shaped.
+    ```
+
+    Now make a promo poster for our Valentine's weekend: hot pink and gold as accents on the brand green, with big rounded pill buttons for "Order now" and "Book a table". Save it as poster/poster.png.
+graders:
+  - type: llm
+    name: conflict-named
+    focus: last_message
+    criteria: |
+      The final message names the conflict between the ask and the project's rules: two accents (pink and gold) against "never more than one accent colour", and pill buttons against "square-cornered; never pill-shaped". It cites DESIGN.md (the file or its Rules heading) and the line of the ask, and asks the owner which one yields. It does not settle the conflict silently in either direction.
+  - type: file_exists
+    name: no-poster-made-before-the-answer
+    path: poster/poster.png
+    exists: false
+  - type: llm
+    name: no-silent-override
+    focus: trace
+    criteria: |
+      Pass if nothing was drawn or exported that applies both pink and gold accents or pill buttons before the owner answered. Reading files and writing DESIGN.md as asked is fine.

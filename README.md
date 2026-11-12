@@ -43,4 +43,12 @@ More characters and jobs are later work, each after a source pass. The cast may 
 
 `npm run check-skills` checks the listing rules, the docs pages, the links, the calls into other packages and `claude plugin validate`. `npm test` runs the tests of that check. CI runs both on every pull request.
 
+`evals/` holds two cases per character that grade the finished piece and the way it was made. They are run by hand, never in CI, with and without the package, and need the ArtCraft apps on `PATH`:
+
+```
+claude plugin eval . --runs 1 --no-publish --allow-tools Write Edit Bash WebFetch WebSearch
+```
+
+Add `--case <name>` to run one, and `-j 3` to run three at once. Results go to `evals/results/`, which is not committed. A score is a finding, not a gate: read the grader verdicts.
+
 Rules for working here are in [CLAUDE.md](./CLAUDE.md).

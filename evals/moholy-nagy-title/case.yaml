@@ -1,0 +1,35 @@
+schema_version: "1.1"
+name: moholy-nagy-title
+description: Moholy-Nagy makes a short animated title with a poster frame that works as the reduced-motion version.
+tags: [moholy-nagy, motion, output]
+runs: 1
+execution:
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:moholy-nagy I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Make a 4-second animated title card, 1920 by 1080, for the talk "Making with less" at Cebu Design Week. Brand colour #1E3A8A. The motion should feel calm and exact, not flashy.
+
+    Save a GIF render as title/title.gif, the poster frame as title/poster.png, and the project beside them. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: gif-made
+    path: title/title.gif
+  - type: file_exists
+    name: poster-made
+    path: title/poster.png
+  - type: llm
+    name: poster-stands-alone
+    focus: {source: file, path: title/poster.png}
+    criteria: |
+      The poster frame of a title animation, which must work on its own for viewers who turn motion off. Pass only if all hold:
+      1. The full title "Making with less" is readable, complete and not caught mid-animation (no half-faded or cut-off letters).
+      2. Deep blue (#1E3A8A or very close) is used, and text contrast is clearly sufficient.
+      3. The composition is calm and deliberate, with clear hierarchy; no lens flares, glows or particle bursts.
+  - type: llm
+    name: keys-read-back
+    focus: trace
+    criteria: |
+      Pass if the trace shows the animation was built in a motion app or script with keyframes set by commands, the keyframes or timing were read back, and the length is about 4 seconds. The final message says the poster frame is the reduced-motion version.

@@ -1,0 +1,37 @@
+schema_version: "1.1"
+name: bayer-logo
+description: Bayer makes a logo as a reproducible SVG from a saved step script, and the mark is judged as a picture.
+tags: [bayer, brand, output]
+runs: 1
+execution:
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:bayer I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Make the logo for Fennel & Stone, a small bakery and cafe in Cebu: stone-baked bread, local flour, open at 7. Brand colour #0B5D4B. It must read at 32 px high on a phone and on a shop sign.
+
+    Save the logo as logo/logo.svg, a PNG of it at 512 px wide as logo/logo.png, and the script or commands that made it beside them. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: svg-made
+    path: logo/logo.svg
+  - type: file_exists
+    name: png-made
+    path: logo/logo.png
+  - type: llm
+    name: mark-is-good
+    focus: {source: file, path: logo/logo.png}
+    criteria: |
+      The picture is a logo for a bakery called Fennel & Stone. Pass only if all hold:
+      1. The name is spelled correctly and legible.
+      2. It is simple enough to read when small: few shapes, no fine detail that would vanish at 32 px, no gradients or drop shadows.
+      3. It uses deep green (#0B5D4B or very close) and at most one other colour.
+      4. It has a single idea that relates to the business (bread, stone, fennel, an oven), not a generic shape.
+      5. It does not look like a stock template: no generic leaf-in-a-circle, no swoosh, no clip-art wheat with a script font.
+  - type: llm
+    name: reproducible
+    focus: trace
+    criteria: |
+      Pass if the SVG was made by a saved script or a recorded list of commands that a person could run again to get the same file, and that script or list was written to disk beside the logo. Hand-typing SVG path data directly into the file with no saved generator fails.
