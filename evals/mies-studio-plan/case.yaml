@@ -1,0 +1,36 @@
+schema_version: "1.1"
+name: mies-studio-plan
+description: Mies draws a small studio floor plan in metric units with dimensions and a short structure note.
+tags: [mies, plans, output]
+runs: 1
+execution:
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:mies I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Draw the floor plan of a one-room ceramics studio, 6 m by 8 m inside, with one entrance door on a short side, a sink against a wall, two kiln bays along one long side, a wedging table and four wheel stations, and a window wall facing north. Use metric units and dimension the outside of the room, the door and the kiln bays.
+
+    Save the plan as plan/plan.png (and the drawing file beside it) and a short structure note as plan/structure.md. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: plan-made
+    path: plan/plan.png
+  - type: file_exists
+    name: structure-note
+    path: plan/structure.md
+  - type: llm
+    name: plan-reads
+    focus: {source: file, path: plan/plan.png}
+    criteria: |
+      A floor plan. Pass only if all hold:
+      1. It reads as an architectural plan: walls with thickness, a door with its swing, a window wall, a north arrow or a north label.
+      2. The room is dimensioned in metric (6 m by 8 m inside, or 6000 by 8000 mm), and the door and kiln bays carry dimensions.
+      3. The sink, two kiln bays, the wedging table and four wheel stations are shown and labelled.
+      4. Line weights tell walls from furniture, and text is legible.
+  - type: llm
+    name: figures-from-the-app
+    focus: trace
+    criteria: |
+      Pass if the plan was drawn by running a drawing app or script whose output reports the figures (lengths or areas) and those were read back, and the hand-over quotes figures as the app printed them with their unit. A plan described only in prose fails.

@@ -1,0 +1,50 @@
+schema_version: "1.1"
+name: bayer-launch-email
+description: Bayer builds a launch email from a short ask, keeps the project's rules, passes the numbers and renders it; the render is judged against the ask.
+tags: [bayer, email, output]
+runs: 1
+execution:
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:bayer I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Make the HTML email that announces the spring opening of Fennel & Stone, a small bakery and cafe in Cebu. It opens on 3 March 2027 at 7:00, and the first 50 customers get a free pandesal box. The one action is "See the menu", linking to https://example.com/menu.
+
+    The project's rules, which beat any taste: the brand colour is #0B5D4B; body text is never smaller than 16 px; no picture carries words.
+
+    Save the email as email/email.html and a render of it at 640 px wide as email/render-640.png. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: email-written
+    path: email/email.html
+  - type: file_exists
+    name: render-written
+    path: email/render-640.png
+  - type: regex
+    name: brand-colour-used
+    target: {source: file, path: email/email.html}
+    pattern: "#0B5D4B"
+    flags: i
+  - type: llm
+    name: render-meets-the-ask
+    focus: {source: file, path: email/render-640.png}
+    criteria: |
+      The picture is a rendered marketing email for a bakery opening. Pass only if all hold:
+      1. The bakery's name, the opening date (3 March) and the free pandesal box offer can be read.
+      2. There is one clear button or link reading "See the menu" and it stands out as the main action.
+      3. Deep green (#0B5D4B or very close) is used as a brand colour.
+      4. Body text looks comfortably readable (not tiny), and text contrast against its ground is clearly sufficient.
+      5. It does not have the generic machine-made look: no small tracked-out all-caps label above the headline, no row of identical tinted cards, no cream-and-serif-and-terracotta default, no emoji used as decoration.
+      6. The layout has a clear hierarchy: one headline, then the detail, then the action, with consistent spacing.
+  - type: llm
+    name: numbers-checked
+    focus: trace
+    criteria: |
+      Pass if the trace shows the email's numbers were checked by running a command, not by eye: text contrast against its background computed (4.5:1 or better for text), and the email's width and body text size checked against the rules (600-640 px container, body text 16 px or more). A command that ran and reported a pass for these counts; a claim in prose with no command does not. Fail if a check failed and the work was handed over without fixing it.
+  - type: llm
+    name: hand-over-says-what-was-not-checked
+    focus: last_message
+    criteria: |
+      The final message names the files made (email/email.html and the render) and ends with what was not checked (for example rendering in real mail clients, or dark mode). It asks the owner no question that blocks the work, and it does not claim the email was sent.

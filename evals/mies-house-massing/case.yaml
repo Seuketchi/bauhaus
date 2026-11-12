@@ -1,0 +1,33 @@
+schema_version: "1.1"
+name: mies-house-massing
+description: Mies builds a massing study of a small house as closed named bodies and reads the image, saying what the study does not contain.
+tags: [mies, massing, output]
+runs: 1
+execution:
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write]
+  prompt: |
+    /bauhaus:mies I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Make a massing study for a two-storey house on a 10 m by 20 m lot in a tropical city: a ground-floor volume, a smaller upper volume shifted to shade the entrance, and a deep roof overhang on the west. Keep 2 m setbacks on the sides.
+
+    Save an image of the study as massing/massing.png and the model and script beside it. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: image-made
+    path: massing/massing.png
+  - type: llm
+    name: study-reads
+    focus: {source: file, path: massing/massing.png}
+    criteria: |
+      A 3D massing image. Pass only if all hold:
+      1. Two stacked volumes are visible, the upper one smaller and shifted so it overhangs or shades an entrance.
+      2. A roof overhang is visible on one side.
+      3. The view lets you read the form (an axonometric or a perspective with clear light and shade), not a flat elevation.
+      4. It is a clean study model: plain materials, no fake photo-real textures, no people or trees pasted in.
+  - type: llm
+    name: bodies-closed-and-honest
+    focus: trace
+    criteria: |
+      Pass if the trace shows the bodies were built by a script in a 3D app, checked to be closed (watertight) by a command, and the image was read after export. The final message must say what the study does not contain (for example floors, stairs, openings or structure) unless the script made them.

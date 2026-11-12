@@ -1,0 +1,45 @@
+schema_version: "1.1"
+name: breuer-research-pricing
+description: The research case. Breuer studies how real makers lay out a pricing page, from opened sources, before designing one.
+tags: [breuer, research, output]
+runs: 1
+execution:
+  max_turns: 120
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Edit, Write, WebSearch, WebFetch]
+  prompt: |
+    /bauhaus:breuer I'm away, so don't ask me anything: work alone and decide what is not given.
+
+    Design the desktop pricing page for Kalye Type, a small type foundry selling font licences: Desktop (from USD 40), Web (from USD 60) and App (from USD 120), with a family bundle at 30% off. Before you design it, study how real type foundries lay out their pricing and licence pages: open their pages and look at them, and write down what they do.
+
+    Save the research as research.md, the page as screens/pricing.png at 1440 px wide, and the screen spec beside it. Say at the end what you did not check.
+graders:
+  - type: file_exists
+    name: research-written
+    path: research.md
+  - type: file_exists
+    name: page-made
+    path: screens/pricing.png
+  - type: llm
+    name: research-is-real
+    focus: {source: file, path: research.md}
+    criteria: |
+      Pass only if all hold:
+      1. It lists at least 6 sources from at least 2 different type foundries or makers, each with a URL.
+      2. Each source says whether it was opened or only seen as a summary.
+      3. For the sources, it names concrete moves seen (for example how licence types are shown, how the price changes with the number of users, where the bundle sits), not general praise.
+      4. It ends with what the research did not check.
+  - type: llm
+    name: sources-were-opened
+    focus: trace
+    criteria: |
+      Pass if the trace shows web pages of type foundries actually fetched or opened (WebFetch, a browser or a fetch command), not only search results. Search alone fails.
+  - type: llm
+    name: page-is-good
+    focus: {source: file, path: screens/pricing.png}
+    criteria: |
+      A desktop pricing page for font licences. Pass only if all hold:
+      1. The three licence types and their starting prices (40, 60, 120 USD) and the 30% bundle can be read.
+      2. It is easy to compare the options, and one next step is clear.
+      3. Type is treated with care, as a type foundry's page should be: clear hierarchy, sensible line lengths.
+      4. No generic SaaS pricing template look: not three identical tinted cards with a "Most popular" ribbon and check-mark lists, no gradient blob, no tracked-out all-caps kicker.
