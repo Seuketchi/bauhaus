@@ -406,6 +406,37 @@ hand("vectorcraft-cli run writes an SVG with a viewBox, to an absolute path, wit
   assert.equal(info.status, 0, info.stderr);
 });
 
+hand("vectorcraft-cli run traces a picture into the token colours and simplifies it (run 29)", ["vectorcraft-cli"], () => {
+  // A yellow disc over a blue band on white: the shape of a picture the owner picked.
+  const w = 200, h = 200, field = groundCanvas(w, h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const disc = (x - 100) ** 2 + (y - 90) ** 2 < 50 ** 2, band = y >= 120 && y < 160 && x >= 30 && x < 170;
+    const [r, g, b] = band ? [1, 66, 155] : disc ? [253, 195, 12] : [255, 255, 255];
+    field.rgba.set([r, g, b, 255], (y * w + x) * 4);
+  }
+  const picture = join(out, "picture.png"), traced = join(out, "traced.svg"), simple = join(out, "simple.svg"), steps = join(out, "trace.json"), simplify = join(out, "simplify.json");
+  writeFileSync(picture, groundPng(w, h, field.rgba));
+  writeFileSync(steps, JSON.stringify([
+    { command: "select.all", params: {} },
+    { command: "imageTrace.makeAndExpand", params: { params: { mode: "logo", logoColors: ["#01429B", "#FDC30C"], ignoreWhite: true, noise: 40 } } },
+  ]));
+  writeFileSync(simplify, JSON.stringify([{ command: "select.all", params: {} }, { command: "object.path.simplify", params: { auto: true } }]));
+  const made = run(["vectorcraft-cli", "run", "--in", picture, "--commands", steps, "--export", traced], { seconds: 60 });
+  assert.equal(made.status, 0, made.stderr);
+  const svg = readFileSync(traced, "utf8");
+  assert.match(svg, /<svg\b[^>]*\sviewBox="[^"]+"/);
+  assert.ok(wellFormed(svg), "the traced SVG is not well-formed XML");
+  const fills = new Set([...svg.matchAll(/fill="(#[0-9a-fA-F]{6})"/g)].map((m) => m[1].toUpperCase()));
+  assert.ok(fills.has("#01429B") && fills.has("#FDC30C"), `the trace keeps the token colours, got ${[...fills]}`);
+  assert.ok(!fills.has("#FFFFFF"), "the white ground is left out");
+  const again = run(["vectorcraft-cli", "run", "--in", traced, "--commands", simplify, "--export", simple]);
+  assert.equal(again.status, 0, again.stderr);
+  assert.ok(wellFormed(readFileSync(simple, "utf8")), "the simplified SVG is not well-formed XML");
+  const info = run(["vectorcraft-cli", "info", simple]);
+  assert.equal(info.status, 0, info.stderr);
+  assert.deepEqual(JSON.parse(info.stdout).warnings, [], "info reports an import warning");
+});
+
 hand("pdfcraft-cli checks the PDF as ok, audits it and renders a page", ["figcraft-cli", "pdfcraft-cli"], () => {
   const checked = run(["pdfcraft-cli", "check", heroPdf, "--json", join(out, "check.json")]);
   assert.equal(checked.status, 0, checked.stderr);
