@@ -154,6 +154,15 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - QS5 [T] Each designer's design trigger covers the three examples of a small job's proposal.
 - QS6 [J] The eval `gropius-small-ask` (on `test/output-evals`) passes `entry-sized-to-the-job`: one banner is made without an eleven-section brief, a `research.md` or a `words.md`.
 
+**Sign-off, added 2026-11-12.** Industries gate and lock stages, and later changes are change orders counted against agreed rounds (`docs/findings/creative-workflows.md`, C19, C20; the AIGA form). The owner settled the four choices: only the owner signs off; three stages lock (the brief or proposal, the comp, the final files); later feedback is a logged change request counted against the rounds, and past them extra work that waits for the owner; a check holds the lock by file hash.
+
+- SO1 [T] `check.mjs approvals` passes when every file matches the hash of its latest sign-off, and fails when a locked file changed with no change request that reopens its stage on or after the sign-off, when a signed file is missing, when the owner's words are not quoted, when a stage is not `brief`, `proposal`, `comp` or `final`, when a hash is not SHA-256, when there is no `Rounds:` line, and when a request's go-ahead does not fit its round (`within rounds` up to the limit; past it `extra: waiting`, which reopens nothing, or `extra: owner approved <date>`). `check.mjs hash` prints a file's SHA-256. `SIGN-OFF.md` describes the file.
+- SO2 [T] The method's `Sign-off` section states that only the owner signs off, the three stages, that the craft pass is not a sign-off, that an away owner leaves the stage unsigned, and the change request; the checks table lists `approvals` and `hash`.
+- SO3 [T] The lead records the owner's sign-off and logs later feedback as change requests, and a request past the rounds waits.
+- SO4 [T] Each designer changes a locked file only under a change request that reopens its stage, and never calls work approved.
+- SO5 [T] The craft pass says sign-off is the owner's, recorded in `approvals.md`.
+- SO6 [J] Not yet in an eval case: a run where the owner approves a comp and then asks for a change shows a change request logged and `check.mjs approvals` passing. An eval case for it is later work, outside the 14 of `evals/`.
+
 **`concept` (tool, the writer's). Owns `REFERENCES.md`.** Its rows WR1 to WR5 are opened sources only, and no cast name appears in them.
 
 - W1 [T] The writer owns the idea, insight, story and words of the pieces made in this package.
