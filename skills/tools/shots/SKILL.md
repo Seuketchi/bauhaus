@@ -12,10 +12,10 @@ This is a plan. It makes no film, takes no shot and cuts no footage. The project
 ## Before you plan
 
 - Start from a complete brief file in the format in `design`, all eleven sections: the writer has filled `Idea`, `Insight` and `Story`. Read `Story` first. The scenes follow its beats, and this tool invents no story. The `Two words` of `Idea` are the test for every choice of size, angle and move.
-- Cite at least three rows of `REFERENCES.md`, only rows marked `opened`. The minimum is the default of three, because six rows are opened.
+- Cite at least three rows of `REFERENCES.md`, only rows marked `opened`. The minimum is the default of three, because eleven rows are opened.
 - The aspect ratio and the frame rate come from the brief or the owner. If neither gives one, ask and never guess.
 - The output directory is `/project/film` in the examples below. Every path in a command and in a script is absolute and under it.
-- Light is a note column, not a plan. No lighting rule is written, because the opened Lighting page covers equipment, not setups, and so: a note starts `light:` and records what the owner said.
+- Light is a note column, not a plan. One lighting rule only, because the opened Lighting page covers equipment, not setups: a note starts `light:`, records what the owner said, and names the real source the light comes from, such as a window, and any added light follows that source's direction (row DE1).
 
 ## What to make
 
@@ -32,10 +32,10 @@ In the output directory:
 The table is this package's own form and is marked inferred: no source opened gives a shot-list form. Its short forms for the size rest on row SZ1, which says they are used on a shot list or a storyboard. The columns are `No`, `Size`, `Angle`, `Movement`, `Lens`, `Subject`, `Sec` and `Note`. `Sec` is the planned length of the shot in seconds, and the markers need it to know where each shot starts.
 
 - **Size** is one of ELS, LS, FS, MWS, MS, MCU, CU and ECU, which are the sizes of row SZ1 from the widest to the closest. LS is the long shot, also called the wide shot.
-- **Angle** says whether the shot is objective, subjective or a point of view (row AG1), then a height: high, eye level or low. The height words are this package's own wording. Most shots are objective, and a subjective or point-of-view shot is kept for when its effect is wanted (row AG1).
-- **Movement** starts with one of static, handheld, dolly, slider or jib, and may add a direction. Choose the move for the tone it carries, and keep to simple moves when the owner has no gear or operator for more (row MV1).
-- **Lens** is a focal length, such as `35 mm`.
-- **Note** holds anything else: a light note, or `crosses the axis` with its reason.
+- **Angle** says whether the shot is objective, subjective or a point of view (row AG1), then a height: high, eye level or low. The height words are this package's own wording. Most shots are objective, and a subjective or point-of-view shot is kept for when its effect is wanted (row AG1). When a character's view of things changes, the camera's vantage changes with it, higher or lower (row PW1).
+- **Movement** starts with one of static, handheld, dolly, slider or jib, and may add a direction. Choose the move for the tone it carries, and keep to simple moves when the owner has no gear or operator for more (row MV1). A set piece can be planned as one unbroken shot: one row with a long `Sec` and a move, its hidden joins named in the note (row LL1).
+- **Lens** is a focal length, such as `35 mm`. Plan the lenses and heights across the piece, not shot by shot: to make a space close in, start high and wide, then lower the camera and lengthen the lens as the tension builds (row LU1).
+- **Note** holds anything else: a light note, or `crosses the axis` with its reason. A frame meant to hold the eye can centre on one vanishing point, with converging lines and a strong symmetry, and its note says `one-point` (row KU1).
 
 Number the shots from 1 with no gap and no repeat, across scenes. A scene is one place at one time and holds any number of shots (row AG1). Each scene states the beats of `Story` it shows in one `Beats:` line, such as `Beats: 1, 2`, and every beat is in at least one scene. When the brief says `Story: none`, the line is `Beats: none`. Each scene states its axis in one `Axis:` line: the line between the scene's two subjects, and the side the camera stays on. The camera stays on that side, so the first stays on the same side of the frame (row AX1). A row that crosses the axis says `crosses the axis` in its note, and the hand-over lists it. A crossing is a choice that is named and never made silently.
 

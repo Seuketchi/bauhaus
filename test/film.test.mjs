@@ -293,10 +293,24 @@ describe("shots (SHO1 to SHO7)", () => {
     assert.match(hand, /cross(?:es|ings)/i);
     assert.match(hand, /`\/bauhaus:critique` takes the PNG frames[^.\n]*not the Markdown or the EDL/i);
   });
-  test("lighting is a note and no lighting rule is written, and the camera rules cite rows (SHO7)", () => {
+  test("lighting is a note with one rule, the real source (DE1), and the camera rules cite rows (SHO7)", () => {
     assert.match(source, /light[^.\n]*note/i);
-    assert.match(source, /no lighting rule/i);
+    assert.match(source, /one lighting rule only/i);
+    assert.match(source, /real source[^.\n]*\(row DE1\)/);
     for (const id of ["SZ1", "AG1", "MV1", "AX1"]) assert.match(source, new RegExp(`row ${id}`));
+  });
+  test("the film canon: each opened row is used in the skill (SHO8)", () => {
+    for (const [id, work] of [["LL1", /La La Land/], ["PW1", /Dead Poets Society/], ["LU1", /12 Angry Men/], ["KU1", /Stanley Kubrick/], ["DE1", /Roger Deakins/]]) {
+      const r = rowsOf(refs("shots")).find((row) => row[0] === id);
+      assert.ok(r, id); assert.match(r[1], work, id); assert.equal(r[5], "opened", id);
+      assert.match(source, new RegExp(`row ${id}\\b`), id);
+    }
+    for (const [id, work] of [["MU1", /In the Blink of an Eye/], ["HI1", /bomb under the table/], ["GV1", /Good Will Hunting/]]) {
+      const r = rowsOf(refs("storyboard")).find((row) => row[0] === id);
+      assert.ok(r, id); assert.match(r[1], work, id); assert.equal(r[5], "opened", id);
+      assert.match(tool("storyboard"), new RegExp(`row ${id}\\b`), id);
+    }
+    assert.match(read("specs/design-package.md"), /- SHO8 \[T\]\[J\] \(added 2026-11-12\)/);
   });
   test("a deliverable cites at least three rows, and the brief minimum is the default", () => {
     assert.match(source, /at least three rows/i);

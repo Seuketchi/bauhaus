@@ -175,7 +175,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - LIB6 [T] Each designer's research trigger reads its library first.
 - LIB7 [J] Not proven: that results improve. An eval run starts with an empty library, so the evals measure the method, not the library. Proof needs the same case run before and after real jobs, with the library copied in.
 
-**`concept` (tool, the writer's). Owns `REFERENCES.md`.** Its rows WR1 to WR5 are opened sources only, and no cast name appears in them.
+**`concept` (tool, the writer's). Owns `REFERENCES.md`.** Its rows WR1 to WR5, and the craft canon of W11, are opened sources only, and no cast name appears in them.
 
 - W1 [T] The writer owns the idea, insight, story and words of the pieces made in this package.
 - W2 [T] The idea comes from a fact found in the research, never from the writer's taste alone.
@@ -186,6 +186,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - W7 [T] The words say plainly what the reader should do.
 - W8 [T] No spec, date, figure or performance claim in the words unless a research row backs it.
 - W9 [T] The designer may send a line back when it does not fit the picture; the writer changes the line and does not argue the layout.
+- W11 [T][J] (added 2026-11-12) The writer learns from great writing and film, a rule from each: Orwell and Strunk (cut what does no work, the short word, the active voice), Vonnegut (a natural voice), Dead Poets Society (the exact word, not very), Antony's speech in Julius Caesar (the evidence argues), Good Will Hunting (an insight rests on a lived detail), Aristotle's Poetics (a story turns on a reversal or a recognition), Chekhov's gun (every detail pays off) and Emma Coats's story spine (the beats as a chain of causes). Each is a row of `concept/REFERENCES.md` (OR1, ST1, VO1, DP1, JC1, GW1, AR1, CH1, EC1), opened on 2026-11-12, paraphrased with nothing quoted, and cited where `concept` uses it. The owner named the films, Shakespeare and Orwell, and kept the rest from a proposed list.
 - W10 [T] The words are a file, not slots: `words.md` has the columns Slot, Words and Research row, with the slot ids the designer's layout uses; the designer places the words and writes none.
 
 **`ogilvy` (character). The writer.**
@@ -334,7 +335,8 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - SHO4 [T] The marker comment holds the angle and the movement, and each marker starts at the sum of the lengths before it, so the table and the project agree. A change to one without the other fails the round-trip test.
 - SHO5 [R] A frame at each shot start renders with `render --seconds S --out f.png`; where media is offline `render` exits 1, the hand-over lists it and `--allow-offline` is never passed.
 - SHO6 [T] Hand-over: shot list and markers, not a cut; the media used and whether any is offline; and that `critique` takes the PNG frames and no Markdown or EDL. The OTIO file is written and not read, and the hand-over says so.
-- SHO7 [J] Each craft rule cites an opened `secondary` row (shot sizes, camera angles, moving the camera, the 180-degree rule, continuity). No lighting rule is written, because the opened Lighting page covers equipment, not setups; light is only a note column.
+- SHO7 [J] Each craft rule cites an opened row (shot sizes, camera angles, moving the camera, the 180-degree rule, continuity, and the film canon of SHO8). Light is a note column with one rule only (amended 2026-11-12): the note names the real source the light comes from, and added light follows its direction (row DE1); no lighting setup is written.
+- SHO8 [T][J] (added 2026-11-12) The shot designer learns from great films and filmmakers, a rule from each, every row opened on 2026-11-12 and paraphrased: La La Land's opening (a set piece as one unbroken shot, joins hidden, row LL1), Dead Poets Society's desk scene (the vantage changes when a character's view does, PW1), Lumet's lens plan for 12 Angry Men (high and wide, then lower and longer as the room closes in, LU1), Kubrick's one-point perspective (KU1) and Deakins on light (DE1). The storyboard adds Murch's rule of six (emotion, then story, then rhythm, MU1), Hitchcock's bomb under the table (show the audience the danger first, HI1) and Good Will Hunting's cutting (an emotional beat on fewer cuts, GV1). Where a source did not support the rule as first proposed, the row states what the source supports. The owner named the three films and kept the rest from a proposed list.
 
 **`storyboard` (tool, FigCraft then FilmCraft). The frames and the animatic.** Its input is the shot list and the brief's `Story` beats: the panels draw the shots, the beats say what each scene shows, and the tool never invents a story. Produces `storyboard.json`, `storyboard.figcraft`, `frames/S<nn>.png`, `storyboard.fcproj`, `animatic.jsonl`, `animatic.gif` and `storyboard.sh`.
 
@@ -788,7 +790,7 @@ The file count rises by one (`design/TRENDS.md`), which moves PR 2 to 9 files. T
 
 ## Out of Scope
 
-- A film canon beyond the opened pages. Mascelli and Katz (film) are lending-only and stay pointers: no craft rule rests on a book that was not opened, and lighting setups and motion-graphics rules are not written.
+- A film canon beyond the opened pages and the rows of SHO8. Mascelli and Katz (film) are lending-only and stay pointers: no craft rule rests on a book that was not opened, and lighting setups and motion-graphics rules are not written.
 - Video, and any command-line app beyond FigCraft, VectorCraft, PdfCraft, SolidCraft, CADCraft, FilmCraft and EffectCraft. A cut of footage is never made; whether DesignCraft has a command-line is UNVERIFIED.
 - A `print` command. Donna's PDF build stays hers; the lead designer's output reaches it through the token file's `document` group.
 - The DTCG Resolver module, any token build tool (Style Dictionary, Terrazzo), a Figma token export, and any claim of interchange with another tool.

@@ -23,17 +23,25 @@ The input is the brief, with its `Intake` and `Research` filled, and the `resear
 
 ## The insight
 
-One fact about the audience or the product that the idea comes from, with the research row it rests on. Ask who the work is for, and what makes it special, before writing it (rows WR4 and WR5). An insight with no research row is not written.
+One fact about the audience or the product that the idea comes from, with the research row it rests on. Ask who the work is for, and what makes it special, before writing it (rows WR4 and WR5). An insight with no research row is not written. Rest it on one concrete detail that someone lived, not on a general fact about the category (row GW1).
 
 ## The story
 
 Who it is about, then 3 to 5 beats. Each beat is `- Beat n: <what is shown> | carried by: <picture, crop, order or copy>`. The story must read from the pictures, crops and order before it reads from the copy. A piece that needs no story, such as a logo mark, writes `Story: none. Reason: <why>` and no beats. Idea, Insight and the two words stay required.
+
+- **The story turns.** At least one beat reverses the action or shows something the audience did not know (row AR1).
+- **Find the beats as a chain of causes:** once upon a time, every day, one day, because of that, until finally (row EC1).
+- **Every detail pays off.** A thing a beat shows is used by a later beat, or it is cut (row CH1).
 
 ## The words
 
 - **Write the way people speak.** Short words, short sentences and short paragraphs, no jargon (row WR1).
 - **Read it aloud the next morning, and then edit** (row WR1).
 - **Say plainly what the reader should do** (row WR1).
+- **Cut what does no work.** Use the short word where it does the job, delete every word the line can do without, and prefer the active voice (rows OR1 and ST1).
+- **The exact word, not very.** Replace very and a weak word with the one exact word (row DP1).
+- **To persuade, show the evidence.** Put the thing the reader can see or check ahead of the claim, and let it argue (row JC1).
+- **Sound like a person.** Write about what the piece truly cares about, in a natural voice and not a borrowed one (row VO1).
 - **Claim only what was checked.** No spec, date, figure or performance claim in the words unless a research row backs it.
 - **The words are a file, not slots.** `words.md` holds each line with the same slot id the designer's layout uses, and the research row behind any claim. The designer places them and writes none.
 

@@ -12,7 +12,7 @@ The inputs are the shot list, `shots.md`, made by the `shots` tool, and the `Sto
 ## Before you draw
 
 - Start from a complete brief file in the format in `design`, all eleven sections, and read its `Story` first. Each beat is `- Beat n: <what is shown> | carried by: <picture, crop, order or copy>`. Every beat is carried by the panels of the scenes whose `Beats:` line names it. A beat no scene names is sent back to `shots`, and a story is never added here. When the brief says `Story: none`, the panels come from the shot list alone and the hand-over says so.
-- Cite at least three rows of `REFERENCES.md`, only rows marked `opened`. The minimum is the default of three, because five rows are opened.
+- Cite at least three rows of `REFERENCES.md`, only rows marked `opened`. The minimum is the default of three, because eight rows are opened.
 - The aspect ratio and the frame rate are the shot list's. Do not change them here.
 - The one aspect ratio is stated once, in the first line of the hand-over, and every frame has that ratio. A frame size is a width and a height that match it, such as `960` by `540` for 16:9.
 - The output directory is `/project/film` in the examples below. Every path in a command and in a script is absolute and under it.
@@ -49,7 +49,7 @@ Make one top-level frame per row of `shots.md`, named `S<nn>` with the shot's nu
 
 The example shows the first two rows of the shot list in `shots`. The number of frames equals the number of rows, and the names match: `S01` to `S<nn>`, in order.
 
-Each panel has to tell its part of the story by what is in the frame, because a part with no dialog is cut on its pictures (row SE1). Panels of one scene keep the screen direction of the scene's axis, so a character keeps the same side of the frame from panel to panel (row SA1), and the sequence reads as consistent across time and place (row SC1). A panel that crosses the axis keeps the shot list's note and is listed in the hand-over. The hand-over also lists each beat with the panels that carry it, such as `Beat 1: S01, S02, S03`, and each panel whose scene shows no beat.
+Each panel has to tell its part of the story by what is in the frame, because a part with no dialog is cut on its pictures (row SE1). Order the panels for emotion first, then story, then rhythm (row MU1). An emotional beat plays on fewer panels, so on fewer cuts (row GV1). For suspense, a panel shows the audience the danger before the characters know of it (row HI1). Panels of one scene keep the screen direction of the scene's axis, so a character keeps the same side of the frame from panel to panel (row SA1), and the sequence reads as consistent across time and place (row SC1). A panel that crosses the axis keeps the shot list's note and is listed in the hand-over. The hand-over also lists each beat with the panels that carry it, such as `Beat 1: S01, S02, S03`, and each panel whose scene shows no beat.
 
 ## The animatic
 
