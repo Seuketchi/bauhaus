@@ -50,6 +50,27 @@ timeout 20 vectorcraft-cli info /project/design/mark.svg
 
 - Test the mark at its minimum size before settling the minimum (row V4).
 
+## A mark with a subject
+
+A mark that draws a thing (a figure, a landscape, a sun over water) starts from a picture, not from coordinates. Shapes placed by number come out stiff and plain, and rendering the mark and redrawing it fixes the drawing, not its character (row G1).
+
+1. Write what the picture must show, from the brief: the subject, the moves taken in `Research`, the token colours by hex, flat colour with no gradient or texture, no text, a plain white ground, and four variations. Give it to the owner.
+2. The owner makes the pictures in an image generator of their choosing and picks one. The brief records the pick.
+3. Crop the pick to the mark and enlarge it to twice its size or more before tracing: a small picture traces into lumps.
+4. Trace it with `vectorcraft-cli run` in logo mode with the token colours, simplify it, and round the numbers:
+
+```
+timeout 120 vectorcraft-cli run --in /project/design/pick.png --commands /project/design/trace.json --export /project/design/traced.svg
+timeout 30 vectorcraft-cli run --in /project/design/traced.svg --commands /project/design/simplify.json --export /project/design/simple.svg
+timeout 20 vectorcraft-cli convert /project/design/simple.svg /project/design/mark.svg --decimals 1
+```
+
+`trace.json` holds `[{"command":"select.all","params":{}},{"command":"imageTrace.makeAndExpand","params":{"params":{"mode":"logo","logoColors":["#01429B","#FDC30C"],"ignoreWhite":true,"noise":40}}}]` with the brand's own colours, and `simplify.json` holds `select.all` then `object.path.simplify` with `{"auto":true}`. The saved commands, the byte-length comparison and the SVG checks above hold for a traced mark as for any other.
+
+5. Say in the hand-over that the rights in a generated picture depend on the generator's terms and the local law, so a trademark filing is checked first. This is a flag, not legal advice.
+
+A geometric mark (letters, a disc, bars, a grid) is still built from shapes with `vectorcraft-cli run`, as above.
+
 ## The specimen sheet
 
 A palette, the type roles, and the mark at three sizes on one page, built with `figcraft-cli run` and rendered to a PNG. Write the steps file first, then:

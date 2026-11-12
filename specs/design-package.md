@@ -216,6 +216,7 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - B5 [R] A specimen sheet (palette, type roles, the mark at three sizes) is built with `figcraft-cli run` and rendered with `render` to a PNG.
 - B6 [J] When a `DESIGN.md` already exists, `brand` changes only the entries the brief names, and a changed entry gets a new `Decided` date and replaces the old entry (git keeps the old one).
 - B7 [T] Names and taglines come from the writer's file (`words.md`). `brand` writes none itself, and a brief that supplies the words is passed on unchanged.
+- B8 [T][R] (added 2026-11-12) A mark with a subject (a figure, a landscape, an emblem that draws a thing) starts from a picture, not from coordinates: `brand` writes what the picture must show, from the brief, the owner makes the pictures in an image generator of their choosing and picks one, and `vectorcraft-cli run` traces the pick (`imageTrace.makeAndExpand` in logo mode with the token colours, then `object.path.simplify`), so B2 and B3 hold for the traced mark. A geometric mark is still built from shapes. The hand-over flags that the rights in a generated picture depend on the generator's terms and the local law. The owner settled it after a logo job in which two marks built from coordinates were rejected for having no character and a traced picture the owner picked was signed. Outside work agrees: designers generate a picture and then trace it, and a render-and-redraw loop fixes the drawing but not its character (`REFERENCES.md` G1). Run 29 in `ARTCRAFT.md` is the proof.
 
 **`email` (tool). HTML email layout and look.**
 
@@ -519,7 +520,7 @@ Commands each job uses, and the proof (all runs below were made today from the s
 
 | Job | `figcraft-cli` | `vectorcraft-cli` | `pdfcraft-cli` | Other |
 | --- | --- | --- | --- | --- |
-| `brand` | `run steps.json --out x.figcraft`, `render x.figcraft -o x.png` | `run --cmd file.new --params J --cmd shape.rectangle --params J --export logo.svg`, `info logo.svg` | none | none |
+| `brand` | `run steps.json --out x.figcraft`, `render x.figcraft -o x.png` | `run --cmd file.new --params J --cmd shape.rectangle --params J --export logo.svg`, `info logo.svg`; for a mark with a subject, `run --in pick.png --commands trace.json --export x.svg` (`imageTrace.makeAndExpand`, then `object.path.simplify`) and `convert x.svg mark.svg --decimals 1` (run 29, vectorcraft-cli 0.22.0, 2026-11-12) | none | none |
 | `email` | `run`, `render` (with `--scale`, from `--help`, not run), `export -o assets/ --format png` (from `--help`, not run) | none | none | `google-chrome --headless=new --screenshot` for the HTML |
 | `screens` | `run` with `frame.create {preset}` (`frame.presets` lists them, not run), `render` | none | none | none |
 | `critique` | `render` | none | `info`, `render`, `check`, `audit` | headless Chrome for HTML |
@@ -673,7 +674,7 @@ Given one real small brief from one of the owner's projects (the asenso app has 
 4. The email passes `check.mjs email`, contrast at 4.5:1 for text and 3:1 for UI parts, live text for the message and the call to action, alt text on every image.
 5. `breuer` produces a screen spec and one PNG per state for one asenso screen, starting with `Rules applied:` listing `file:heading` entries that exist, and honouring the async-state sizing idiom (S5).
 6. `critique`, run by a session other than the maker, reports every seeded defect (C6) and edits nothing.
-7. Louis reviews each PR against this spec once, with one re-review at most, and checks every piece against `TELLS.md` (section 10). An auditor maps the work to AC ids D1 to D14, B1 to B7, E1 to E7, S1 to S7, C1 to C9, GRO1 to GRO4, BAY1 to BAY4, BRE1 to BRE3, CAST1; a violated criterion or an unrequested change keeps the PR in draft.
+7. Louis reviews each PR against this spec once, with one re-review at most, and checks every piece against `TELLS.md` (section 10). An auditor maps the work to AC ids D1 to D14, B1 to B8, E1 to E7, S1 to S7, C1 to C9, GRO1 to GRO4, BAY1 to BAY4, BRE1 to BRE3, CAST1; a violated criterion or an unrequested change keeps the PR in draft.
 8. Each piece in steps 3 and 5 started from a brief file that passes D13 and cites at least three reference rows. `critique` exits 0 and reports `PASS: no tells` on each, exits 1 on a seeded piece that carries one tell of each kind the checklist lists, and exits 2 on a seeded piece that cites no reference.
 9. The 29 checks of `TELLS.md` have been run on three real ArtCraft-built files, and every false positive is either fixed or listed in the file (the research proposed the checks and did not run them).
 10. `design/TRENDS.md` holds the 9 seed entries of section 11 and `check.mjs trends` passes on it. A tenth, "Email shaped for automated inbox summaries", was dropped because it had no opened source.

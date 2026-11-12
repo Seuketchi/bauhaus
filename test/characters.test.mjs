@@ -709,7 +709,7 @@ describe("REGISTERS.md in email, screens and brand", () => {
   });
 });
 
-describe("brand (B1 to B7)", () => {
+describe("brand (B1 to B8)", () => {
   const source = job("brand");
   const has = (re, why) => assert.match(source, re, why);
   test("writes a DESIGN.md that passes check.mjs design and a token file that passes check.mjs tokens (B1)", () => {
@@ -752,6 +752,19 @@ describe("brand (B1 to B7)", () => {
     has(/names and taglines come from the writer's `words\.md`/i);
     has(/writes? none of its own/i);
     has(/only `brand` creates a `DESIGN\.md`|only this skill creates a `DESIGN\.md`/i);
+  });
+  test("a mark with a subject starts from a picture the owner picks, traced and simplified by vectorcraft-cli run (B8)", () => {
+    has(/starts from a picture, not from coordinates/i);
+    has(/the owner makes the pictures/i);
+    has(/imageTrace\.makeAndExpand/);
+    has(/"mode":"logo"/);
+    has(/object\.path\.simplify/);
+    has(/geometric mark/i);
+    has(/rights/i);
+    has(/fixes the drawing, not its character/i);
+    has(/row G1/);
+    assert.match(read("specs/design-package.md"), /- B8 \[T\]\[R\] \(added 2026-11-12\)[^\n]*starts from a picture/);
+    assert.match(read("skills/tools/brand/REFERENCES.md"), /^\| G1 \|[^\n]*\| opened \|/m);
   });
 });
 
