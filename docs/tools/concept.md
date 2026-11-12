@@ -21,6 +21,8 @@ Skip it for long documents and the PDF build, which are donna's.
 
 **What if a piece needs no story?** A logo mark may write `Story: none. Reason: <why>`. Idea, Insight and the two words stay required.
 
+**Where do the writing rules come from?** From opened sources in `REFERENCES.md`: a plain-writing memo and great writing and film, among them Orwell, Strunk, Shakespeare's Julius Caesar, Aristotle, Chekhov and two films. Each gives one rule, paraphrased, and the skill cites the row where it uses it.
+
 **Who writes screen strings?** The writer, where the project's l10n rules allow it, in the project's own shape. The project's rules win.
 
 **Who places the words?** The designer, from `words.md`, by slot id. The designer writes none, and may send a line back.

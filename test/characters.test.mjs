@@ -1878,17 +1878,28 @@ describe("the concept tool", () => {
 describe("concept/REFERENCES.md", () => {
   const rows = referenceRows(read(REFS.concept));
   const find = (re) => rows.filter((r) => re.test(r[1]));
-  test("holds the five opened sources, each with a free link, and no lending-only book", () => {
-    assert.equal(rows.length, 5);
+  test("holds the fourteen opened sources, each with a free link, and no lending-only book", () => {
+    assert.equal(rows.length, 14);
     for (const r of rows) {
       assert.equal(r[5], "opened", r[0]);
       assert.match(r[6], /^free \(https:\/\//, r[0]);
     }
-    assert.equal(find(/How to Write/).length, 1, "the memo on plain writing");
+    assert.equal(find(/How to Write, a memo/).length, 1, "the memo on plain writing");
     assert.equal(find(/Letter of 15 May/).length, 1, "the letter on persuasion");
     assert.equal(find(/D&AD/).length, 1, "the two-words exercise");
     assert.equal(find(/Collins/).length, 1);
     assert.equal(find(/Koto/).length, 1);
+  });
+  test("the craft canon: plain words, story and persuasion from opened works, each rule cited in the skill (W11)", () => {
+    for (const [id, work] of [["OR1", /Orwell, Politics and the English Language/], ["ST1", /Strunk, The Elements of Style/], ["VO1", /Vonnegut, How to Write with Style/],
+      ["DP1", /Dead Poets Society/], ["JC1", /Shakespeare, Julius Caesar/], ["GW1", /Good Will Hunting/], ["AR1", /Aristotle, Poetics/], ["CH1", /Chekhov's gun/], ["EC1", /Emma Coats/]]) {
+      const r = rows.find((row) => row[0] === id);
+      assert.ok(r, id);
+      assert.match(r[1], work, id);
+      assert.equal(r[5], "opened", id);
+      assert.match(read("skills/tools/concept/SKILL.md"), new RegExp(`rows? (?:[A-Z]{2}\\d and )?${id}\\b|rows ${id} and`), id);
+    }
+    assert.match(read("specs/design-package.md"), /- W11 \[T\]\[J\] \(added 2026-11-12\)/);
   });
   test("its ids repeat no id of any other references file", () => {
     const others = Object.entries(REFS).filter(([craft]) => craft !== "concept").flatMap(([, f]) => referenceRows(read(f)).map((r) => r[0]));

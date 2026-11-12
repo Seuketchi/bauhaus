@@ -8,7 +8,7 @@ The size of each shot is one of ELS, LS, FS, MWS, MS, MCU, CU and ECU. Shots are
 
 The table becomes a FilmCraft project. Each row is a marker at the start of its shot, named for its number and size, with the angle and the movement as its comment, so the table and the project say the same thing. The markers sit on a grey placeholder matte as long as the list, because an empty sequence exports no marker. The project exports an EDL with one marker line for each row, and a frame is rendered at the start of each shot.
 
-Light is only a note column, and no lighting rule is written, because the opened Lighting page covers equipment, not setups. The craft rules rest on opened rows in `REFERENCES.md`, all secondary, and the two lending books are pointers that are not cited. The rules for driving the command-line apps are in the `design` tool's `ARTCRAFT.md`.
+Light is only a note column with one rule, from a cinematographer's own words: the note names the real source the light comes from. The craft rules rest on opened rows in `REFERENCES.md`, from the manual pages to the films and filmmakers the owner chose, and the two lending books are pointers that are not cited. The rules for driving the command-line apps are in the `design` tool's `ARTCRAFT.md`.
 
 Every hand-over says: this is a plan and a draft, not a cut. No film was made, no shot was taken and no footage was cut.
 
