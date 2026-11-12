@@ -2,7 +2,7 @@
 
 ## What it does
 
-`bayer` is the graphic designer: brand, logos and HTML email. It reads the brief and the project's `DESIGN.md`, makes the piece with the matching tool and hands back files that pass the checks.
+`bayer` is the graphic designer: brand, logos, HTML email and diagrams. It reads the brief and the project's `DESIGN.md`, makes the piece with the matching tool and hands back files that pass the checks.
 
 Its file also holds a short stance: one system where one will do, a line that looks like one thing, and the saving counted. A stance is not a voice.
 
@@ -14,6 +14,7 @@ The split is fixed. The writer owns the words of the pieces made here, donna kee
 
 - A brand, a logo or a visual identity is wanted.
 - An HTML email needs its layout and look.
+- A diagram is wanted: a process, a flow or how a system works.
 - The brief names a made ground or a picture in a few colours, from the token colours.
 - A finished identity or email from another session needs a craft pass.
 

@@ -20,7 +20,7 @@ The cast are real people, now dead, and their names are used as names only. Each
 | Person | Role |
 | --- | --- |
 | Walter Gropius | Lead. Frames the brief, hands work on, runs the craft pass. |
-| Herbert Bayer | Graphic designer. Brand, logos, email. |
+| Herbert Bayer | Graphic designer. Brand, logos, email, diagrams. |
 | Marcel Breuer | UI/UX designer. App and web screens, and finished pages handed to Figma and to a developer. |
 | Ludwig Mies van der Rohe | Space designer. Form, plans, structure. |
 | David Ogilvy | Writer. The idea, the story and the words. |

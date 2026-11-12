@@ -2,7 +2,7 @@
 
 The one page that stands in for the brief on a small job (see **A small job** in `SKILL.md`). It is what a studio sends before a small job starts: what is made, in what sizes, with whose words, in how many rounds, for what use, and what is left out. `check.mjs proposal <proposal.md>` checks its shape, and `check.mjs tells` takes it in place of a brief.
 
-The lead writes every part but **Examples**, shows the owner the page and waits for go. When the owner is away, the lead writes `owner away` on the approval line and goes on, and the proposal heads the hand-over. The designer adds the three examples before building and runs the check.
+The lead writes every part but **Examples**, shows the owner the page and waits for go. When the owner is away, the lead writes `owner away` on the approval line and goes on, and the proposal heads the hand-over. The designer adds the three examples before building and runs the check. The owner's go approves the scope; the proposal is locked once `check.mjs proposal` passes, as `SIGN-OFF.md` sets out.
 
 ## The file
 

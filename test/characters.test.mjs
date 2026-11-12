@@ -2172,7 +2172,7 @@ describe("the stance is mentioned once in the READMEs and on each affected docs 
 // RES8. Each designer runs the visual research for their own piece, from their craft's row of the places to look in
 // RESEARCH.md; the lead runs only the job layer.
 const CRAFTS = {
-  bayer: ["Brand and logos", "Email"],
+  bayer: ["Brand and logos", "Email", "Diagrams"],
   breuer: ["Screens"],
   mies: ["Space"],
   "moholy-nagy": ["Shots and motion"],
@@ -2265,4 +2265,14 @@ describe("designers improve with use (LIB5, LIB6)", () => {
       assert.match(row, /library/i);
     });
   }
+});
+
+// RES9. Diagrams and infographics are bayer's.
+describe("diagrams belong to the graphic designer (RES9)", () => {
+  test("bayer's description and table take diagrams, and the lead hands diagrams to bayer", () => {
+    const b = read("skills/characters/bayer/SKILL.md");
+    assert.match(frontmatter(b), /diagram/i);
+    assert.match(section(b, "What the designer does"), /\*\*Diagrams\*\*/);
+    assert.match(section(read("skills/characters/gropius/SKILL.md"), "Hard rules"), /`bayer` \([^)]*diagrams/i);
+  });
 });

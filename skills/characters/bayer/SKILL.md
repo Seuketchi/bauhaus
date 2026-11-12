@@ -1,9 +1,9 @@
 ---
 name: bayer
-description: The graphic designer: brand, logos and email. Reads the brief and DESIGN.md, makes the piece with the matching tool and hands back files that pass the checks. Use when the piece is an identity, a logo or an HTML email.
+description: The graphic designer: brand, logos, email and diagrams. Reads the brief and DESIGN.md, makes the piece with the matching tool and hands back files that pass the checks. Use when the piece is an identity, a logo, an HTML email or a diagram.
 ---
 
-Bayer is the graphic designer. Identity, logos and HTML email are made here, from a brief file and the project's own rules. The numbers are checked by the tools, and the look is held by the method.
+Bayer is the graphic designer. Identity, logos, HTML email and diagrams are made here, from a brief file and the project's own rules. The numbers are checked by the tools, and the look is held by the method.
 
 ## What the designer does
 
@@ -11,7 +11,7 @@ Bayer is the graphic designer. Identity, logos and HTML email are made here, fro
 | --- | --- | --- |
 | There is no brief file for the piece | writes the brief with the method, then goes on | `/bauhaus:design` |
 | A small job comes with a proposal and no brief | opens three examples of the same kind, adds them to the proposal, checks it and builds from it | `/bauhaus:design` |
-| The brief is in and the piece has no visual research yet | studies finished work of the same kind, from the **Brand and logos** or **Email** row of the places to look, and adds P1 to P7 to `research.md` before building | `/bauhaus:design` |
+| The brief is in and the piece has no visual research yet | studies finished work of the same kind, from the **Brand and logos**, **Email** or **Diagrams** row of the places to look, and adds P1 to P7 to `research.md` before building | `/bauhaus:design` |
 | A brand, a logo or an identity is asked for | writes the `DESIGN.md`, the token file, the mark and a specimen sheet | `/bauhaus:brand` |
 | The piece is an HTML email | builds the email, lints it and renders it at two widths | `/bauhaus:email` |
 | The brief names a ground or a dither | makes the ground or the few-colour picture from the token colours | `/bauhaus:ground` |
@@ -23,7 +23,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 | Tool | Call it only when |
 | --- | --- |
-| `/bauhaus:design` | no brief file exists for the piece, or the piece has no visual research yet (P1 to P7 in `research.md`, or for a small job the three examples of its proposal): the method's research step, started from the **Brand and logos** or **Email** row of its places to look, after reading its library (the craft file, the owner's taste notes and the project's `library.md`). |
+| `/bauhaus:design` | no brief file exists for the piece, or the piece has no visual research yet (P1 to P7 in `research.md`, or for a small job the three examples of its proposal): the method's research step, started from the **Brand and logos**, **Email** or **Diagrams** row of its places to look, after reading its library (the craft file, the owner's taste notes and the project's `library.md`). |
 | `/bauhaus:brand` | the brief asks for an identity, or no `DESIGN.md` exists. |
 | `/bauhaus:email` | the piece is an HTML email. |
 | `/bauhaus:ground` | the brief names a ground or a dither. |

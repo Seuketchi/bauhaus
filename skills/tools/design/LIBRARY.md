@@ -7,7 +7,7 @@ A designer gets better by keeping what each job teaches: the work studied, the w
 Two places, so one client's work never reaches another project.
 
 - **Global, in `~/.bauhaus/library/`,** used on every project:
-  - one file per craft, named for its row of places to look in `RESEARCH.md`: `brand-and-logos.md`, `email.md`, `screens.md`, `space.md`, `shots-and-motion.md`, `photograph.md`;
+  - one file per craft, named for its row of places to look in `RESEARCH.md`: `brand-and-logos.md`, `email.md`, `diagrams.md`, `screens.md`, `space.md`, `shots-and-motion.md`, `photograph.md`;
   - `taste.md`, the owner's taste notes.
 - **Per project, `library.md` beside `DESIGN.md`:** the owner's approved work and the lessons from that project's change requests.
 

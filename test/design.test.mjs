@@ -975,6 +975,18 @@ test("approvals: the owner's words are quoted, the stage is known, and the hash 
   bad(AP, "no Rounds: line", approvals({ rounds: "" }));
 });
 
+test("approvals: a proposal is locked only once its words and examples are in and it passes check.mjs proposal (SO7)", () => {
+  const full = proposalText();
+  const row = (text) => [`| proposal | 2026-11-12 | "go" | proposal.md | ${sha(text)} |`];
+  ok(AP, approvals({ signed: row(full) }, { "proposal.md": full }));
+  const early = proposalText({ Examples: "To be added by the designer." });
+  bad(AP, "sign-off row 1: proposal.md is locked before it passes check.mjs proposal", approvals({ signed: row(early) }, { "proposal.md": early }));
+});
+
+test("library: diagrams is a craft a taste note can apply to (RES9)", () => {
+  ok(LIB, lib(`# Taste\n\n## Notes\n\n| Date | Said | Applies to |\n| --- | --- | --- |\n| 2026-11-12 | "i actually love it" | diagrams |\n`));
+});
+
 test("hash prints each file's SHA-256 for a sign-off row", () => {
   const r = ok(["hash", "piece.html"], dir({ "piece.html": PIECE }));
   assert.equal(r.first, `${sha(PIECE)}  piece.html`);
@@ -2027,6 +2039,15 @@ test("SKILL.md: the library is read before research, half the sources stay new, 
   assert.match(sec, /client|project's own/i);
   assert.match(sec, /level 5/i);
   assert.match(skill, /\| `library <file>` \|/);
+});
+
+test("SIGN-OFF.md and PROPOSAL.md lock a proposal after the designer's check, with the owner's go (SO7)", () => {
+  for (const file of ["SIGN-OFF.md", "PROPOSAL.md"]) {
+    const text = designText(file);
+    assert.match(text, /proposal[^.\n]*locked[^.\n]*`check\.mjs proposal`[^.\n]*passes/i, file);
+    assert.match(text, /owner's go/i, file);
+  }
+  assert.match(designText("LIBRARY.md"), /`diagrams\.md`/);
 });
 
 test("LIBRARY.md describes the three files, their tables, the two-project rule and what never leaves a project (LIB2, LIB3)", () => {
