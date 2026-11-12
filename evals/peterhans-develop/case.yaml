@@ -3,8 +3,6 @@ name: peterhans-develop
 description: Peterhans develops a photograph for a 4:5 post in stated values, exports a JPG and a PNG preview, and leaves the source untouched.
 tags: [peterhans, develop, output]
 runs: 1
-context:
-  add_dirs: [/usr/share/backgrounds]
 execution:
   max_turns: 80
   timeout_seconds: 1800
@@ -12,7 +10,7 @@ execution:
   prompt: |
     /bauhaus:peterhans I'm away, so don't ask me anything: work alone and decide what is not given.
 
-    Develop the photograph /usr/share/backgrounds/mendhak-Red_Acer.jpg for an Instagram post: crop it to 4:5 around the strongest part of the frame, make it feel a little warmer and brighter like early autumn light, and keep the reds from clipping. Do not change the source file.
+    Copy /usr/share/backgrounds/mendhak-Red_Acer.jpg to photo/source.jpg, then develop photo/source.jpg for an Instagram post: crop it to 4:5 around the strongest part of the frame, make it feel a little warmer and brighter like early autumn light, and keep the reds from clipping. Do not change the source file.
 
     Save the result as photo/developed.jpg, a PNG preview as photo/preview.png, and the command that made them beside them. Say at the end what you did not check.
 graders:
@@ -34,4 +32,4 @@ graders:
     name: stated-values-and-source-untouched
     focus: trace
     criteria: |
-      Pass if every change was made as a stated number in an app or command (for example exposure +0.3, temperature, crop box) and the final message lists each value, and the source file's hash or size was checked before and after and is unchanged. Nothing was written to /usr/share/backgrounds.
+      Pass if every change was made as a stated number in an app or command (for example exposure +0.3, temperature, crop box) and the final message lists each value, and the source file's hash or size was checked before and after and is unchanged. Nothing was written to /usr/share/backgrounds or over photo/source.jpg.

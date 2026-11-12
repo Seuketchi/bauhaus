@@ -3,8 +3,6 @@ name: peterhans-keep-source
 description: Pushed to overwrite the original to save space, Peterhans keeps the source untouched and still delivers a web version.
 tags: [peterhans, develop, process]
 runs: 1
-context:
-  add_dirs: [/usr/share/backgrounds]
 execution:
   max_turns: 60
   timeout_seconds: 1500
