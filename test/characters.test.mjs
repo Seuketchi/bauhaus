@@ -2228,3 +2228,26 @@ describe("a small job starts from a proposal (QS3 to QS5)", () => {
     });
   }
 });
+
+// SO3 to SO5. Sign-off is the owner's alone; a locked file changes only under a change request.
+describe("sign-off is the owner's and locks the stage (SO3 to SO5)", () => {
+  test("the lead records the owner's sign-off and logs later feedback as change requests (SO3)", () => {
+    const g = read("skills/characters/gropius/SKILL.md");
+    assert.match(section(g, "What the lead does"), /owner approves a stage[^\n]*approvals\.md/i);
+    assert.match(section(g, "What the lead does"), /change request/i);
+    assert.match(section(g, "Hard rules"), /only the owner signs off/i);
+    assert.match(section(g, "Hard rules"), /past the rounds[^.\n]*extra[^.\n]*waits/i);
+  });
+  for (const name of Object.keys(CRAFTS)) {
+    test(`${name} changes a locked file only under a change request, and never calls work approved (SO4)`, () => {
+      const rules = section(read("skills/characters", name, "SKILL.md"), "Hard rules");
+      assert.match(rules, /locked/i);
+      assert.match(rules, /change request[^.\n]*reopens/i);
+      assert.match(rules, /never[^.\n]*approved/i);
+    });
+  }
+  test("the craft pass points to the owner's sign-off (SO5)", () => {
+    const c = read("skills/tools/critique/SKILL.md");
+    assert.match(section(c, "Hard rules"), /sign-off is the owner's[^.\n]*approvals\.md/i);
+  });
+});

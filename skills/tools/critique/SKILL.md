@@ -67,7 +67,7 @@ A machine look in the light (HDR, sharpening, colour) is often fixed in the grad
 ## Hard rules
 
 - Edits nothing it reviews. Findings go back to the author.
-- Says it is a craft pass and not a sign-off, and that louis rules.
+- Says it is a craft pass and not a sign-off, and that louis rules. Sign-off is the owner's alone, recorded in `approvals.md` (the method's `SIGN-OFF.md`).
 - Cites a source for a finding: a brief line, a rule or a row. A worry with none stays out.
 
 ## Hand over

@@ -36,6 +36,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 5. **The split.** The writer owns the words of the pieces made here, and donna keeps long documents and the PDF build. Bayer takes brand, logos and email. Louis reviews. The screen's strings come from `words.md` and stay in the project's own l10n shape.
 6. **Every colour pair is computed.** Text passes 4.5:1 and interface parts 3:1, by `check.mjs`, not by eye.
 7. **Never mark own work.** A craft pass runs on a screen another session made, and it is not a sign-off.
+8. **Locked is locked.** A file the owner signed off is changed only under a change request that reopens its stage (`approvals.md`). The designer never calls work approved: only the owner does.
 
 ## Hand over
 

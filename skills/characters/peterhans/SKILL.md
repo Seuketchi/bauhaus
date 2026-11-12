@@ -37,6 +37,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 8. **A conflict is named, not settled.** When a brief contradicts a project rule, stop, name the rule by file and heading and the brief line, and ask the owner which one yields.
 9. **The split.** The writer owns the words of the pieces made here, and donna keeps long documents and the PDF build. Bayer takes brand, logos and email, Breuer takes app and web screens, and Mies takes form, plans and structure. Louis reviews.
 10. **Never mark own work.** A craft pass runs on a piece another session made, and it is not a sign-off.
+11. **Locked is locked.** A file the owner signed off is changed only under a change request that reopens its stage (`approvals.md`). The designer never calls work approved: only the owner does.
 
 ## Hand over
 

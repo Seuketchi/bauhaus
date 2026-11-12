@@ -115,6 +115,10 @@ When the work is more than one page, or emails that follow a site:
 - The first call to action sits right under the headline, on every page.
 - Offer the interaction layer with the first build: hover, reveal on scroll and the menu, each with a reduced-motion version.
 
+## Sign-off
+
+Only the owner signs off. A stage is approved and locked at three points: the brief (or a small job's proposal), the comp and the final files. The craft pass is not a sign-off, and no one but the owner calls a piece approved. When the owner is away, the stage stays unsigned. Each sign-off is recorded with the owner's words and each locked file's hash in `approvals.md`, in the shape `SIGN-OFF.md` gives. Feedback after a sign-off is a change request: logged, counted against the rounds, and past them extra work that waits for the owner. A locked file changes only under a change request that reopens its stage, and `check.mjs approvals` holds that.
+
 ## When rounds go nowhere
 
 After two rounds of polish, or two tools, that the owner rejects, stop. Name the root cause in one line (missing material, a wrong brief, a tool that cannot do it), then offer two or three directions or ask for the material. A third round of the same kind is not made.
@@ -132,6 +136,8 @@ Run them from this folder with `node check.mjs <command>`.
 | `trends <TRENDS.md> --as-of <date>` | Every entry has its fields, a valid status and a review-by date not past. |
 | `brief <brief.md>` | The brief has all eleven sections, a two-word idea, a story of 3 to 5 beats (or none, with a reason), its tells have reasons, and its reference minimum is allowed. |
 | `proposal <proposal.md>` | The small job's one page: its date and approval line, the sections in order, a deliverable, words from the owner or the writer, three opened examples each with the move taken, a number of rounds, and no more than one page. |
+| `approvals <approvals.md>` | Every locked file matches the hash of its latest sign-off unless a change request reopens its stage; the owner's words are quoted; each request's go-ahead fits its round against `Rounds:`. |
+| `hash <file>...` | Prints each file's SHA-256 for a sign-off row. |
 | `research <research.md>` | The research file has its date and client line, the seven parts in order, every source marked opened or summary only, the eight fields in every source note, and the not-that table. |
 | `email <file.html> [--limits <LIMITS.md>]` | Alt text, a real button, live text, a container of at most 640 px, the tells a script can see, and the limits table when one is given. |
 | `parts-set <page.html>...` | Every `data-part` the pages share is the same in each: one closing card, one footer, one nav. |
