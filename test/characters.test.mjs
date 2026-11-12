@@ -2168,3 +2168,37 @@ describe("the stance is mentioned once in the READMEs and on each affected docs 
     assert.doesNotMatch(read("docs/characters/breuer.md"), /stance/i);
   });
 });
+
+// RES8. Each designer runs the visual research for their own piece, from their craft's row of the places to look in
+// RESEARCH.md; the lead runs only the job layer.
+const CRAFTS = {
+  bayer: ["Brand and logos", "Email"],
+  breuer: ["Screens"],
+  mies: ["Space"],
+  "moholy-nagy": ["Shots and motion"],
+  peterhans: ["Photograph"],
+};
+describe("each designer researches their own piece (RES8)", () => {
+  const where = section(read("skills/tools/design/RESEARCH.md"), "Where to look");
+  const crafts = [...where.matchAll(/^\| \*\*([^*|]+)\*\* \|/gm)].map((m) => m[1]);
+  for (const [name, own] of Object.entries(CRAFTS)) {
+    test(`${name} calls the method for the visual research when the piece has none, from its craft's row`, () => {
+      const when = section(read("skills/characters", name, "SKILL.md"), "When to call");
+      const row = when.split("\n").find((l) => l.startsWith("| `/bauhaus:design` |")) ?? "";
+      assert.match(row, /no visual research/i);
+      assert.match(row, /P1 to P7/);
+      for (const craft of own) {
+        assert.ok(row.includes(`**${craft}**`), `${name} does not name the ${craft} row`);
+        assert.ok(crafts.includes(craft), `RESEARCH.md has no ${craft} row`);
+      }
+    });
+  }
+  test("every craft row in RESEARCH.md belongs to a designer", () => {
+    assert.deepEqual([...crafts].sort(), Object.values(CRAFTS).flat().sort());
+  });
+  test("the lead runs only the job layer and leaves the piece layer to the designer", () => {
+    const when = section(read("skills/characters/gropius/SKILL.md"), "When to call");
+    assert.match(when, /job layer/i);
+    assert.match(when, /designer[^.\n]*piece layer|piece layer[^.\n]*designer/i);
+  });
+});

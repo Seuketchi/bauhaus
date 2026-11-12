@@ -21,7 +21,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 | Tool | Call it only when |
 | --- | --- |
-| `/bauhaus:design` | no brief file exists for the piece. The method asks the intake questions once, runs the research step and writes the brief with its audience, job, tone, what it must not look like, surface, intake, research and references. |
+| `/bauhaus:design` | no brief file exists for the piece. The method asks the intake questions once, runs the job layer of the research step (the designer who takes the piece runs the piece layer) and writes the brief with its audience, job, tone, what it must not look like, surface, intake, research and references. |
 | `/bauhaus:critique` | a finished piece exists that this session did not make. |
 
 ## Hard rules
