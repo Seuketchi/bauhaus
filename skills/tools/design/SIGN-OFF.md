@@ -4,7 +4,7 @@ A stage is approved and locked only by the owner. The craft pass and the reviewe
 
 ## The stages
 
-- `brief`, or `proposal` on a small job: what is being made.
+- `brief`, or `proposal` on a small job: what is being made. The owner's go approves a proposal's scope, but the proposal is locked only once the writer's words and the designer's examples are in and `check.mjs proposal` passes; its row quotes the owner's go, with the date it was given, and takes the hash then. `check.mjs approvals` refuses a proposal row whose file does not pass.
 - `comp`: the look before building, such as the email comp or the first draft of a screen.
 - `final`: the files handed over.
 

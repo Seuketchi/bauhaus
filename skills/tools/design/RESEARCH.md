@@ -32,12 +32,13 @@ Places that hold finished work of each kind. They are where the search starts, n
 | --- | --- | --- |
 | **Brand and logos** | Brand New (underconsideration.com/brandnew), Fonts In Use, Dribbble | Pinterest, Google Images, Behance |
 | **Email** | Really Good Emails | Pinterest, Google Images, Milled |
+| **Diagrams** | Information is Beautiful, Information is Beautiful Awards, Visual Capitalist, The Pudding, Dribbble | Pinterest, Google Images, Behance, Data Viz Project |
 | **Screens** | Mobbin, Dribbble, Awwwards, Land-book | Pinterest, Google Images |
 | **Space** | ArchDaily, Dezeen, Divisare | Pinterest, Google Images |
 | **Shots and motion** | Film-Grab | Pinterest, Google Images, ShotDeck, Art of the Title, Vimeo |
 | **Photograph** | Magnum Photos, Unsplash, 500px | Pinterest, Google Images, Flickr search |
 
-Behance, ShotDeck and Vimeo admit a generic reader but name some readers they keep out; read the file for the one in use. Pinterest and Google Images are where most people start, so they are in every row, and both are closed to a fetch.
+Behance, ShotDeck, Vimeo and Data Viz Project admit a generic reader but name some readers they keep out; read the file for the one in use. Dribbble's file allows a search, but on 2026-11-12 it answered a plain read with an empty page, which counts as a block (R6). Pinterest and Google Images are where most people start, so they are in every row, and both are closed to a fetch.
 
 ## The owner's browser
 

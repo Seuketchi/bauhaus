@@ -695,6 +695,11 @@ function approvalsProblems(text, base) {
     if (!/^["“].+["”]$/.test(words ?? "")) problems.push(`${at}: Owner's words must quote the owner`);
     if (!file) problems.push(`${at}: no File`);
     if (!/^[0-9a-f]{64}$/i.test(hash ?? "")) problems.push(`${at}: SHA-256 is not 64 hex characters`);
+    // A small job's proposal is locked only once its words and examples are in (SIGN-OFF.md).
+    if (stage === "proposal" && file && existsSync(resolve(base, file))) {
+      const unfinished = parseProposal(readFileSync(resolve(base, file), "utf8"), parseTells().map((r) => r.id)).problems;
+      if (unfinished.length) problems.push(`${at}: ${file} is locked before it passes check.mjs proposal`);
+    }
     signs.push({ stage, date, file, hash: (hash ?? "").toLowerCase() });
   });
 
@@ -758,7 +763,7 @@ commands.hash = hashCommand;
 
 // What each job leaves behind for the next (LIBRARY.md): a craft file and the owner's taste in ~/.bauhaus/library/,
 // and a project library beside DESIGN.md.
-const CRAFTS = ["brand-and-logos", "email", "screens", "space", "shots-and-motion", "photograph"];
+const CRAFTS = ["brand-and-logos", "email", "diagrams", "screens", "space", "shots-and-motion", "photograph"];
 const quoted = (text) => /^["“].+["”]$/.test(text ?? "");
 
 function libraryProblems(text) {
