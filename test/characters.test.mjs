@@ -2202,3 +2202,29 @@ describe("each designer researches their own piece (RES8)", () => {
     assert.match(when, /designer[^.\n]*piece layer|piece layer[^.\n]*designer/i);
   });
 });
+
+// QS3 to QS5. A small job starts from a one-page proposal (design/PROPOSAL.md) in place of the eleven-section brief.
+describe("a small job starts from a proposal (QS3 to QS5)", () => {
+  const gropius = read("skills/characters/gropius/SKILL.md");
+  test("the lead writes a proposal for a small job, shows it to the owner unless the owner is away, and says so in the hand-over (QS3)", () => {
+    const does = section(gropius, "What the lead does");
+    assert.match(does, /small job[^\n]*proposal/i);
+    const when = section(gropius, "When to call").split("\n").find((l) => l.startsWith("| `/bauhaus:design` |")) ?? "";
+    assert.match(when, /small job[^.]*proposal/i);
+    assert.match(section(gropius, "Hard rules"), /brief file, or for a small job a proposal/i);
+    assert.match(section(gropius, "Hard rules"), /owner is away/i);
+    assert.match(section(gropius, "Hand over"), /`proposal written`/);
+  });
+  test("the writer writes only the missing lines of a small job's proposal, with no idea, insight or story (QS4)", () => {
+    const ogilvy = read("skills/characters/ogilvy/SKILL.md");
+    const row = section(ogilvy, "When to call").split("\n").find((l) => l.startsWith("| `/bauhaus:concept` |")) ?? "";
+    assert.match(row, /proposal[^.]*`Words`[^.]*(?:missing|empty)/i);
+    assert.match(ogilvy, /no idea, insight or story/i);
+  });
+  for (const name of Object.keys(CRAFTS)) {
+    test(`${name} takes a small job from its proposal and gathers its three examples (QS5)`, () => {
+      const row = section(read("skills/characters", name, "SKILL.md"), "When to call").split("\n").find((l) => l.startsWith("| `/bauhaus:design` |")) ?? "";
+      assert.match(row, /three examples[^.]*proposal|proposal[^.]*three examples/i);
+    });
+  }
+});

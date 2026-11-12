@@ -28,6 +28,17 @@ A brief that contradicts a project rule is not obeyed silently: stop, name the r
 - Run the research step in `RESEARCH.md`: the lead runs it before the brief is final (the job's facts), and the designer who takes the piece runs it again before craft (the piece's visual research, from the craft's row of places to look). Write `research.md` beside the brief, and check it with `check.mjs research` once the piece's research is in.
 - Cite at least three reference rows and say which rule you took from each, so a ban never stands alone. A brief may state a lower minimum with a reason; the floor is one. A rule rests only on a reference that was opened.
 
+## A small job
+
+A small job is one piece, or a set of one kind (three sizes of one banner), for a brand that already exists. A new identity or a logo is never small. When the owner says small or full, that wins over this test.
+
+A small job starts from a one-page proposal, `PROPOSAL.md`, which stands in for the brief: scope, deliverables, words, three examples, rounds, usage and what is not included. The intake questions are not asked; what the ask leaves out is written `not given`.
+
+- The lead writes the proposal, shows the owner the page and waits for go. When the owner is away, the lead marks it `owner away`, goes on, and puts the proposal at the head of the hand-over.
+- The words the ask gives are used as given. The writer is called only for a line that is missing, and writes that line alone.
+- The designer opens three examples from the craft's row of places to look in `RESEARCH.md`, adds them to the proposal, checks it with `check.mjs proposal`, and builds.
+- The proposal takes the place of `research.md` and `words.md` wherever a job asks for them. Everything else holds: the project's rules, `DESIGN.md`, the bans and the checks.
+
 ## The intake
 
 The questions live here, once. The lead gets them by calling `design`, and a character never copies them. They come from the questions studios put to a client: who are you and where are you going, and who it is for, what is special and how it should feel.
@@ -120,11 +131,12 @@ Run them from this folder with `node check.mjs <command>`.
 | `document-css <file.tokens>` | Writes the six document properties as CSS custom properties. |
 | `trends <TRENDS.md> --as-of <date>` | Every entry has its fields, a valid status and a review-by date not past. |
 | `brief <brief.md>` | The brief has all eleven sections, a two-word idea, a story of 3 to 5 beats (or none, with a reason), its tells have reasons, and its reference minimum is allowed. |
+| `proposal <proposal.md>` | The small job's one page: its date and approval line, the sections in order, a deliverable, words from the owner or the writer, three opened examples each with the move taken, a number of rounds, and no more than one page. |
 | `research <research.md>` | The research file has its date and client line, the seven parts in order, every source marked opened or summary only, the eight fields in every source note, and the not-that table. |
 | `email <file.html> [--limits <LIMITS.md>]` | Alt text, a real button, live text, a container of at most 640 px, the tells a script can see, and the limits table when one is given. |
 | `parts-set <page.html>...` | Every `data-part` the pages share is the same in each: one closing card, one footer, one nav. |
 | `roles <piece.html> --design <DESIGN.md>` | No band is filled with a colour whose `**Use:**` leaves out `block` and `ground`, also through a CSS variable. |
-| `tells <piece> --brief <brief.md> [--brand <tokens>] [--render <png>]` | The rows of `TELLS.md`. Exit 0 no tell, 1 a tell, 2 too few reference rows, 3 a check could not run. The first line is `PASS: no tells` or `FAIL: ...`. |
+| `tells <piece> --brief <brief.md or proposal.md> [--brand <tokens>] [--render <png>]` | The rows of `TELLS.md`. Exit 0 no tell, 1 a tell, 2 too few reference rows, 3 a check could not run. The first line is `PASS: no tells` or `FAIL: ...`. |
 
 A pass is never approval. The checks prove numbers and written rules; the critique pass and the owner's reviewer rule on the rest.
 

@@ -851,6 +851,71 @@ test("research: a missing file is refused", () => {
   bad(["research", "nope.md"], "nope.md: no such file", dir());
 });
 
+// ---- proposal (QS1): the one page that stands in for the brief on a small job ----
+
+const exampleRows = (n = 3, { read = "opened", move = "a single dark field" } = {}) =>
+  Array.from({ length: n }, (_, i) => `| ${i + 1} | Maker ${i + 1} | https://example.com/banner/${i + 1} | ${read} | ${move} |`).join("\n");
+const PROPOSAL_PARTS = {
+  Scope: "One web banner for a talk, for the brand as it stands.",
+  Deliverables: "| File | Size | Format |\n| --- | --- | --- |\n| banner/banner.png | 1200 by 400 px | PNG |\n",
+  Words: "| Slot | Words | From |\n| --- | --- | --- |\n| title | Making with less | owner |\n| date | 14 February 2027 | owner |\n",
+  Examples: `| # | Maker | URL | Read | Move taken |\n| --- | --- | --- | --- | --- |\n${exampleRows()}\n`,
+  Rounds: "Rounds: 2",
+  Usage: "The event's site and social posts, until the talk.",
+  "Not included": "- Print sizes.\n- Animation.",
+  References: "- V1: Discipline in the grid.\n- W2: Contrast of 4.5:1 for text.\n- C3: One focal point.",
+};
+const proposalText = (parts = {}, { head = "Date: 2026-11-12\nApproved: owner away\n" } = {}) =>
+  `# Proposal: talk banner\n\n${head}\n${Object.entries({ ...PROPOSAL_PARTS, ...parts }).filter(([, v]) => v !== null).map(([k, v]) => `## ${k}\n\n${v}\n`).join("\n")}`;
+const proposal = (parts, options) => dir({ "proposal.md": proposalText(parts, options) });
+const PR = ["proposal", "proposal.md"];
+
+test("proposal: a valid proposal passes, approved on a date or with the owner away (QS1)", () => {
+  ok(PR, proposal());
+  ok(PR, proposal({}, { head: "Date: 2026-11-12\nApproved: 2026-11-12\n" }));
+});
+
+for (const part of ["Scope", "Deliverables", "Words", "Examples", "Rounds", "Usage", "Not included", "References"]) {
+  test(`proposal: a proposal missing "${part}" is rejected`, () => {
+    bad(PR, `missing section "${part}"`, proposal({ [part]: null }));
+  });
+}
+
+test("proposal: the head lines are required, and Approved is a date or owner away", () => {
+  bad(PR, "no Date: line", proposal({}, { head: "Approved: owner away\n" }));
+  bad(PR, "no Approved: line", proposal({}, { head: "Date: 2026-11-12\n" }));
+  bad(PR, 'Approved: "soon" is not a date or owner away', proposal({}, { head: "Date: 2026-11-12\nApproved: soon\n" }));
+});
+
+test("proposal: at least one deliverable, and a number of rounds", () => {
+  bad(PR, "Deliverables: no file listed", proposal({ Deliverables: "| File | Size | Format |\n| --- | --- | --- |\n" }));
+  bad(PR, "Rounds: needs a whole number of 1 or more", proposal({ Rounds: "As many as needed." }));
+  bad(PR, "Rounds: needs a whole number of 1 or more", proposal({ Rounds: "Rounds: 0" }));
+});
+
+test("proposal: each line of words comes from the owner or the writer, or the piece has none", () => {
+  bad(PR, 'Words row 1: From "designer" is not owner or writer', proposal({ Words: "| Slot | Words | From |\n| --- | --- | --- |\n| title | Less | designer |\n" }));
+  ok(PR, proposal({ Words: "none: the piece carries no words." }));
+});
+
+test("proposal: three examples of the same kind, each opened, each with the move taken", () => {
+  bad(PR, "Examples: 2 opened, needs 3", proposal({ Examples: `| # | Maker | URL | Read | Move taken |\n| --- | --- | --- | --- | --- |\n${exampleRows(2)}\n` }));
+  bad(PR, "Examples: 0 opened, needs 3", proposal({ Examples: `| # | Maker | URL | Read | Move taken |\n| --- | --- | --- | --- | --- |\n${exampleRows(3, { read: "summary only" })}\n` }));
+  bad(PR, "Examples row 2: no Move taken", proposal({ Examples: `| # | Maker | URL | Read | Move taken |\n| --- | --- | --- | --- | --- |\n${exampleRows(3, { move: "" })}\n` }));
+});
+
+test("proposal: it fits on one page", () => {
+  const long = Array.from({ length: 60 }, (_, i) => `- Line ${i + 1}.`).join("\n");
+  bad(PR, "the proposal is longer than one page", proposal({ "Not included": long }));
+});
+
+test("tells: a proposal stands in for the brief on a small job, with its references and earned tells", () => {
+  clean(ck(["tells", "piece.html", "--brief", "proposal.md", "--only", "T28"], dir({ "piece.html": ROWS.T28.pass, "proposal.md": proposalText() })));
+  flagged(ck(["tells", "piece.html", "--brief", "proposal.md", "--only", "T28"], dir({ "piece.html": ROWS.T28.flag, "proposal.md": proposalText() })), "T28");
+  const bare = dir({ "piece.html": "<p>x</p>", "proposal.md": proposalText({ Rounds: "" }) });
+  assert.match(ck(["tells", "piece.html", "--brief", "proposal.md"], bare).all, /proposal: /);
+});
+
 // ---- tells: file and text rows ----
 
 const page = (css, body) => `<!doctype html><html><head><title>t</title><style>${css}</style></head><body>${body}</body></html>`;
@@ -1384,7 +1449,7 @@ test("email: a pattern with a | inside backticks is one cell", () => {
 
 const root = join(here, "..");
 const shipped = (...parts) => readFileSync(join(root, ...parts), "utf8");
-const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "RESEARCH.md", "TELLS.md", "TRENDS.md"];
+const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "PROPOSAL.md", "RESEARCH.md", "TELLS.md", "TRENDS.md"];
 
 test("TELLS.md has 29 complete rows T1 to T29 and each one has a check that runs", () => {
   const rows = shipped("skills", "tools", "design", "TELLS.md").split("\n").filter((l) => /^\| T\d+ /.test(l)).map((l) => l.split("|").slice(1, -1).map((c) => c.trim()));
@@ -1789,6 +1854,32 @@ test("RESEARCH.md gives the piece layer to the designer, lists places to look by
   assert.match(browser, /never[^.\n]*password/i);
   assert.match(browser, /one page at a time/i);
   assert.match(browser, /owner is away|owner says no/i);
+});
+
+test("SKILL.md: a small job starts from a one-page proposal, and the checks table lists the proposal command (QS2)", () => {
+  const skill = designText("SKILL.md");
+  const small = skill.split(/^## A small job$/m)[1]?.split(/^## /m)[0] ?? "";
+  assert.ok(small, "no A small job section");
+  assert.match(small, /PROPOSAL\.md/);
+  assert.match(small, /one piece[^.\n]*one kind[^.\n]*brand that already exists/i);
+  assert.match(small, /new identity[^.\n]*never small/i);
+  assert.match(small, /owner says[^.\n]*small[^.\n]*full/i);
+  assert.match(small, /shows? the owner[^.\n]*waits|waits[^.\n]*owner/i);
+  assert.match(small, /owner is away/i);
+  assert.match(small, /writer[^.\n]*only[^.\n]*missing|missing[^.\n]*writer/i);
+  assert.match(small, /stands? in for[^.\n]*brief/i);
+  assert.match(small, /`research\.md`[^.\n]*`words\.md`/);
+  assert.match(skill, /\| `proposal <proposal\.md>` \|/);
+  assert.match(skill, /`tells <piece> --brief <brief\.md or proposal\.md>/);
+});
+
+test("PROPOSAL.md describes the file the checker reads: the head lines, the sections in order and the floors (QS1)", () => {
+  const text = designText("PROPOSAL.md");
+  const at = ["Date:", "Approved:", "## Scope", "## Deliverables", "## Words", "## Examples", "## Rounds", "## Usage", "## Not included", "## References"].map((p) => text.indexOf(p));
+  assert.ok(at.every((i) => i >= 0) && at.every((i, k) => k === 0 || i > at[k - 1]), `in order: ${at}`);
+  for (const phrase of ["owner away", "`owner`", "`writer`", "opened", "Move taken", "Rounds:", "check.mjs proposal", "one page"]) assert.ok(text.includes(phrase), phrase);
+  assert.match(text, /three/i);
+  assert.match(text, /usage[^.\n]*`not given`|`not given`[^.\n]*usage/i);
 });
 
 test("RESEARCH.md describes the file the checker reads: the head lines, the parts in order and the closing lists", () => {

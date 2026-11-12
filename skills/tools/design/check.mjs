@@ -8,11 +8,12 @@
 //   check.mjs trends <TRENDS.md> [--as-of <date>]
 //   check.mjs brief <brief.md> [--tells <TELLS.md>]
 //   check.mjs research <research.md>
+//   check.mjs proposal <proposal.md> [--tells <TELLS.md>]
 //   check.mjs email <file.html> [--limits <LIMITS.md>] [--words <words.md>]
 //   check.mjs email-set <a.html> <b.html> [<more.html> ...]
 //   check.mjs parts-set <a.html> <b.html> [<more.html> ...]
 //   check.mjs roles <piece.html> --design <DESIGN.md>
-//   check.mjs tells <piece.html> --brief <brief.md> [--brand <file.tokens>] [--render <file.png>]
+//   check.mjs tells <piece.html> --brief <brief.md or proposal.md> [--brand <file.tokens>] [--render <file.png>]
 //                    [--references <REFERENCES.md>] [--only T1,T2] [--tells <TELLS.md>]
 //
 // Every command exits 0 when its input passes and 1 when it does not. `tells`
@@ -547,18 +548,8 @@ function storyProblems(story) {
   return problems;
 }
 
-function parseBrief(text, tellIds) {
-  const sections = sectionsOf(text);
-  const problems = [];
-  const body = (name) => sections.find((s) => s.name === name)?.body ?? "";
-  const lacking = NEW_BRIEF_SECTIONS.filter((name) => !sections.some((s) => s.name === name));
-  if (lacking.length) problems.push(`the brief needs the creative sections: missing ${lacking.join(", ")}`);
-  for (const name of [...BRIEF_SECTIONS, ...NEW_BRIEF_SECTIONS]) {
-    if (!sections.some((s) => s.name === name)) problems.push(`missing section "${name}"`);
-    else if (!body(name).trim()) problems.push(`section "${name}" is empty`);
-  }
-  if (body("Idea").trim()) problems.push(...twoWordsProblems(body("Idea")));
-  if (body("Story").trim()) problems.push(...storyProblems(body("Story")));
+// The rule rows a brief or a proposal cites, its stated minimum, and the tells it earns with a reason.
+function referencesAndTells(body, tellIds, problems) {
   const references = [];
   let minimum = DEFAULT_MINIMUM;
   for (const item of bullets(body("References"))) {
@@ -581,7 +572,22 @@ function parseBrief(text, tellIds) {
     else if (!m[2].trim()) problems.push(`${m[1]} has no reason (a tell is earned with a reason)`);
     else earned.add(m[1]);
   }
-  return { problems, references, minimum, earned };
+  return { references, minimum, earned };
+}
+
+function parseBrief(text, tellIds) {
+  const sections = sectionsOf(text);
+  const problems = [];
+  const body = (name) => sections.find((s) => s.name === name)?.body ?? "";
+  const lacking = NEW_BRIEF_SECTIONS.filter((name) => !sections.some((s) => s.name === name));
+  if (lacking.length) problems.push(`the brief needs the creative sections: missing ${lacking.join(", ")}`);
+  for (const name of [...BRIEF_SECTIONS, ...NEW_BRIEF_SECTIONS]) {
+    if (!sections.some((s) => s.name === name)) problems.push(`missing section "${name}"`);
+    else if (!body(name).trim()) problems.push(`section "${name}" is empty`);
+  }
+  if (body("Idea").trim()) problems.push(...twoWordsProblems(body("Idea")));
+  if (body("Story").trim()) problems.push(...storyProblems(body("Story")));
+  return { problems, ...referencesAndTells(body, tellIds, problems) };
 }
 
 function briefCommand({ positional, flags }) {
@@ -591,6 +597,71 @@ function briefCommand({ positional, flags }) {
   return { out: [`ok: ${positional[0]}`] };
 }
 commands.brief = briefCommand;
+
+// ---- proposal ----
+
+// The one page that stands in for the brief on a small job (PROPOSAL.md).
+const PROPOSAL_SECTIONS = ["Scope", "Deliverables", "Words", "Examples", "Rounds", "Usage", "Not included", "References"];
+const WORDS_FROM = ["owner", "writer"];
+const EXAMPLES_FLOOR = 3;
+const PAGE_LINES = 60;
+
+const isProposal = (text) => /^# Proposal\b/m.test(text.split(/^## /m)[0]);
+
+function parseProposal(text, tellIds) {
+  const problems = [];
+  const sections = sectionsOf(text);
+  const body = (name) => sections.find((s) => s.name === name)?.body ?? "";
+  const head = text.split(/^## /m)[0];
+
+  const date = /^Date:[ \t]*(.*)$/m.exec(head)?.[1]?.trim();
+  if (date === undefined) problems.push("no Date: line");
+  else if (!isDate(date)) problems.push(`Date: ${date} is not a date (YYYY-MM-DD)`);
+  const approved = /^Approved:[ \t]*(.*)$/m.exec(head)?.[1]?.trim();
+  if (approved === undefined) problems.push("no Approved: line (a date, or owner away)");
+  else if (!isDate(approved) && approved !== "owner away") problems.push(`Approved: "${approved}" is not a date or owner away`);
+
+  for (const name of PROPOSAL_SECTIONS) {
+    if (!sections.some((s) => s.name === name)) problems.push(`missing section "${name}"`);
+    else if (!body(name).trim()) problems.push(`section "${name}" is empty`);
+  }
+  if (body("Deliverables").trim() && !tableRows(body("Deliverables")).some(([file]) => file)) problems.push("Deliverables: no file listed");
+
+  const words = body("Words");
+  if (words.trim() && !/^\s*none\b/im.test(words)) {
+    const rows = tableRows(words);
+    if (!rows.length) problems.push("Words: no table of lines, and no none line");
+    rows.forEach(([, , from], i) => {
+      if (!WORDS_FROM.includes(from)) problems.push(`Words row ${i + 1}: From "${from ?? ""}" is not owner or writer`);
+    });
+  }
+
+  const examples = body("Examples");
+  if (examples.trim()) {
+    const rows = tableRows(examples);
+    rows.forEach(([, maker, url, , move], i) => {
+      if (!maker) problems.push(`Examples row ${i + 1}: no Maker`);
+      if (!url) problems.push(`Examples row ${i + 1}: no URL`);
+      if (!move) problems.push(`Examples row ${i + 1}: no Move taken`);
+    });
+    const opened = rows.filter(([, , , read]) => read === "opened").length;
+    if (opened < EXAMPLES_FLOOR) problems.push(`Examples: ${opened} opened, needs ${EXAMPLES_FLOOR}`);
+  }
+
+  const rounds = /^\s*Rounds:\s*(\d+)\s*$/m.exec(body("Rounds"))?.[1];
+  if (body("Rounds").trim() && !(Number(rounds) >= 1)) problems.push("Rounds: needs a whole number of 1 or more");
+
+  if (text.split("\n").filter((l) => l.trim()).length > PAGE_LINES) problems.push(`the proposal is longer than one page (${PAGE_LINES} lines)`);
+  return { problems, ...referencesAndTells(body, tellIds, problems) };
+}
+
+function proposalCommand({ positional, flags }) {
+  if (positional.length !== 1) fail("usage: proposal <proposal.md> [--tells <TELLS.md>]");
+  const { problems } = parseProposal(readText(positional[0]), parseTells(flags.tells).map((r) => r.id));
+  if (problems.length) return { code: 1, err: problems.map((p) => `${positional[0]}: ${p}`) };
+  return { out: [`ok: ${positional[0]}`] };
+}
+commands.proposal = proposalCommand;
 
 // ---- research ----
 
@@ -1106,8 +1177,10 @@ function tellsCommand({ positional, flags }) {
   if (!PIECE_TYPES.includes(extension)) fail(`piece type ${extension} is not supported (html and svg)`);
   const rows = parseTells(flags.tells);
   const ids = rows.map((r) => r.id);
-  const brief = parseBrief(readText(flags.brief), ids);
-  if (brief.problems.length) fail(`brief: ${brief.problems.join("; ")}`);
+  const briefSource = readText(flags.brief);
+  const kind = isProposal(briefSource) ? "proposal" : "brief";
+  const brief = (kind === "proposal" ? parseProposal : parseBrief)(briefSource, ids);
+  if (brief.problems.length) fail(`${kind}: ${brief.problems.join("; ")}`);
   const selected = flags.only ? flags.only.split(",").map((s) => s.trim()) : ids;
   for (const id of selected) if (!ids.includes(id)) fail(`--only: ${id} is not a row of TELLS.md`);
   const run = rows.filter((r) => selected.includes(r.id) && !brief.earned.has(r.id));
