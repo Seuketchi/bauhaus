@@ -2251,3 +2251,18 @@ describe("sign-off is the owner's and locks the stage (SO3 to SO5)", () => {
     assert.match(section(c, "Hard rules"), /sign-off is the owner's[^.\n]*approvals\.md/i);
   });
 });
+
+// LIB5, LIB6. Designers read their library first; the lead files the library at the final sign-off and keeps the owner's taste notes.
+describe("designers improve with use (LIB5, LIB6)", () => {
+  test("the lead files the library at the final sign-off and records the owner's taste notes (LIB5)", () => {
+    const g = read("skills/characters/gropius/SKILL.md");
+    assert.match(section(g, "What the lead does"), /final[^\n]*library/i);
+    assert.match(section(g, "What the lead does"), /taste/i);
+  });
+  for (const name of Object.keys(CRAFTS)) {
+    test(`${name} reads its library before research (LIB6)`, () => {
+      const row = section(read("skills/characters", name, "SKILL.md"), "When to call").split("\n").find((l) => l.startsWith("| `/bauhaus:design` |")) ?? "";
+      assert.match(row, /library/i);
+    });
+  }
+});

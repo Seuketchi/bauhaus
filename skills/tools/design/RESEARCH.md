@@ -7,7 +7,7 @@ Research is evidence for the brief, not a rule above it. A register or a referen
 ## Two layers
 
 - **The job layer, by the lead, once, before the brief is final.** Who the audience is, what the category looks like, what the owner already has, what is known and what is not. It asks for one reference that shows the world the idea lives in, and not only for craft rules.
-- **The piece layer, by the designer who takes the piece, after the brief and before craft.** The visual research for this kind of piece, in the parts P1 to P7 below, started from the craft's row under **Where to look**. The designer reads the job layer first, adds P1 to P7 to the same `research.md`, and checks the file once they are in.
+- **The piece layer, by the designer who takes the piece, after the brief and before craft.** The visual research for this kind of piece, in the parts P1 to P7 below, started from the craft's row under **Where to look**. The designer reads the job layer and the library (`LIBRARY.md`) first, adds P1 to P7 to the same `research.md`, and checks the file once they are in.
 
 ## The rules
 

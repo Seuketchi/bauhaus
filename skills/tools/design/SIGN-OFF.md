@@ -36,4 +36,4 @@ Rounds: <n>
 
 A file must match the hash of its latest sign-off, unless a change request dated on or after that sign-off reopens its stage with a go-ahead. Once the change is made and the owner approves again, a new sign-off row records the new hash and locks the stage again. A locked file that changed with no such request fails, and the check names the file and the stage.
 
-The file is kept after the job. What the owner approved, and what was asked for after, is the record of the job.
+At the `final` sign-off, the lead files the job into the library (`LIBRARY.md`): the sources, the approved piece, and the change requests as lessons. The file is kept after the job. What the owner approved, and what was asked for after, is the record of the job.

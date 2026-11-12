@@ -11,6 +11,7 @@
 //   check.mjs proposal <proposal.md> [--tells <TELLS.md>]
 //   check.mjs approvals <approvals.md>
 //   check.mjs hash <file> [<file> ...]
+//   check.mjs library <file>
 //   check.mjs email <file.html> [--limits <LIMITS.md>] [--words <words.md>]
 //   check.mjs email-set <a.html> <b.html> [<more.html> ...]
 //   check.mjs parts-set <a.html> <b.html> [<more.html> ...]
@@ -642,13 +643,16 @@ function parseProposal(text, tellIds) {
   const examples = body("Examples");
   if (examples.trim()) {
     const rows = tableRows(examples);
-    rows.forEach(([, maker, url, , move], i) => {
+    rows.forEach(([, maker, url, , move, from], i) => {
+      if (from !== undefined && from !== "" && from !== "new" && from !== "library") problems.push(`Examples row ${i + 1}: From "${from}" is not new or library`);
       if (!maker) problems.push(`Examples row ${i + 1}: no Maker`);
       if (!url) problems.push(`Examples row ${i + 1}: no URL`);
       if (!move) problems.push(`Examples row ${i + 1}: no Move taken`);
     });
     const opened = rows.filter(([, , , read]) => read === "opened").length;
     if (opened < EXAMPLES_FLOOR) problems.push(`Examples: ${opened} opened, needs ${EXAMPLES_FLOOR}`);
+    const fromLibrary = rows.filter(([, , , , , from]) => from === "library").length;
+    if (fromLibrary > Math.floor(rows.length / 2)) problems.push(`Examples: ${fromLibrary} of ${rows.length} come from the library, at most ${Math.floor(rows.length / 2)}`);
   }
 
   const rounds = /^\s*Rounds:\s*(\d+)\s*$/m.exec(body("Rounds"))?.[1];
@@ -750,6 +754,81 @@ function hashCommand({ positional }) {
 }
 commands.hash = hashCommand;
 
+// ---- library ----
+
+// What each job leaves behind for the next (LIBRARY.md): a craft file and the owner's taste in ~/.bauhaus/library/,
+// and a project library beside DESIGN.md.
+const CRAFTS = ["brand-and-logos", "email", "screens", "space", "shots-and-motion", "photograph"];
+const quoted = (text) => /^["“].+["”]$/.test(text ?? "");
+
+function libraryProblems(text) {
+  const problems = [];
+  const sections = sectionsOf(text);
+  const body = (name) => sections.find((s) => s.name === name)?.body ?? "";
+  const title = /^# (Library|Taste|Project library)\b/m.exec(text.split(/^## /m)[0])?.[1];
+  const need = (names) => names.forEach((name) => sections.some((s) => s.name === name) || problems.push(`missing section "${name}"`));
+  const dated = (table, i, date) => isDate(date ?? "") || problems.push(`${table} row ${i + 1}: date "${date ?? ""}" is not a date (YYYY-MM-DD)`);
+
+  if (title === "Library") {
+    need(["Examples", "Lessons", "Lessons in waiting"]);
+    const seen = new Set();
+    tableRows(body("Examples")).forEach(([added, maker, url, move], i) => {
+      dated("Examples", i, added);
+      if (!maker) problems.push(`Examples row ${i + 1}: no Maker`);
+      if (!/^https?:\/\//.test(url ?? "")) problems.push(`Examples row ${i + 1}: no URL`);
+      else if (seen.has(url)) problems.push(`Examples: ${url} is listed twice`);
+      else seen.add(url);
+      if (!move) problems.push(`Examples row ${i + 1}: no Move taken`);
+    });
+    const global = new Set();
+    tableRows(body("Lessons")).forEach(([added, lesson, projects], i) => {
+      dated("Lessons", i, added);
+      const names = new Set((projects ?? "").split(",").map((p) => p.trim()).filter(Boolean));
+      if (names.size < 2) problems.push(`Lessons row ${i + 1}: "${lesson}" is seen in ${names.size} project, needs 2`);
+      global.add(lesson);
+    });
+    const waiting = new Map();
+    tableRows(body("Lessons in waiting")).forEach(([added, lesson, project], i) => {
+      dated("Lessons in waiting", i, added);
+      if (!project) problems.push(`Lessons in waiting row ${i + 1}: no Project`);
+      if (global.has(lesson)) problems.push(`"${lesson}" is in Lessons and still waiting`);
+      waiting.set(lesson, [...(waiting.get(lesson) ?? []), project]);
+    });
+    for (const [lesson, projects] of waiting) {
+      const names = [...new Set(projects.filter(Boolean))];
+      if (names.length >= 2) problems.push(`"${lesson}" waits in ${names.join(" and ")}: promote it to Lessons`);
+    }
+  } else if (title === "Taste") {
+    need(["Notes"]);
+    tableRows(body("Notes")).forEach(([date, said, applies], i) => {
+      dated("Notes", i, date);
+      if (!quoted(said)) problems.push(`Notes row ${i + 1}: Said must quote the owner`);
+      if (applies !== "all" && !CRAFTS.includes(applies)) problems.push(`Notes row ${i + 1}: Applies to "${applies ?? ""}" is not all or a craft`);
+    });
+  } else if (title === "Project library") {
+    need(["Approved work", "Lessons"]);
+    tableRows(body("Approved work")).forEach(([date, piece, files, made], i) => {
+      dated("Approved work", i, date);
+      if (!piece) problems.push(`Approved work row ${i + 1}: no Piece`);
+      if (!files) problems.push(`Approved work row ${i + 1}: no Files`);
+      if (!made) problems.push(`Approved work row ${i + 1}: no What made it work`);
+    });
+    tableRows(body("Lessons")).forEach(([date, , lesson], i) => {
+      dated("Lessons", i, date);
+      if (!lesson) problems.push(`Lessons row ${i + 1}: no Lesson`);
+    });
+  } else problems.push('not a library file: the title is "# Library: <craft>", "# Taste" or "# Project library: <project>"');
+  return problems;
+}
+
+function libraryCommand({ positional }) {
+  if (positional.length !== 1) fail("usage: library <file>");
+  const problems = libraryProblems(readText(positional[0]));
+  if (problems.length) return { code: 1, err: problems.map((p) => `${positional[0]}: ${p}`) };
+  return { out: [`ok: ${positional[0]}`] };
+}
+commands.library = libraryCommand;
+
 // ---- research ----
 
 // The seven parts of a piece's visual research, then the closing lists, in this order (RESEARCH.md).
@@ -809,6 +888,9 @@ function researchProblems(text) {
     });
     if (rows.length < P1_FLOOR) problems.push(`P1: ${rows.length} sources, needs ${P1_FLOOR}`);
     if (rows.length >= P1_FLOOR && makers.size < P1_MAKERS) problems.push(`P1: ${makers.size} maker, needs ${P1_MAKERS}`);
+    // At least half the sources are new to this job, not taken from the library (LIBRARY.md).
+    const fromLibrary = rows.filter(([, , , fetched]) => /\blibrary\b/i.test(fetched ?? "")).length;
+    if (fromLibrary > Math.floor(rows.length / 2)) problems.push(`P1: ${fromLibrary} of ${rows.length} sources come from the library, at most ${Math.floor(rows.length / 2)}`);
   }
 
   // P2: one entry for each source, every field filled.

@@ -35,6 +35,8 @@ Skip it for the words of a document, which it leaves to whoever writes them. The
 
 **Who approves a piece?** Only the owner. The brief or proposal, the comp and the final files are signed off by the owner's word and locked by their hashes in `approvals.md` (`SIGN-OFF.md`). Later feedback is a change request, counted against the rounds; past them it waits for the owner. `check.mjs approvals` fails when a locked file changed with no request that reopens it.
 
+**Does it get better with use?** Yes. Each job leaves its sources, the approved piece and the lessons from its change requests in a library: one file per craft and the owner's taste notes in `~/.bauhaus/library/`, and the project's own work in its `library.md`, which never reaches another project. The designer reads it before research, but at least half of each job's sources stay new. It is filed at the final sign-off and checked by `check.mjs library`.
+
 **Who does the research, and can it read Pinterest?** The lead gathers the job's facts before the brief; the designer who takes the piece studies finished work of its kind before building, starting from the craft's row of places to look in `RESEARCH.md`. Pinterest and Google Images keep automated readers out, so they are read only in the owner's own browser, with the owner there and signed in, one page at a time. No downloader or other way round the block is used.
 
 **Are the 29 checks proven?** Partly. 18 rows have run on three real files. The other 11 stay `proposed, not run`, with fixtures in the tests only, until a real file has their subject. `TELLS.md` marks each row.
