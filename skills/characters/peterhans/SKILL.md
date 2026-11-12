@@ -21,7 +21,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 | Tool | Call it only when |
 | --- | --- |
-| `/bauhaus:design` | no brief file exists for the piece, or the piece has no visual research yet (P1 to P7 in `research.md`, or for a small job the three examples of its proposal): the method's research step, started from the **Photograph** row of its places to look. |
+| `/bauhaus:design` | no brief file exists for the piece, or the piece has no visual research yet (P1 to P7 in `research.md`, or for a small job the three examples of its proposal): the method's research step, started from the **Photograph** row of its places to look, after reading its library (the craft file, the owner's taste notes and the project's `library.md`). |
 | `/bauhaus:develop` | the task is a photograph to develop or prepare. |
 | `/bauhaus:critique` | a finished image exists that this session did not make. |
 

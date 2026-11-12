@@ -23,7 +23,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 | Tool | Call it only when |
 | --- | --- |
-| `/bauhaus:design` | no brief file exists for the piece, or the piece has no visual research yet (P1 to P7 in `research.md`, or for a small job the three examples of its proposal): the method's research step, started from the **Shots and motion** row of its places to look. |
+| `/bauhaus:design` | no brief file exists for the piece, or the piece has no visual research yet (P1 to P7 in `research.md`, or for a small job the three examples of its proposal): the method's research step, started from the **Shots and motion** row of its places to look, after reading its library (the craft file, the owner's taste notes and the project's `library.md`). |
 | `/bauhaus:shots` | the task is the shots of a film or a sequence. |
 | `/bauhaus:storyboard` | the task is the frames of a film in order, or an animatic. |
 | `/bauhaus:motion` | the task is an animated title, graphic or effect. |

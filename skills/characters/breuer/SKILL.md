@@ -22,7 +22,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 | Tool | Call it only when |
 | --- | --- |
-| `/bauhaus:design` | no brief file exists for the screen, or the screen has no visual research yet (P1 to P7 in `research.md`, or for a small job the three examples of its proposal): the method's research step, started from the **Screens** row of its places to look. |
+| `/bauhaus:design` | no brief file exists for the screen, or the screen has no visual research yet (P1 to P7 in `research.md`, or for a small job the three examples of its proposal): the method's research step, started from the **Screens** row of its places to look, after reading its library (the craft file, the owner's taste notes and the project's `library.md`). |
 | `/bauhaus:screens` | the task is an app or web screen. |
 | `/bauhaus:handoff` | accepted pages are to go into a Figma file or to a developer. |
 | `/bauhaus:critique` | a finished screen exists that this session did not make. |

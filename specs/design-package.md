@@ -163,6 +163,16 @@ Every criterion has a check type: **[T]** an automated test in the repo, **[R]**
 - SO5 [T] The craft pass says sign-off is the owner's, recorded in `approvals.md`.
 - SO6 [J] Not yet in an eval case: a run where the owner approves a comp and then asks for a change shows a change request logged and `check.mjs approvals` passing. An eval case for it is later work, outside the 14 of `evals/`.
 
+**The library, added 2026-11-12.** The owner wants the designers to improve with use, as a working designer keeps a swipe file (the owner's reference: Austin Kleon, *Steal Like an Artist*). The owner settled eight choices: keep the examples studied, the approved work, lessons from change requests and the owner's taste notes; a global library in `~/.bauhaus/library/` (a file per craft, and `taste.md`) for public examples, general lessons and taste, and a project `library.md` for approved work and that client's lessons; a lesson goes global when seen in two projects; the designer reads the library first, but at least half of each job's sources are new; it is filed automatically at the final sign-off, and the owner prunes.
+
+- LIB1 [T] `check.mjs research` fails when more than half the P1 sources are marked `library` in `Fetched`; `check.mjs proposal` fails when more than one of three examples has `From: library`, and on a `From` that is not `new` or `library`.
+- LIB2 [T] `check.mjs library` passes a craft file and fails on an example with no URL or no move taken, a URL listed twice, a global lesson seen in fewer than two projects, and a lesson waiting in two projects that was not promoted; it passes taste notes that quote the owner and name `all` or a craft, and fails others.
+- LIB3 [T] It passes a project library and fails approved work with no line on what made it work, and any file whose title is not one of the three.
+- LIB4 [T] The method's `The library` section states the two places, reading before research, at least half new, filing at the final sign-off, client work kept in its project, and level 5; the checks table lists `library`. `LIBRARY.md` describes the three files.
+- LIB5 [T] The lead files the library at the final sign-off and writes the owner's taste notes.
+- LIB6 [T] Each designer's research trigger reads its library first.
+- LIB7 [J] Not proven: that results improve. An eval run starts with an empty library, so the evals measure the method, not the library. Proof needs the same case run before and after real jobs, with the library copied in.
+
 **`concept` (tool, the writer's). Owns `REFERENCES.md`.** Its rows WR1 to WR5 are opened sources only, and no cast name appears in them.
 
 - W1 [T] The writer owns the idea, insight, story and words of the pieces made in this package.

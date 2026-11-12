@@ -980,6 +980,54 @@ test("hash prints each file's SHA-256 for a sign-off row", () => {
   assert.equal(r.first, `${sha(PIECE)}  piece.html`);
 });
 
+// ---- the library (LIB1 to LIB3): designers keep what each job teaches ----
+
+test("research: at least half the P1 sources are new, not taken from the library (LIB1)", () => {
+  const rows = (lib) => `| # | Maker | URL | Fetched | Read |\n| --- | --- | --- | --- | --- |\n${Array.from({ length: 6 }, (_, i) => `| ${i + 1} | Maker ${(i % 3) + 1} | https://example.com/mail/${i + 1} | 2026-11-07${i < lib ? " library" : ""} | opened |`).join("\n")}\n`;
+  ok(R, research({ "P1. Sources": rows(3) }));
+  bad(R, "P1: 4 of 6 sources come from the library, at most 3", research({ "P1. Sources": rows(4) }));
+});
+
+test("proposal: at most one of three examples comes from the library, and From is new or library (LIB1)", () => {
+  const ex = (froms) => `| # | Maker | URL | Read | Move taken | From |\n| --- | --- | --- | --- | --- | --- |\n${froms.map((f, i) => `| ${i + 1} | Maker ${i + 1} | https://example.com/b/${i + 1} | opened | a dark field | ${f} |`).join("\n")}\n`;
+  ok(PR, proposal({ Examples: ex(["library", "new", "new"]) }));
+  bad(PR, "Examples: 2 of 3 come from the library, at most 1", proposal({ Examples: ex(["library", "library", "new"]) }));
+  bad(PR, 'Examples row 1: From "old" is not new or library', proposal({ Examples: ex(["old", "new", "new"]) }));
+});
+
+const craftLibrary = ({ examples, lessons = "", waiting = "" } = {}) =>
+  `# Library: email\n\n## Examples\n\n| Added | Maker | URL | Move taken |\n| --- | --- | --- | --- |\n${examples ?? "| 2026-11-12 | Maker 1 | https://example.com/a | one product on a dark field |\n"}\n## Lessons\n\n| Added | Lesson | Projects |\n| --- | --- | --- |\n${lessons}\n## Lessons in waiting\n\n| Added | Lesson | Project |\n| --- | --- | --- |\n${waiting}`;
+const LIB = ["library", "library.md"];
+const lib = (text) => dir({ "library.md": text });
+
+test("library: a craft file passes with examples, lessons seen in two projects and lessons in waiting (LIB2)", () => {
+  ok(LIB, lib(craftLibrary({ lessons: "| 2026-11-12 | No gradient behind text. | bakery, clinic |\n", waiting: "| 2026-11-12 | Keep the button above the fold. | bakery |\n" })));
+});
+
+test("library: an example needs a URL and the move taken, and is kept once", () => {
+  bad(LIB, "Examples row 1: no Move taken", lib(craftLibrary({ examples: "| 2026-11-12 | Maker 1 | https://example.com/a |  |\n" })));
+  bad(LIB, "Examples: https://example.com/a is listed twice", lib(craftLibrary({ examples: "| 2026-11-12 | M | https://example.com/a | x |\n| 2026-11-13 | M | https://example.com/a | y |\n" })));
+});
+
+test("library: a lesson is global only once seen in two projects, and one waiting in two projects must be promoted", () => {
+  bad(LIB, 'Lessons row 1: "No gradient behind text." is seen in 1 project, needs 2', lib(craftLibrary({ lessons: "| 2026-11-12 | No gradient behind text. | bakery |\n" })));
+  bad(LIB, '"Keep the button above the fold." waits in bakery and clinic: promote it to Lessons', lib(craftLibrary({ waiting: "| 2026-11-12 | Keep the button above the fold. | bakery |\n| 2026-11-13 | Keep the button above the fold. | clinic |\n" })));
+});
+
+test("library: taste notes quote the owner and name what they apply to", () => {
+  const taste = (row) => `# Taste\n\n## Notes\n\n| Date | Said | Applies to |\n| --- | --- | --- |\n${row}\n`;
+  ok(LIB, lib(taste('| 2026-11-12 | "more white space" | all |')));
+  bad(LIB, "Notes row 1: Said must quote the owner", lib(taste("| 2026-11-12 | more white space | all |")));
+  bad(LIB, 'Notes row 1: Applies to "posters" is not all or a craft', lib(taste('| 2026-11-12 | "x" | posters |')));
+});
+
+test("library: a project library holds approved work and that project's lessons (LIB3)", () => {
+  const project = (work) => `# Project library: bakery\n\n## Approved work\n\n| Date | Piece | Files | What made it work |\n| --- | --- | --- | --- |\n${work}\n## Lessons\n\n| Date | Change request | Lesson |\n| --- | --- | --- |\n| 2026-11-14 | 1 | No gradient behind text. |\n`;
+  ok(LIB, lib(project("| 2026-11-13 | launch email | email/email.html | one green field, the offer first |")));
+  bad(LIB, "Approved work row 1: no What made it work", lib(project("| 2026-11-13 | launch email | email/email.html |  |")));
+  bad(LIB, "not a library file", lib("# Notes\n"));
+});
+
 // ---- tells: file and text rows ----
 
 const page = (css, body) => `<!doctype html><html><head><title>t</title><style>${css}</style></head><body>${body}</body></html>`;
@@ -1513,7 +1561,7 @@ test("email: a pattern with a | inside backticks is one cell", () => {
 
 const root = join(here, "..");
 const shipped = (...parts) => readFileSync(join(root, ...parts), "utf8");
-const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "PROPOSAL.md", "RESEARCH.md", "SIGN-OFF.md", "TELLS.md", "TRENDS.md"];
+const designFiles = ["SKILL.md", "ARTCRAFT.md", "DESIGN-MD.md", "LIBRARY.md", "PROPOSAL.md", "RESEARCH.md", "SIGN-OFF.md", "TELLS.md", "TRENDS.md"];
 
 test("TELLS.md has 29 complete rows T1 to T29 and each one has a check that runs", () => {
   const rows = shipped("skills", "tools", "design", "TELLS.md").split("\n").filter((l) => /^\| T\d+ /.test(l)).map((l) => l.split("|").slice(1, -1).map((c) => c.trim()));
@@ -1965,6 +2013,28 @@ test("SIGN-OFF.md describes approvals.md: the Rounds line, the two tables and th
   for (const phrase of ["Rounds:", "## Sign-offs", "## Change requests", "| Stage | Date | Owner's words | File | SHA-256 |", "| # | Date | Asked | Reopens | Round | Go-ahead |", "within rounds", "extra: waiting", "extra: owner approved", "check.mjs approvals", "check.mjs hash"]) assert.ok(text.includes(phrase), phrase);
   for (const stage of ["`brief`", "`proposal`", "`comp`", "`final`"]) assert.ok(text.includes(stage), stage);
   assert.match(text, /never[^.\n]*(?:write|add)[^.\n]*sign-off[^.\n]*owner did not/i);
+});
+
+test("SKILL.md: the library is read before research, half the sources stay new, and it is filed at the final sign-off (LIB4)", () => {
+  const skill = designText("SKILL.md");
+  const sec = skill.split(/^## The library$/m)[1]?.split(/^## /m)[0] ?? "";
+  assert.ok(sec, "no The library section");
+  assert.match(sec, /LIBRARY\.md/);
+  assert.match(sec, /~\/\.bauhaus\/library\//);
+  assert.match(sec, /before[^.\n]*research|research[^.\n]*reads?[^.\n]*library/i);
+  assert.match(sec, /at least half/i);
+  assert.match(sec, /final sign-off/i);
+  assert.match(sec, /client|project's own/i);
+  assert.match(sec, /level 5/i);
+  assert.match(skill, /\| `library <file>` \|/);
+});
+
+test("LIBRARY.md describes the three files, their tables, the two-project rule and what never leaves a project (LIB2, LIB3)", () => {
+  const text = designText("LIBRARY.md");
+  for (const phrase of ["~/.bauhaus/library/", "taste.md", "library.md", "# Library:", "# Taste", "# Project library:", "| Added | Maker | URL | Move taken |", "| Added | Lesson | Projects |", "| Added | Lesson | Project |", "| Date | Said | Applies to |", "| Date | Piece | Files | What made it work |", "| Date | Change request | Lesson |", "check.mjs library"]) assert.ok(text.includes(phrase), phrase);
+  assert.match(text, /two projects/i);
+  assert.match(text, /never[^.\n]*(?:global|another project)/i);
+  assert.match(text, /owner[^.\n]*(?:removes?|prunes?)/i);
 });
 
 test("RESEARCH.md describes the file the checker reads: the head lines, the parts in order and the closing lists", () => {

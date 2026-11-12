@@ -14,6 +14,8 @@ Gropius leads the design work. A piece starts from a brief file, goes to the des
 | The brief has its Intake and Research and the project's rules agree | hands the brief to the writer for the idea, the insight, the story and the words | none |
 | The owner named the designer and a complete brief with all eleven sections already exists | skips the intake and hands the piece to the designer with the brief, the words file and `DESIGN.md` | none |
 | The owner approves a stage (the brief or proposal, the comp, the final files) | records the owner's words and each locked file's hash in `approvals.md` | `/bauhaus:design` |
+| The owner signs off the final files | files the job into the library: the sources and examples into the craft file, the approved piece and the lessons from its change requests into the project's `library.md` | `/bauhaus:design` |
+| The owner says what they like or dislike in a look | writes it as a taste note in the library, in the owner's words | `/bauhaus:design` |
 | The owner asks for a change to a stage already signed off | logs it as a change request, counts the round, and puts extra work to the owner | `/bauhaus:design` |
 | A brief contradicts a project rule | stops, names the rule and the brief line, and asks the owner | none |
 | A finished piece exists that someone else made | runs the craft pass | `/bauhaus:critique` |
@@ -24,7 +26,7 @@ The default is not to call. A tool is called only when a stated fact about the t
 
 | Tool | Call it only when |
 | --- | --- |
-| `/bauhaus:design` | no brief file exists for the piece. The method asks the intake questions once, runs the job layer of the research step (the designer who takes the piece runs the piece layer) and writes the brief with its audience, job, tone, what it must not look like, surface, intake, research and references. For a small job the method's one-page proposal takes the place of the brief, and the intake is not asked. Also when the owner approves a stage, or asks to change one already signed off: the method's sign-off record. |
+| `/bauhaus:design` | no brief file exists for the piece. The method asks the intake questions once, runs the job layer of the research step (the designer who takes the piece runs the piece layer) and writes the brief with its audience, job, tone, what it must not look like, surface, intake, research and references. For a small job the method's one-page proposal takes the place of the brief, and the intake is not asked. Also when the owner approves a stage, or asks to change one already signed off: the method's sign-off record, and at the final sign-off its library. |
 | `/bauhaus:critique` | a finished piece exists that this session did not make. |
 
 ## Hard rules

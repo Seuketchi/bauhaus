@@ -26,7 +26,7 @@ Approved: <the date the owner said go, or owner away>
 - **Scope.** The one job, for whom, and the brand it is made for, in two or three lines.
 - **Deliverables.** A table, `| File | Size | Format |`, with one row for each file handed over.
 - **Words.** A table, `| Slot | Words | From |`, where `From` is `owner` for a line given in the ask, used as given, or `writer` for a line the writer wrote because it was missing. A piece with no words writes `none` and the reason.
-- **Examples.** Three finished pieces of the same kind, from the craft's row of places to look in `RESEARCH.md`, each opened as an image: `| # | Maker | URL | Read | Move taken |`, with `Read` as `opened` and the one move this piece takes from it. The rules of `RESEARCH.md` on sources apply; no `research.md` is written.
+- **Examples.** Three finished pieces of the same kind, from the craft's row of places to look in `RESEARCH.md`, each opened as an image: `| # | Maker | URL | Read | Move taken |`, with `Read` as `opened` and the one move this piece takes from it. An optional sixth column, `From`, is `new` or `library`; at most one example comes from the library. The rules of `RESEARCH.md` on sources apply; no `research.md` is written.
 - **Rounds.** `Rounds: <n>`, the rounds of changes included. Two unless the owner said otherwise.
 - **Usage.** The usage the owner gave: where the piece may be used and for how long, or `not given`, which is never filled by guess.
 - **Not included.** What is left out, so a later ask for it is new work.
