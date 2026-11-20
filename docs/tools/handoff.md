@@ -20,6 +20,8 @@ Skip it for an email (use `email`), for a single screen spec (use `screens`), an
 
 **Why Scripter and not a Figma import plugin?** Scripter runs the Figma plugin API with no rate limit, and the script can be read and run again. The owner pastes it into a new script and runs it.
 
+**Does the owner have to paste the scripts?** Not when the session has a Figma server connected to the owner's file (tools `figma_run_file` and `figma_screenshot`): each script is run there by path, and a screenshot of the frame is checked after the first part. Pasting into Scripter is the fallback when no server is connected.
+
 **Why are the page's scripts left out of the capture?** A reveal on scroll or a carousel would hide or move parts while the page is read. Interactions are described in the developer file instead.
 
 **The headings came out in Inter.** The font in the CSS is not in the Figma file. Pass `--font-map` with the family the file uses, or install the font, and run the script again.
@@ -32,6 +34,6 @@ Skip it for an email (use `email`), for a single screen spec (use `screens`), an
 
 ## It's working if
 
-- `figma.mjs page` prints `PASS` for every script, and the owner's screenshot shows the frame matching the page.
+- `figma.mjs page` prints `PASS` for every script, and the screenshot of each frame, from the Figma server or from the owner, shows it matching the page.
 - Running a script twice leaves one copy of its part in the frame.
 - The developer file opens from disk, every tab shows its page, a header link switches to its tab, and the Mobile switch shows the page at 390 px.

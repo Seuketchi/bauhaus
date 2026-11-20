@@ -108,3 +108,11 @@ test("bundle puts pages, shared images, links and interactions in one file", () 
   assert.doesNotMatch(html, /src=\\"icon\.svg/, "paths are replaced by the shared copy");
   assert.match(interactionsHtml(readFileSync(md, "utf8")), /<b>Gallery<\/b><span>a thumbnail &lt;swaps&gt; the image\.<\/span>/);
 });
+
+test("the skill runs the scripts through a connected Figma server, and pasting is the fallback", () => {
+  const skill = readFileSync(new URL("../skills/tools/handoff/SKILL.md", import.meta.url), "utf8");
+  assert.match(skill, /tools include `figma_run_file` and `figma_screenshot`/);
+  assert.match(skill, /Check the status first/);
+  assert.match(skill, /When the server is not connected, or a run times out, hand the scripts over/);
+  assert.match(skill, /With no Figma server, the owner runs them/);
+});
