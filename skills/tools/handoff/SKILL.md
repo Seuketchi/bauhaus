@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Finished HTML pages handed on, as Figma layers built by Scripter scripts the owner pastes and runs, and as one self-contained HTML file for the developer with every page, the links between them, a mobile view and the interactions written down. Use when finished pages go to Figma or to a developer.
+description: Finished HTML pages handed on, as Figma layers built by scripts run through a connected Figma server or pasted into Scripter by the owner, and as one self-contained HTML file for the developer with every page, the links between them, a mobile view and the interactions written down. Use when finished pages go to Figma or to a developer.
 ---
 
 # Handoff
@@ -24,9 +24,18 @@ node skills/tools/handoff/figma.mjs page /project/site/product.html --width 390 
 
 What it handles: gradients (linear and radial), shadows, CSS blur, rounded corners, borders on one side (row dividers), text in a flex box beside an icon, buttons and button rows as auto layout, images cropped the way CSS crops them, clip-path polygons, gradient masks, SVG icons with their group styles copied onto each shape, dotted and dashed strokes, and text on a path as one letter per layer.
 
+### Running them straight into Figma
+
+When the session has a Figma server whose tools include `figma_run_file` and `figma_screenshot`, and its status says the plugin is connected to the owner's file, run the scripts there instead of handing them over:
+
+1. Check the status first: the open file and page are the ones the owner named. A script builds on the current page.
+2. Run each script with `figma_run_file`, by path, one part at a time and in order. Its printed build line comes back in the result.
+3. After the first part of each frame, take a screenshot of the frame with `figma_screenshot` and look at it before running the rest. Fix the converter, not the Figma file, when something is missing.
+4. When the server is not connected, or a run times out, hand the scripts over as below.
+
 ### Handing the scripts over
 
-The owner runs them, and nothing in this session can see the result. So:
+With no Figma server, the owner runs them, and nothing in this session can see the result. So:
 
 1. Put one script on the clipboard at a time, and say which file it is and which part of how many.
 2. Say: open the Figma file, open Scripter, **New script, Ctrl+A, paste, run.** Pasting into an existing sample script gives errors that are not in the code.
@@ -55,5 +64,5 @@ When the pages carry interactions (an FAQ that opens, a gallery that swipes, a c
 
 ## It is done when
 
-- Every script printed `PASS` here and the owner has sent the build line and a screenshot of each frame.
+- Every script printed `PASS` here, and each frame's build line and screenshot have been seen: from the Figma server's results, or sent by the owner.
 - The developer file opens with no server, every tab shows its page, the page links switch tabs, and the Interactions tab lists each interaction with its trigger.
